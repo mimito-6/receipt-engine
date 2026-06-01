@@ -1,5 +1,7 @@
 # receipt-engine
 
+**English** · [繁體中文](README.zh-TW.md) · [日本語](README.ja.md)
+
 Receipts, but delightful.
 
 `receipt-engine` is an open-source rendering engine for beautiful, shareable,
