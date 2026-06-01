@@ -29,7 +29,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "clean": "pnpm -r clean",
-    "samples": "tsx scripts/build-samples.mts"
+    "samples": "tsx scripts/build-samples.mts",
+    "demo": "pnpm --filter @receipt-engine/playground build && node -e \"console.log('\\nOpen this in your browser:\\n  apps/playground/public/index.html\\n')\""
   },
   "devDependencies": {
     "@receipt-engine/core": "workspace:*",

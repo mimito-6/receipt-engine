@@ -33,6 +33,21 @@ importers:
         specifier: ^4.1.8
         version: 4.1.8(@types/node@22.19.19)(vite@8.0.15(@types/node@22.19.19)(esbuild@0.27.7)(tsx@4.22.4))
 
+  apps/playground:
+    dependencies:
+      '@receipt-engine/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      '@receipt-engine/render-html':
+        specifier: workspace:*
+        version: link:../../packages/render-html
+      '@receipt-engine/render-svg':
+        specifier: workspace:*
+        version: link:../../packages/render-svg
+      '@receipt-engine/themes':
+        specifier: workspace:*
+        version: link:../../packages/themes
+
   packages/cli:
     dependencies:
       '@receipt-engine/core':

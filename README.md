@@ -45,6 +45,7 @@ like OpenBooth: pass a receipt JSON, get back PNG / SVG / HTML).
 | `@receipt-engine/render-png` | Receipt → PNG `Buffer` (resvg). |
 | `@receipt-engine/react` | `<ReceiptCard />`. |
 | `@receipt-engine/cli` | `receipt-engine render …`. |
+| `@receipt-engine/playground` | Static in-browser playground (runs on phones). |
 
 ## Install (development)
 
@@ -55,6 +56,13 @@ pnpm install
 pnpm build
 pnpm test
 ```
+
+## Try it in the browser (playground)
+
+A static, client-side playground lives in [`apps/playground`](apps/playground).
+After `pnpm build`, open `apps/playground/public/index.html` in any browser — edit
+the JSON, switch themes, and download the result. It runs entirely in the browser,
+so it works on phones too (see [Using it on a phone](#using-it-on-a-phone)).
 
 ## CLI
 
@@ -135,6 +143,30 @@ const svg = renderReceiptToSvg(receipt, { theme })
 pnpm build
 pnpm samples   # writes samples/<example>-<theme>.{svg,png}
 ```
+
+## Using it on a phone
+
+A quick mental model of what runs where:
+
+- This project is a **library + CLI** — it runs on a computer or server, not as a
+  phone app you install.
+- But **SVG and HTML rendering is pure front-end JavaScript** — it runs directly in
+  a mobile browser, no server required. That's how the playground works on a phone.
+- Only **PNG rendering** currently needs a computer/server (it uses a native module).
+  v0.2 will add a browser-capable path (`@resvg/resvg-wasm`) so phones can export
+  PNG client-side too.
+
+Three practical ways to use it on a phone today:
+
+1. **Recommended** — deploy `apps/playground/public` (one HTML + one `.js`) to any
+   static host (GitHub Pages, Netlify, Vercel) and open the URL on your phone.
+2. **Same Wi-Fi** — run a static server on your computer and open `http://<your-ip>:<port>` from the phone.
+3. **Just view output** — generate a PNG/HTML with the CLI and send the file to the
+   phone; phones open images and web pages natively.
+
+To embed rendering in your own mobile app (React Native / WebView), import
+`@receipt-engine/render-svg` or `@receipt-engine/render-html` directly — neither has
+any computer-only dependency.
 
 ## Docs
 

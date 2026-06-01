@@ -1,0 +1,18 @@
+{
+  "name": "@receipt-engine/playground",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Static, in-browser playground for receipt-engine. Renders receipts client-side (works on phones).",
+  "type": "module",
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "clean": "node -e \"require('node:fs').rmSync('public/receipt-engine.global.js',{force:true})\""
+  },
+  "dependencies": {
+    "@receipt-engine/core": "workspace:*",
+    "@receipt-engine/render-html": "workspace:*",
+    "@receipt-engine/render-svg": "workspace:*",
+    "@receipt-engine/themes": "workspace:*"
+  }
+}
