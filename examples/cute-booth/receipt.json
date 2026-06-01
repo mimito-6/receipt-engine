@@ -49,5 +49,9 @@
   },
   "assets": {
     "footerImage": "./assets/mascot.svg"
-  }
+  },
+  "stickers": [
+    { "content": "🎀", "anchor": "header", "x": 80 },
+    { "content": "✨", "anchor": "free" }
+  ]
 }

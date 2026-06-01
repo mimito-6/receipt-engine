@@ -21,7 +21,7 @@
 ## 它能做什麼
 
 - 📄 **一份資料,三種輸出**:手機/網頁看的向量圖(SVG)、可直接打開的整頁網頁(HTML)、圖檔(PNG)。
-- 🎨 **三種現成風格**:`簡約`、`可愛`、`收據機`(黑白窄條那種)。也能自己換顏色、字體。
+- 🎨 **兩種現成風格**:`自訂(custom)` 和 `收據機(thermal)`。`自訂` 是彩色的那種,可以自己換顏色、挑字體,還能貼貼紙;`收據機` 是黑白窄條那種,等寬字體,而且會自動把放進去的圖片轉成黑白。
 - 🧱 **可自由加區塊**:加一段文字、一張圖、一條分隔線,或一個 QR code。
 - 🔢 **金額自動算**:小計、折扣、稅、找零都幫你算好,不用自己加。
 - 🔗 **QR code**:可以連到你的數位收據、社群、優惠券或回饋表單。
@@ -56,7 +56,7 @@ pnpm test      # 跑測試(可選)
 **B. 用一行指令產生一張收據**:
 
 ```bash
-pnpm --filter @receipt-engine/cli dev render examples/cute-booth/receipt.json --theme cute --format png --out receipt.png
+pnpm --filter @receipt-engine/cli dev render examples/cute-booth/receipt.json --theme custom --format png --out receipt.png
 ```
 
 把 `--format` 換成 `svg` 或 `html` 也可以。Windows 下產生 `.html` 後,用 `start receipt.html` 就能開來看。
@@ -84,7 +84,7 @@ pnpm --filter @receipt-engine/cli dev render examples/cute-booth/receipt.json --
 | 套件 | 做的事 |
 |------|--------|
 | `@receipt-engine/core` | 收據資料的「規格 + 檢查 + 自動算錢」。 |
-| `@receipt-engine/themes` | 三種內建風格,以及換風格的工具。 |
+| `@receipt-engine/themes` | 兩種內建風格,以及換風格的工具。 |
 | `@receipt-engine/render-svg` | 把收據畫成向量圖(主要的渲染器)。 |
 | `@receipt-engine/render-html` | 把收據包成一頁可直接打開的網頁。 |
 | `@receipt-engine/render-png` | 把收據轉成 PNG 圖檔。 |
@@ -95,10 +95,10 @@ pnpm --filter @receipt-engine/cli dev render examples/cute-booth/receipt.json --
 ## 給工程師:命令列
 
 ```bash
-receipt-engine render receipt.json --theme cute --format png --out receipt.png
+receipt-engine render receipt.json --theme custom --format png --out receipt.png
 ```
 
-選項:`--theme minimal|cute|thermal`、`--format svg|html|png`、`--out <檔名>`、
+選項:`--theme custom|thermal`、`--format svg|html|png`、`--out <檔名>`、
 `--width <數字>`、`--pretty`。沒給 `--out` 時,`svg`/`html` 會直接印在畫面上。
 
 ## 給工程師:程式介面
@@ -107,8 +107,8 @@ receipt-engine render receipt.json --theme cute --format png --out receipt.png
 import { renderReceiptToSvg } from '@receipt-engine/render-svg'
 import { renderReceiptToPng } from '@receipt-engine/render-png'
 
-const svg = renderReceiptToSvg(receipt, { theme: 'cute', width: 720 })
-const png = await renderReceiptToPng(receipt, { theme: 'cute', pixelRatio: 2 })
+const svg = renderReceiptToSvg(receipt, { theme: 'custom', width: 720 })
+const png = await renderReceiptToPng(receipt, { theme: 'custom', pixelRatio: 2 })
 ```
 
 ## 給工程師:React
@@ -117,7 +117,7 @@ const png = await renderReceiptToPng(receipt, { theme: 'cute', pixelRatio: 2 })
 import { ReceiptCard } from '@receipt-engine/react'
 
 export function App() {
-  return <ReceiptCard receipt={receipt} theme="cute" width={360} />
+  return <ReceiptCard receipt={receipt} theme="custom" width={360} />
 }
 ```
 
@@ -150,8 +150,8 @@ export function App() {
 import { getTheme, mergeTheme } from '@receipt-engine/themes'
 import { renderReceiptToSvg } from '@receipt-engine/render-svg'
 
-// 以「簡約」為底,只改主色
-const theme = mergeTheme(getTheme('minimal'), {
+// 以「自訂」為底,只改主色
+const theme = mergeTheme(getTheme('custom'), {
   palette: { primary: '#0b7285', accent: '#0b7285' },
 })
 const svg = renderReceiptToSvg(receipt, { theme })

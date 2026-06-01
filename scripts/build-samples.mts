@@ -11,7 +11,7 @@ import { renderReceiptToSvg } from '@receipt-engine/render-svg'
 
 const root = resolve(fileURLToPath(import.meta.url), '../..')
 const examples = ['simple', 'cute-booth', 'openbooth-like']
-const themes = ['minimal', 'cute', 'thermal'] as const
+const themes = ['custom', 'thermal'] as const
 
 const MIME: Record<string, string> = {
   '.png': 'image/png',
@@ -44,6 +44,9 @@ function inlineAssets(receipt: ReceiptDocument, baseDir: string): ReceiptDocumen
   }
   for (const block of out.customBlocks ?? []) {
     if (block.type === 'image') block.src = inline(block.src, baseDir) ?? block.src
+  }
+  for (const sticker of out.stickers ?? []) {
+    sticker.content = inline(sticker.content, baseDir) ?? sticker.content
   }
   return out
 }

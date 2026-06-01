@@ -1,7 +1,7 @@
 {
   "name": "@receipt-engine/themes",
   "version": "0.1.0",
-  "description": "Built-in receipt themes (minimal, cute, thermal) for receipt-engine.",
+  "description": "Built-in receipt themes (custom, thermal) for receipt-engine.",
   "license": "MIT",
   "author": "mimito",
   "type": "module",

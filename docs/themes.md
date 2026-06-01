@@ -1,17 +1,16 @@
 # Themes
 
-`@receipt-engine/themes` ships three built-in themes.
+`@receipt-engine/themes` ships two built-in themes.
 
 | Theme | Mode | Default width | Vibe |
 |-------|------|---------------|------|
-| `minimal` | `card` | 720 | Clean, white, thin border — general digital receipts. |
-| `cute` | `card` | 720 | Soft colors, rounded corners, sparkles & badges — creator booths, doujin events, craft markets. |
-| `thermal` | `thermal` | 384 | Black & white, narrow, monospace — mimics thermal paper, no color dependency. |
+| `custom` | `card` | 720 | Colorful, user-tweakable card — soft colors, rounded corners, badges & stickers. The **default** theme. |
+| `thermal` | `thermal` | 384 | Black & white, narrow, monospace — mimics thermal paper, no color dependency. Auto-converts embedded images to black & white. |
 
 ```ts
 import { getTheme, mergeTheme } from '@receipt-engine/themes'
 
-const base = getTheme('cute')
+const base = getTheme('custom')
 const custom = mergeTheme(base, {
   palette: { primary: '#7048e8', accent: '#b197fc' },
   typography: { fontFamily: "'Baloo 2', sans-serif" },
@@ -41,6 +40,8 @@ interface ReceiptTheme {
     borderStyle?: 'solid' | 'dashed' | 'none'
     showCornerStars?: boolean
     showItemBadges?: boolean
+    perforatedEdges?: boolean   // torn sawtooth top/bottom edges (thermal paper look)
+    monochromeImages?: boolean  // force every embedded image & emoji to black & white
   }
 }
 ```
@@ -53,7 +54,7 @@ The renderers accept either a theme name **or** a full `ReceiptTheme` object:
 import { renderReceiptToSvg } from '@receipt-engine/render-svg'
 import { getTheme, mergeTheme } from '@receipt-engine/themes'
 
-const theme = mergeTheme(getTheme('minimal'), {
+const theme = mergeTheme(getTheme('custom'), {
   palette: { primary: '#0b7285', accent: '#0b7285' },
 })
 const svg = renderReceiptToSvg(receipt, { theme, width: 640 })

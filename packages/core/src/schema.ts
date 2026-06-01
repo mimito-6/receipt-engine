@@ -114,6 +114,21 @@ export const CustomBlockSchema = z.discriminatedUnion('type', [
   }),
 ])
 
+export const StickerSchema = z.object({
+  /** An emoji (e.g. "🎀") OR an image source (URL, data URI, or local path). */
+  content: z.string().min(1),
+  /** Horizontal offset from the anchor, in px. */
+  x: z.number().optional(),
+  /** Vertical offset from the anchor, in px. */
+  y: z.number().optional(),
+  /** Emoji font-size / image box size in px. */
+  size: z.number().positive().optional(),
+  /** Rotation in degrees. */
+  rotation: z.number().optional(),
+  /** Where the sticker is positioned relative to. */
+  anchor: z.enum(['logo', 'header', 'footer', 'free']).optional(),
+})
+
 export const ReceiptDocumentSchema = z.object({
   schemaVersion: z.literal(SCHEMA_VERSION),
   id: z.string().optional(),
@@ -130,6 +145,8 @@ export const ReceiptDocumentSchema = z.object({
   message: MessageSchema.optional(),
   assets: AssetsSchema.optional(),
   customBlocks: z.array(CustomBlockSchema).optional(),
+  /** Free-floating decorations (emoji or images) rendered on top of the receipt. */
+  stickers: z.array(StickerSchema).optional(),
 })
 
 export type ReceiptSocialLink = z.infer<typeof SocialLinkSchema>
@@ -144,4 +161,5 @@ export type ReceiptQr = z.infer<typeof QrSchema>
 export type ReceiptMessage = z.infer<typeof MessageSchema>
 export type ReceiptAssets = z.infer<typeof AssetsSchema>
 export type ReceiptCustomBlock = z.infer<typeof CustomBlockSchema>
+export type ReceiptSticker = z.infer<typeof StickerSchema>
 export type ReceiptDocument = z.infer<typeof ReceiptDocumentSchema>

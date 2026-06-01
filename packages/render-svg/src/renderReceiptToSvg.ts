@@ -18,13 +18,16 @@ import {
   renderMessage,
   renderPayments,
   renderQrBlock,
+  renderStickers,
   renderTotals,
   renderTransactionMeta,
+  type StickerGeom,
 } from './blocks'
 import { escapeXml } from './escape'
 import {
   createMoneyFormatter,
   createPainter,
+  n,
   svgRect,
   type BlockResult,
   type RenderContext,
@@ -40,9 +43,10 @@ export interface RenderSvgOptions {
 
 const DEFAULT_CARD_WIDTH = 720
 const THERMAL_WIDTH = 384
+const MONO_FILTER_ID = 're-mono'
 
 function resolveTheme(option: RenderSvgOptions['theme']): ReceiptTheme {
-  if (!option) return getTheme('minimal')
+  if (!option) return getTheme('custom')
   if (typeof option === 'string') return getTheme(option)
   return option
 }
@@ -55,6 +59,36 @@ function sparkle(x: number, y: number, r: number, fill: string): string {
   return `<path d="${d}" fill="${escapeXml(fill)}" opacity="0.85" />`
 }
 
+/** Torn/perforated comb edge: triangular notches in `color` biting into the paper. */
+function perforation(
+  x0: number,
+  width: number,
+  edgeY: number,
+  pointDown: boolean,
+  color: string,
+  tooth = 12,
+  depth = 9,
+): string {
+  const count = Math.max(2, Math.floor(width / tooth))
+  const w = width / count
+  const dir = pointDown ? depth : -depth
+  let d = ''
+  for (let i = 0; i < count; i++) {
+    const x = x0 + i * w
+    d += `M${n(x)} ${n(edgeY)}L${n(x + w / 2)} ${n(edgeY + dir)}L${n(x + w)} ${n(edgeY)}Z`
+  }
+  return `<path d="${d}" fill="${escapeXml(color)}" />`
+}
+
+/** Black & white image filter (luminance-weighted grayscale), resvg-supported. */
+function monoFilterDefs(id: string): string {
+  return (
+    `<defs><filter id="${id}" x="0%" y="0%" width="100%" height="100%" color-interpolation-filters="sRGB">` +
+    `<feColorMatrix type="matrix" values="0.2126 0.7152 0.0722 0 0 0.2126 0.7152 0.0722 0 0 0.2126 0.7152 0.0722 0 0 0 0 0 1 0"/>` +
+    `</filter></defs>`
+  )
+}
+
 /** Render a validated, normalized receipt to a deterministic SVG string. */
 export function renderReceiptToSvg(
   receipt: ReceiptDocument,
@@ -63,9 +97,12 @@ export function renderReceiptToSvg(
   const doc = normalizeReceipt(validateReceipt(receipt))
   const theme = resolveTheme(options.theme)
   const isThermal = theme.mode === 'thermal'
+  const monoImages = theme.decoration?.monochromeImages ?? isThermal
+  // The value used in `filter="…"`; the <defs> below uses the bare id.
+  const monoFilterId = monoImages ? `url(#${MONO_FILTER_ID})` : undefined
 
   const width = options.width ?? (isThermal ? THERMAL_WIDTH : DEFAULT_CARD_WIDTH)
-  const outerMargin = isThermal ? 0 : 26
+  const outerMargin = isThermal ? 22 : 26
   const innerPad = theme.spacing.page
   const cardX = outerMargin
   const cardTop = outerMargin
@@ -86,6 +123,7 @@ export function renderReceiptToSvg(
     mono: isThermal,
     currency: doc.currency,
     formatMoney: createMoneyFormatter(doc.currency),
+    monoFilterId,
   }
   const p = createPainter(ctx)
 
@@ -128,6 +166,13 @@ export function renderReceiptToSvg(
     dash: !isThermal && borderStyle === 'dashed' ? '5 6' : undefined,
   })
 
+  let edges = ''
+  if (theme.decoration?.perforatedEdges) {
+    edges =
+      perforation(cardX, cardWidth, cardTop, true, theme.palette.background) +
+      perforation(cardX, cardWidth, cardBottom, false, theme.palette.background)
+  }
+
   let decorations = ''
   if (theme.decoration?.showCornerStars) {
     const accent = theme.palette.accent ?? theme.palette.primary
@@ -138,10 +183,34 @@ export function renderReceiptToSvg(
       sparkle(cardX + 36, cardBottom - 30, 4, accent)
   }
 
+  let stickerLayer = ''
+  if (doc.stickers && doc.stickers.length > 0) {
+    const geom: StickerGeom = {
+      cardLeft: cardX,
+      cardRight: cardX + cardWidth,
+      cardTop,
+      cardBottom,
+      centerX: cardX + cardWidth / 2,
+    }
+    stickerLayer = renderStickers(ctx, p, doc.stickers, geom)
+  }
+
+  const defs = monoImages ? monoFilterDefs(MONO_FILTER_ID) : ''
   const xmlDecl = options.includeXmlDeclaration ? '<?xml version="1.0" encoding="UTF-8"?>\n' : ''
   const open =
     `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${totalHeight}" ` +
     `viewBox="0 0 ${width} ${totalHeight}" font-family="${escapeXml(theme.typography.fontFamily)}">`
 
-  return xmlDecl + open + background + card + decorations + parts.join('') + '</svg>'
+  return (
+    xmlDecl +
+    open +
+    defs +
+    background +
+    card +
+    edges +
+    decorations +
+    parts.join('') +
+    stickerLayer +
+    '</svg>'
+  )
 }

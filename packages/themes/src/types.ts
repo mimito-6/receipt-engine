@@ -1,4 +1,4 @@
-export type ReceiptThemeName = 'minimal' | 'cute' | 'thermal'
+export type ReceiptThemeName = 'custom' | 'thermal'
 
 export interface ReceiptThemePalette {
   background: string
@@ -33,6 +33,10 @@ export interface ReceiptThemeDecoration {
   borderStyle?: 'solid' | 'dashed' | 'none'
   showCornerStars?: boolean
   showItemBadges?: boolean
+  /** Draw torn/perforated sawtooth edges at the top & bottom (thermal paper look). */
+  perforatedEdges?: boolean
+  /** Force every embedded image to render in black & white (thermal). */
+  monochromeImages?: boolean
 }
 
 export interface ReceiptTheme {

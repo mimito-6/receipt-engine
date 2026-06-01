@@ -1,8 +1,10 @@
 # @receipt-engine/playground
 
-A static, client-side playground for `receipt-engine`. Edit receipt JSON, switch
-themes, and preview/download the result — **entirely in the browser** (no server,
-no network), so it works on phones too.
+A static, client-side playground for `receipt-engine`. Fill in a form (shop, items,
+message), upload a logo, add emoji/image stickers, pick colors & fonts, switch
+between the **custom** and **thermal** themes, and preview/download the result as
+SVG / HTML / PNG — **entirely in the browser** (no server, no network), so it works
+on phones too. (A raw-JSON editor is tucked into an advanced panel.)
 
 ## Run locally
 
@@ -32,5 +34,9 @@ The `public/` folder is fully static (one HTML + one JS). Host it anywhere:
 - **GitHub Pages** — publish `apps/playground/public`.
 - **Netlify / Vercel** — drag-and-drop the `public` folder.
 
-Then open the URL on your phone. SVG/HTML rendering runs client-side; PNG export in
-the browser is planned for v0.2 via `@resvg/resvg-wasm`.
+Then open the URL on your phone. SVG/HTML rendering runs client-side, and PNG export
+works in-browser too (the SVG is drawn to a `<canvas>` and exported — note that
+custom web fonts may fall back to a system font in the PNG, and a receipt that
+references an *external URL* image can't be exported to PNG due to canvas security;
+uploaded/data-URI images are fine). A future `@resvg/resvg-wasm` path can improve
+PNG font fidelity.

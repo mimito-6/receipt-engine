@@ -15,6 +15,8 @@ export interface RenderContext {
   mono: boolean
   currency: string
   formatMoney: (amount: number) => string
+  /** When set (thermal), every image is rendered through this filter, e.g. "url(#re-mono)". */
+  monoFilterId?: string
 }
 
 export interface BlockResult {
@@ -231,6 +233,7 @@ export function createPainter(ctx: RenderContext): Painter {
     text: (content, x, y, options = {}) => svgText(content, x, y, { family, ...options }),
     rect: svgRect,
     line: svgLine,
-    image: svgImage,
+    image: (href, x, y, width, height, options = {}) =>
+      svgImage(href, x, y, width, height, { filter: ctx.monoFilterId, ...options }),
   }
 }

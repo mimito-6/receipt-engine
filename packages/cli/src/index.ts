@@ -9,7 +9,7 @@ import { renderReceiptToSvg } from '@receipt-engine/render-svg'
 import { resolveAssets } from './resolveAssets'
 
 const FORMATS = ['svg', 'html', 'png'] as const
-const THEMES = ['minimal', 'cute', 'thermal'] as const
+const THEMES = ['custom', 'thermal'] as const
 type Format = (typeof FORMATS)[number]
 type ThemeName = (typeof THEMES)[number]
 
@@ -32,7 +32,7 @@ Usage:
   receipt-engine render <file> [options]
 
 Options:
-  --theme <minimal|cute|thermal>   Theme to render with (default: minimal)
+  --theme <custom|thermal>         Theme to render with (default: custom)
   --format <svg|html|png>          Output format (default: svg)
   --out <path>                     Write to a file (required for png; svg/html
                                    print to stdout when omitted)
@@ -41,7 +41,7 @@ Options:
   -h, --help                       Show this help
 
 Examples:
-  receipt-engine render receipt.json --theme cute --format png --out receipt.png
+  receipt-engine render receipt.json --theme custom --format png --out receipt.png
   receipt-engine render receipt.json --theme thermal --format svg --out receipt.svg`)
 }
 
@@ -72,7 +72,7 @@ async function main(): Promise<void> {
   }
 
   // Validate option values up front for clean error messages.
-  const themeName = (values.theme ?? 'minimal') as ThemeName
+  const themeName = (values.theme ?? 'custom') as ThemeName
   if (!THEMES.includes(themeName)) {
     fail(`Unsupported theme: ${values.theme}\nSupported themes: ${THEMES.join(', ')}`)
   }

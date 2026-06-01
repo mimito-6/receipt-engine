@@ -51,6 +51,7 @@ export {
   MessageSchema,
   AssetsSchema,
   CustomBlockSchema,
+  StickerSchema,
   SocialLinkSchema,
 } from './schema'
 export type {
@@ -66,5 +67,6 @@ export type {
   ReceiptMessage,
   ReceiptAssets,
   ReceiptCustomBlock,
+  ReceiptSticker,
   ReceiptSocialLink,
 } from './schema'

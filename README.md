@@ -26,7 +26,7 @@ like OpenBooth: pass a receipt JSON, get back PNG / SVG / HTML).
 ## Features
 
 - 📄 **One schema, many outputs** — SVG (canonical), HTML, PNG.
-- 🎨 **Themes** — `minimal`, `cute`, `thermal`, plus full custom themes.
+- 🎨 **Themes** — `custom` (the colorful default) and `thermal`, plus full custom themes. The `custom` theme lets you change colors, pick fonts, and add stickers; `thermal` is monospace and auto-converts embedded images to black & white.
 - 🧱 **Custom blocks** — text, image, divider, QR, between totals and message.
 - 🔢 **Smart totals** — subtotals, discounts, tax, payments and change computed for you.
 - 🔗 **QR codes** — digital receipt, social, coupon, feedback links.
@@ -60,26 +60,27 @@ pnpm test
 ## Try it in the browser (playground)
 
 A static, client-side playground lives in [`apps/playground`](apps/playground).
-After `pnpm build`, open `apps/playground/public/index.html` in any browser — edit
-the JSON, switch themes, and download the result. It runs entirely in the browser,
-so it works on phones too (see [Using it on a phone](#using-it-on-a-phone)).
+After `pnpm build`, open `apps/playground/public/index.html` in any browser — fill in
+a form, upload a logo, add stickers, pick colors & fonts, switch between the `custom`
+and `thermal` themes, and download as SVG / HTML / PNG. It runs entirely in the
+browser, so it works on phones too (see [Using it on a phone](#using-it-on-a-phone)).
 
 ## CLI
 
 ```bash
 # from the repo, the CLI runs via the dev script:
-pnpm --filter @receipt-engine/cli dev render examples/cute-booth/receipt.json --theme cute --format svg  --out receipt.svg
-pnpm --filter @receipt-engine/cli dev render examples/cute-booth/receipt.json --theme cute --format html --out receipt.html
-pnpm --filter @receipt-engine/cli dev render examples/cute-booth/receipt.json --theme cute --format png  --out receipt.png
+pnpm --filter @receipt-engine/cli dev render examples/cute-booth/receipt.json --theme custom --format svg  --out receipt.svg
+pnpm --filter @receipt-engine/cli dev render examples/cute-booth/receipt.json --theme custom --format html --out receipt.html
+pnpm --filter @receipt-engine/cli dev render examples/cute-booth/receipt.json --theme custom --format png  --out receipt.png
 ```
 
 Once built, the `receipt-engine` bin is available:
 
 ```bash
-receipt-engine render receipt.json --theme cute --format png --out receipt.png
+receipt-engine render receipt.json --theme custom --format png --out receipt.png
 ```
 
-Options: `--theme minimal|cute|thermal`, `--format svg|html|png`, `--out <path>`,
+Options: `--theme custom|thermal`, `--format svg|html|png`, `--out <path>`,
 `--width <number>`, `--pretty`. `svg`/`html` print to stdout when `--out` is omitted.
 
 ## TypeScript API
@@ -88,8 +89,8 @@ Options: `--theme minimal|cute|thermal`, `--format svg|html|png`, `--out <path>`
 import { renderReceiptToSvg } from '@receipt-engine/render-svg'
 import { renderReceiptToPng } from '@receipt-engine/render-png'
 
-const svg = renderReceiptToSvg(receipt, { theme: 'cute', width: 720 })
-const png = await renderReceiptToPng(receipt, { theme: 'cute', pixelRatio: 2 })
+const svg = renderReceiptToSvg(receipt, { theme: 'custom', width: 720 })
+const png = await renderReceiptToPng(receipt, { theme: 'custom', pixelRatio: 2 })
 ```
 
 ## React
@@ -98,7 +99,7 @@ const png = await renderReceiptToPng(receipt, { theme: 'cute', pixelRatio: 2 })
 import { ReceiptCard } from '@receipt-engine/react'
 
 export function App() {
-  return <ReceiptCard receipt={receipt} theme="cute" width={360} />
+  return <ReceiptCard receipt={receipt} theme="custom" width={360} />
 }
 ```
 
@@ -131,7 +132,7 @@ See [`docs/schema.md`](docs/schema.md) for the full field reference, and the
 import { getTheme, mergeTheme } from '@receipt-engine/themes'
 import { renderReceiptToSvg } from '@receipt-engine/render-svg'
 
-const theme = mergeTheme(getTheme('minimal'), {
+const theme = mergeTheme(getTheme('custom'), {
   palette: { primary: '#0b7285', accent: '#0b7285' },
 })
 const svg = renderReceiptToSvg(receipt, { theme })

@@ -3,289 +3,528 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<meta name="color-scheme" content="light" />
+<meta name="color-scheme" content="light dark" />
 <title>receipt-engine 試玩場</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Quicksand:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&family=Baloo+2:wght@500;600;700&family=Poppins:wght@400;500;600&family=Fredoka:wght@400;500;600&display=swap" rel="stylesheet" />
 <style>
   :root {
-    --bg: #f4f4f7;
-    --card: #ffffff;
-    --ink: #1f2937;
+    --desk: #2c2c30;
+    --desk-2: #232327;
+    --panel: #ffffff;
+    --ink: #1f2430;
     --muted: #6b7280;
-    --line: #e5e7eb;
+    --line: #e7e7ec;
     --accent: #d6336c;
     --accent-soft: #ffe3ef;
+    --radius: 14px;
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; }
   body {
-    background: var(--bg);
+    background: linear-gradient(180deg, var(--desk), var(--desk-2));
     color: var(--ink);
-    font-family: system-ui, -apple-system, 'Segoe UI', 'PingFang TC', 'Microsoft JhengHei', sans-serif;
-    line-height: 1.55;
+    font-family: 'Quicksand', system-ui, -apple-system, 'Segoe UI', 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+    min-height: 100vh;
     padding: env(safe-area-inset-top) 0 0;
   }
-  header {
-    padding: 18px 16px 10px;
-    text-align: center;
-  }
-  header h1 { margin: 0; font-size: 20px; }
-  header p { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
-  .wrap {
-    max-width: 920px;
+  header { text-align: center; color: #fff; padding: 22px 16px 6px; }
+  header h1 { margin: 0; font-size: 21px; font-weight: 700; letter-spacing: .2px; }
+  header p { margin: 5px 0 0; color: #c9c9d2; font-size: 13px; }
+
+  .layout {
+    max-width: 1060px;
     margin: 0 auto;
-    padding: 0 14px 40px;
+    padding: 16px 14px 48px;
     display: grid;
-    gap: 14px;
+    gap: 16px;
+    grid-template-columns: 1fr;
   }
-  .panel {
-    background: var(--card);
-    border: 1px solid var(--line);
-    border-radius: 14px;
-    padding: 14px;
+  @media (min-width: 880px) {
+    .layout { grid-template-columns: minmax(0, 420px) 1fr; align-items: start; }
+    .stage { position: sticky; top: 16px; }
   }
-  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-  .label { font-size: 12px; color: var(--muted); width: 100%; margin-bottom: 2px; }
-  button {
-    font: inherit;
-    border: 1px solid var(--line);
-    background: #fff;
-    color: var(--ink);
-    border-radius: 999px;
-    padding: 8px 14px;
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
+
+  /* ---- Preview stage ---- */
+  .stage {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    order: -1;
   }
-  button:hover { border-color: var(--accent); }
-  button.active {
-    background: var(--accent-soft);
-    border-color: var(--accent);
-    color: var(--accent);
-    font-weight: 600;
-  }
-  select, button.ghost { border-radius: 10px; }
-  textarea {
+  @media (min-width: 880px) { .stage { order: 2; } }
+  .paper {
     width: 100%;
-    min-height: 220px;
-    font-family: ui-monospace, 'SFMono-Regular', Consolas, monospace;
-    font-size: 13px;
-    line-height: 1.5;
-    border: 1px solid var(--line);
-    border-radius: 10px;
-    padding: 10px;
-    resize: vertical;
-    background: #fbfbfd;
-    color: var(--ink);
-  }
-  .preview {
+    max-width: 380px;
     display: flex;
     justify-content: center;
-    background: repeating-conic-gradient(#eee 0% 25%, #f7f7f9 0% 50%) 50% / 18px 18px;
-    border-radius: 12px;
-    padding: 14px;
-    overflow: auto;
   }
-  .preview svg {
+  .paper svg {
     width: 100%;
-    max-width: 420px;
     height: auto;
-    filter: drop-shadow(0 8px 24px rgba(0,0,0,.12));
-    border-radius: 10px;
+    border-radius: 8px;
+    filter: drop-shadow(0 18px 40px rgba(0,0,0,.45));
+    animation: rise .45s ease-out;
   }
-  .error {
-    color: #b42318;
-    background: #fee4e2;
-    border: 1px solid #fda29b;
-    border-radius: 10px;
-    padding: 10px 12px;
-    font-size: 13px;
-    white-space: pre-wrap;
-    display: none;
+  @keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+  .dl { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+  .dl button {
+    font: inherit; font-size: 13px; font-weight: 600;
+    color: #fff; background: rgba(255,255,255,.12);
+    border: 1px solid rgba(255,255,255,.22); border-radius: 999px;
+    padding: 8px 16px; cursor: pointer; -webkit-tap-highlight-color: transparent;
   }
-  .actions { display: flex; gap: 8px; flex-wrap: wrap; }
-  .actions button { flex: 1 1 auto; }
-  footer { text-align: center; color: var(--muted); font-size: 12px; padding: 6px 16px 24px; }
-  footer code { background: #ececed; padding: 1px 5px; border-radius: 4px; }
-  @media (min-width: 760px) {
-    .wrap { grid-template-columns: 1fr 1fr; align-items: start; }
-    header, .controls, footer { grid-column: 1 / -1; }
+  .dl button:hover { background: rgba(255,255,255,.22); }
+  .err {
+    display: none; color: #ffd2cf; background: rgba(180,35,24,.35);
+    border: 1px solid rgba(255,120,110,.5); border-radius: 10px;
+    padding: 8px 12px; font-size: 12px; white-space: pre-wrap; max-width: 380px;
   }
+
+  /* ---- Control panel ---- */
+  .controls { display: grid; gap: 12px; }
+  .card { background: var(--panel); border-radius: var(--radius); padding: 14px 14px 16px; box-shadow: 0 6px 20px rgba(0,0,0,.18); }
+  .card h2 { margin: 0 0 10px; font-size: 13px; font-weight: 700; color: var(--ink); display: flex; align-items: center; gap: 6px; }
+  .card h2 .hint { font-weight: 500; color: var(--muted); font-size: 11px; }
+  label.field { display: block; font-size: 12px; color: var(--muted); margin: 8px 0 3px; }
+  input[type=text], input[type=number], textarea, select {
+    width: 100%; font: inherit; font-size: 14px; color: var(--ink);
+    border: 1px solid var(--line); border-radius: 9px; padding: 8px 10px; background: #fcfcfd;
+  }
+  input:focus, textarea:focus, select:focus { outline: 2px solid var(--accent-soft); border-color: var(--accent); }
+  textarea { font-family: ui-monospace, Consolas, monospace; font-size: 12px; min-height: 150px; resize: vertical; }
+
+  .seg { display: flex; gap: 8px; }
+  .seg button {
+    flex: 1; font: inherit; font-weight: 600; cursor: pointer;
+    border: 1.5px solid var(--line); background: #fff; color: var(--ink);
+    border-radius: 11px; padding: 12px 8px; -webkit-tap-highlight-color: transparent;
+  }
+  .seg button .big { font-size: 15px; }
+  .seg button .sub { display: block; font-size: 11px; font-weight: 500; color: var(--muted); margin-top: 2px; }
+  .seg button.on { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+  .seg button.on .sub { color: var(--accent); }
+
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .btn {
+    font: inherit; font-size: 13px; cursor: pointer; border-radius: 9px;
+    border: 1px solid var(--line); background: #fff; color: var(--ink); padding: 8px 12px;
+  }
+  .btn:hover { border-color: var(--accent); }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn.ghost { background: #f6f6f8; }
+  .btn.sm { padding: 5px 9px; font-size: 12px; }
+
+  .item { display: grid; grid-template-columns: 1fr 52px 72px 30px; gap: 6px; align-items: center; margin-bottom: 6px; }
+  .item input { padding: 7px 8px; font-size: 13px; }
+  .item .x { border: none; background: #f3f3f5; color: #999; border-radius: 8px; height: 32px; cursor: pointer; font-size: 16px; }
+  .item .x:hover { background: #ffe3ef; color: var(--accent); }
+
+  .stickers { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .emoji-pick button { font-size: 20px; line-height: 1; padding: 6px; border: 1px solid var(--line); border-radius: 9px; background: #fff; cursor: pointer; }
+  .emoji-pick button:hover { background: var(--accent-soft); }
+  .chip { display: inline-flex; align-items: center; gap: 4px; background: #f6f6f8; border-radius: 999px; padding: 3px 4px 3px 9px; font-size: 14px; }
+  .chip img { width: 20px; height: 20px; object-fit: contain; border-radius: 3px; }
+  .chip button { border: none; background: none; cursor: pointer; color: #aaa; font-size: 14px; padding: 0 4px; }
+  .chip button:hover { color: var(--accent); }
+
+  .colors { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .colors label { font-size: 11px; color: var(--muted); display: flex; flex-direction: column; gap: 3px; align-items: center; }
+  .colors input[type=color] { width: 100%; height: 34px; border: 1px solid var(--line); border-radius: 8px; padding: 2px; background: #fff; cursor: pointer; }
+  .upload { position: relative; overflow: hidden; }
+  .upload input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  details { border-top: 1px solid var(--line); margin-top: 4px; padding-top: 8px; }
+  details summary { cursor: pointer; font-size: 12px; color: var(--muted); }
+  .hide { display: none !important; }
+  footer { text-align: center; color: #9a9aa6; font-size: 11px; padding: 0 16px 26px; }
+  footer code { background: rgba(255,255,255,.1); color: #cfcfd8; padding: 1px 5px; border-radius: 4px; }
 </style>
 </head>
 <body>
 <header>
   <h1>🧾 receipt-engine 試玩場</h1>
-  <p>改一改右邊的資料,左邊的收據即時變。整個過程都在你的瀏覽器裡跑——手機也行。</p>
+  <p>填一填、上傳張圖、貼幾張貼紙——收據即時生成。整個過程都在你的瀏覽器裡跑,手機也行。</p>
 </header>
 
-<div class="wrap">
-  <div class="panel controls">
-    <div class="row">
-      <span class="label">挑一個樣式</span>
-      <button data-theme="minimal" class="theme">簡約</button>
-      <button data-theme="cute" class="theme active">可愛</button>
-      <button data-theme="thermal" class="theme">收據機風</button>
-    </div>
-    <div class="row" style="margin-top:10px">
-      <span class="label">載入範例</span>
+<div class="layout">
+  <!-- ============ CONTROLS ============ -->
+  <div class="controls">
+    <div class="card">
+      <h2>樣式</h2>
+      <div class="seg" id="theme-seg">
+        <button data-theme="custom" class="on"><span class="big">🎨 自訂</span><span class="sub">彩色,可改色/字/貼紙</span></button>
+        <button data-theme="thermal"><span class="big">🧾 收據機</span><span class="sub">黑白等寬,圖自動轉灰</span></button>
+      </div>
+      <label class="field">從範例開始</label>
       <select id="example">
         <option value="cute">同人攤位</option>
         <option value="coffee">咖啡店</option>
         <option value="market">手作市集</option>
       </select>
     </div>
-  </div>
 
-  <div class="panel">
-    <div class="label">預覽</div>
-    <div class="error" id="error"></div>
-    <div class="preview" id="preview"></div>
-    <div class="actions" style="margin-top:12px">
-      <button class="ghost" id="dl-svg">下載圖片 (SVG)</button>
-      <button class="ghost" id="dl-html">下載網頁 (HTML)</button>
+    <div class="card">
+      <h2>店家</h2>
+      <label class="field">店名</label>
+      <input type="text" id="f-name" placeholder="你的店名" />
+      <label class="field">標語(副標)</label>
+      <input type="text" id="f-subtitle" placeholder="例如:手作 × 插畫" />
+      <label class="field">商標 / 圖示</label>
+      <div class="row2">
+        <button class="btn ghost upload">上傳圖片<input type="file" id="f-logo" accept="image/*" /></button>
+        <input type="text" id="f-icon" placeholder="或貼 emoji,如 🎀" />
+      </div>
+      <div id="logo-status" style="font-size:11px;color:var(--muted);margin-top:5px"></div>
+    </div>
+
+    <div class="card">
+      <h2>品項 <span class="hint">名稱 / 數量 / 單價</span></h2>
+      <div id="items"></div>
+      <button class="btn sm" id="add-item">+ 新增品項</button>
+    </div>
+
+    <div class="card" id="card-stickers">
+      <h2>貼紙 <span class="hint">點一下加上去</span></h2>
+      <div class="emoji-pick stickers" id="emoji-pick"></div>
+      <div class="row2" style="margin-top:8px">
+        <button class="btn ghost upload">上傳貼紙圖<input type="file" id="f-sticker" accept="image/*" /></button>
+      </div>
+      <div class="stickers" id="sticker-list" style="margin-top:8px"></div>
+    </div>
+
+    <div class="card" id="card-look">
+      <h2>外觀 <span class="hint">自訂專屬</span></h2>
+      <div class="colors">
+        <label>主色<input type="color" id="c-primary" /></label>
+        <label>背景<input type="color" id="c-bg" /></label>
+        <label>卡片<input type="color" id="c-surface" /></label>
+        <label>文字<input type="color" id="c-text" /></label>
+      </div>
+      <label class="field" style="margin-top:10px">字體</label>
+      <select id="f-font">
+        <option value="quicksand">圓潤 Quicksand</option>
+        <option value="nunito">柔和 Nunito</option>
+        <option value="baloo">粗胖 Baloo 2</option>
+        <option value="poppins">簡約 Poppins</option>
+        <option value="fredoka">俏皮 Fredoka</option>
+      </select>
+    </div>
+
+    <div class="card">
+      <h2>結尾訊息</h2>
+      <label class="field">標題</label>
+      <input type="text" id="f-msg-title" placeholder="例如:Thank you! ♡" />
+      <label class="field">內文</label>
+      <input type="text" id="f-msg-body" placeholder="一句感謝的話" />
+      <details>
+        <summary>進階:看 / 貼上 JSON</summary>
+        <textarea id="json" spellcheck="false" style="margin-top:8px"></textarea>
+        <button class="btn sm" id="load-json" style="margin-top:6px">從上面的 JSON 載入</button>
+      </details>
     </div>
   </div>
 
-  <div class="panel">
-    <div class="label">收據資料(可直接編輯)</div>
-    <textarea id="json" spellcheck="false"></textarea>
+  <!-- ============ STAGE ============ -->
+  <div class="stage">
+    <div class="err" id="err"></div>
+    <div class="paper" id="paper"></div>
+    <div class="dl">
+      <button id="dl-png">下載 PNG</button>
+      <button id="dl-svg">下載 SVG</button>
+      <button id="dl-html">下載 HTML</button>
+    </div>
   </div>
 </div>
 
-<footer>
-  純前端 · 不上傳任何資料 · 由 <code>@receipt-engine/render-svg</code> 在瀏覽器內渲染
-</footer>
+<footer>純前端 · 不上傳任何資料 · 由 <code>@receipt-engine/render-svg</code> 在瀏覽器內渲染</footer>
 
 <script src="./receipt-engine.global.js"></script>
 <script>
 (function () {
-  const examples = {
+  var RE = window.ReceiptEngine;
+  var $ = function (id) { return document.getElementById(id); };
+
+  var FONTS = {
+    quicksand: "'Quicksand','PingFang TC','Microsoft JhengHei','Noto Sans TC',sans-serif",
+    nunito: "'Nunito','PingFang TC','Microsoft JhengHei','Noto Sans TC',sans-serif",
+    baloo: "'Baloo 2','PingFang TC','Microsoft JhengHei','Noto Sans TC',cursive",
+    poppins: "'Poppins','PingFang TC','Microsoft JhengHei','Noto Sans TC',sans-serif",
+    fredoka: "'Fredoka','PingFang TC','Microsoft JhengHei','Noto Sans TC',sans-serif"
+  };
+  var EMOJIS = ['🎀','🌸','✨','💖','🐱','⭐','🍰','🎁','🧁','☕','🌟','💐'];
+
+  var examples = {
     coffee: {
-      schemaVersion: "0.1",
-      currency: "USD",
-      merchant: { name: "Corner Coffee", subtitle: "Daily roast & fresh bakes", icon: "☕" },
-      transaction: { receiptNo: "0042", issuedAt: "2026-06-01T08:15:00-07:00", cashier: "Sam" },
-      items: [
-        { name: "Flat White", quantity: 1, unitPrice: 4.5 },
-        { name: "Butter Croissant", quantity: 2, unitPrice: 3.25 }
-      ],
-      payments: [{ method: "Cash", amount: 15 }],
-      qr: { value: "https://corner.coffee/r/0042", label: "View online" },
-      message: { title: "Thank you!", body: "Have a lovely day.", footer: "See you tomorrow" }
+      receipt: {
+        schemaVersion: '0.1', currency: 'USD',
+        merchant: { name: 'Corner Coffee', subtitle: 'Daily roast & fresh bakes', icon: '☕' },
+        transaction: { receiptNo: '0042', issuedAt: '2026-06-01T08:15:00-07:00', cashier: 'Sam' },
+        items: [ { name: 'Flat White', quantity: 1, unitPrice: 4.5 }, { name: 'Butter Croissant', quantity: 2, unitPrice: 3.25 } ],
+        payments: [ { method: 'Cash', amount: 15 } ],
+        qr: { value: 'https://corner.coffee/r/0042', label: 'View online' },
+        message: { title: 'Thank you!', body: 'Have a lovely day.' }
+      },
+      custom: { primary: '#8a5a2b', bg: '#f6efe6', surface: '#fffdf8', text: '#4a3b2a', font: 'poppins' }
     },
     cute: {
-      schemaVersion: "0.1",
-      locale: "zh-TW",
-      currency: "TWD",
-      merchant: { name: "Mimito Booth", subtitle: "手作 × 插畫 × 小誌", icon: "🎀" },
-      event: { name: "Artist Alley", boothNumber: "A12", location: "Taipei", date: "2026-06-01" },
-      transaction: { receiptNo: "AA-A12-018", issuedAt: "2026-06-01T14:30:00+08:00", cashier: "Mimi" },
-      items: [
-        { name: "Sticker Set", variant: "Pastel", quantity: 2, unitPrice: 120, tags: ["新刊"] },
-        { name: "Mini Zine", variant: "32p / A6", quantity: 1, unitPrice: 180, tags: ["新刊", "特典"], note: "含限定書籤" },
-        { name: "Acrylic Charm", variant: "Cat", quantity: 1, unitPrice: 250 }
-      ],
-      discounts: [{ label: "套組優惠 Set deal", amount: 50 }],
-      payments: [{ method: "Cash", amount: 700 }],
-      qr: { value: "https://instagram.com/mimito.art", label: "追蹤我們", caption: "新作 & 下次擺攤資訊" },
-      message: { title: "Thank you! ♡", body: "感謝支持我們的攤位,希望你喜歡這次的作品。", footer: "See you next event!" }
+      receipt: {
+        schemaVersion: '0.1', locale: 'zh-TW', currency: 'TWD',
+        merchant: { name: 'Mimito Booth', subtitle: '手作 × 插畫 × 小誌', icon: '🎀' },
+        event: { name: 'Artist Alley', boothNumber: 'A12', location: 'Taipei', date: '2026-06-01' },
+        transaction: { receiptNo: 'AA-A12-018', issuedAt: '2026-06-01T14:30:00+08:00', cashier: 'Mimi' },
+        items: [
+          { name: 'Sticker Set', variant: 'Pastel', quantity: 2, unitPrice: 120, tags: ['新刊'] },
+          { name: 'Mini Zine', variant: '32p / A6', quantity: 1, unitPrice: 180, tags: ['新刊','特典'] },
+          { name: 'Acrylic Charm', quantity: 1, unitPrice: 250 }
+        ],
+        discounts: [ { label: '套組優惠', amount: 50 } ],
+        payments: [ { method: 'Cash', amount: 700 } ],
+        qr: { value: 'https://instagram.com/mimito.art', label: '追蹤我們', caption: '新作 & 下次擺攤資訊' },
+        message: { title: 'Thank you! ♡', body: '感謝支持我們的攤位,希望你喜歡這次的作品。' },
+        stickers: [ { content: '✨', anchor: 'free' }, { content: '🎀', anchor: 'logo', x: -64 } ]
+      },
+      custom: { primary: '#d6336c', bg: '#fff0f6', surface: '#fffdfb', text: '#5b3256', font: 'quicksand' }
     },
     market: {
-      schemaVersion: "0.1",
-      locale: "zh-TW",
-      currency: "TWD",
-      merchant: { name: "微光手作 Glow", subtitle: "蠟燭・乾燥花・香氛", icon: "🕯️" },
-      event: { name: "週末手作市集", boothName: "Row B · Stall 7", location: "華山 1914", date: "2026-06-01" },
-      transaction: { receiptNo: "MKT-20260601-031", issuedAt: "2026-06-01T16:05:00+08:00", cashier: "阿光" },
-      items: [
-        { name: "大豆蠟燭 Soy Candle", variant: "海鹽鼠尾草", quantity: 1, unitPrice: 480 },
-        { name: "乾燥花束 Dried Bouquet", quantity: 1, unitPrice: 360 },
-        { name: "香氛蠟磚 Wax Tablet", quantity: 3, unitPrice: 150 }
-      ],
-      discounts: [{ label: "市集首日優惠", amount: 129 }],
-      payments: [{ method: "Cash", amount: 1500 }],
-      qr: { value: "https://glow.example/feedback", label: "填回饋拿小禮" },
-      message: { body: "手工製作,每件都獨一無二。", footer: "下次市集見 ☀" }
+      receipt: {
+        schemaVersion: '0.1', locale: 'zh-TW', currency: 'TWD',
+        merchant: { name: '微光手作 Glow', subtitle: '蠟燭・乾燥花・香氛', icon: '🕯️' },
+        event: { name: '週末手作市集', boothName: 'Row B · Stall 7', location: '華山 1914', date: '2026-06-01' },
+        transaction: { receiptNo: 'MKT-20260601-031', issuedAt: '2026-06-01T16:05:00+08:00', cashier: '阿光' },
+        items: [
+          { name: '大豆蠟燭 Soy Candle', variant: '海鹽鼠尾草', quantity: 1, unitPrice: 480 },
+          { name: '乾燥花束 Dried Bouquet', quantity: 1, unitPrice: 360 },
+          { name: '香氛蠟磚 Wax Tablet', quantity: 3, unitPrice: 150 }
+        ],
+        discounts: [ { label: '市集首日優惠', amount: 129 } ],
+        payments: [ { method: 'Cash', amount: 1500 } ],
+        qr: { value: 'https://glow.example/feedback', label: '填回饋拿小禮' },
+        message: { body: '手工製作,每件都獨一無二。', footer: '下次市集見 ☀' }
+      },
+      custom: { primary: '#2f6f4f', bg: '#eef4ef', surface: '#ffffff', text: '#2c3a32', font: 'nunito' }
     }
   };
 
-  const $ = (id) => document.getElementById(id);
-  const preview = $("preview");
-  const errorBox = $("error");
-  const json = $("json");
-  let theme = "cute";
+  var state = { theme: 'custom', receipt: null, custom: null };
 
-  function currentReceipt() {
-    return JSON.parse(json.value);
+  function deepClone(o) { return JSON.parse(JSON.stringify(o)); }
+
+  function currentTheme() {
+    if (state.theme === 'thermal') return 'thermal';
+    var c = state.custom;
+    return RE.mergeTheme(RE.getTheme('custom'), {
+      palette: { primary: c.primary, accent: c.primary, secondary: c.primary, background: c.bg, surface: c.surface, text: c.text },
+      typography: { fontFamily: FONTS[c.font] || FONTS.quicksand }
+    });
   }
+
+  function showError(msg) { var e = $('err'); e.textContent = msg; e.style.display = 'block'; }
+  function clearError() { $('err').style.display = 'none'; }
 
   function render() {
-    let data;
+    var check = RE.safeValidateReceipt(state.receipt);
+    if (!check.success) { showError('資料還沒填完整:\n\n' + check.error.format()); return; }
     try {
-      data = currentReceipt();
-    } catch (e) {
-      return showError("JSON 格式有誤:\n" + e.message);
-    }
-    const check = ReceiptEngine.safeValidateReceipt(data);
-    if (!check.success) {
-      return showError("收據資料不符合規格:\n\n" + check.error.format());
-    }
-    try {
-      preview.innerHTML = ReceiptEngine.renderReceiptToSvg(check.data, { theme: theme });
-      errorBox.style.display = "none";
-    } catch (e) {
-      showError(e.message);
-    }
+      $('paper').innerHTML = RE.renderReceiptToSvg(check.data, { theme: currentTheme() });
+      clearError();
+    } catch (e) { showError(String(e && e.message || e)); }
+    $('json').value = JSON.stringify(state.receipt, null, 2);
   }
 
-  function showError(msg) {
-    errorBox.textContent = msg;
-    errorBox.style.display = "block";
+  /* ---------- form rendering ---------- */
+  function syncFormFromState() {
+    var r = state.receipt, c = state.custom;
+    $('f-name').value = r.merchant.name || '';
+    $('f-subtitle').value = r.merchant.subtitle || '';
+    $('f-icon').value = (r.merchant.icon && !/^data:|^https?:|\//.test(r.merchant.icon)) ? r.merchant.icon : '';
+    $('logo-status').textContent = r.merchant.logo ? '✓ 已設定商標圖片' : '';
+    $('f-msg-title').value = (r.message && r.message.title) || '';
+    $('f-msg-body').value = (r.message && r.message.body) || '';
+    $('c-primary').value = c.primary; $('c-bg').value = c.bg; $('c-surface').value = c.surface; $('c-text').value = c.text;
+    $('f-font').value = c.font;
+    renderItems(); renderStickerList();
   }
 
-  function download(filename, text, type) {
-    const blob = new Blob([text], { type: type });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = filename;
-    a.click();
-    URL.revokeObjectURL(url);
+  function renderItems() {
+    var box = $('items'); box.innerHTML = '';
+    var canDelete = state.receipt.items.length > 1;
+    state.receipt.items.forEach(function (it, i) {
+      var row = document.createElement('div'); row.className = 'item';
+      row.innerHTML =
+        '<input type="text" value="' + esc(it.name) + '" placeholder="名稱" data-i="' + i + '" data-k="name" />' +
+        '<input type="number" value="' + it.quantity + '" min="1" data-i="' + i + '" data-k="quantity" />' +
+        '<input type="number" value="' + it.unitPrice + '" min="0" step="0.01" data-i="' + i + '" data-k="unitPrice" />' +
+        (canDelete ? '<button class="x" data-rm="' + i + '" title="刪除">×</button>' : '<span></span>');
+      box.appendChild(row);
+    });
+    box.querySelectorAll('input').forEach(function (inp) {
+      inp.addEventListener('input', function () {
+        var i = +inp.dataset.i, k = inp.dataset.k;
+        if (k === 'name') { state.receipt.items[i].name = inp.value; }
+        else {
+          if (inp.value === '') return; // mid-edit blank: keep last valid number
+          var num = Number(inp.value);
+          if (!Number.isFinite(num)) return;
+          state.receipt.items[i][k] = num;
+        }
+        render();
+      });
+    });
+    box.querySelectorAll('[data-rm]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        if (state.receipt.items.length <= 1) return;
+        state.receipt.items.splice(+b.dataset.rm, 1); renderItems(); render();
+      });
+    });
   }
 
+  function renderStickerList() {
+    var box = $('sticker-list'); box.innerHTML = '';
+    (state.receipt.stickers || []).forEach(function (s, i) {
+      var chip = document.createElement('span'); chip.className = 'chip';
+      var isImg = /^data:|^https?:|\.(png|jpe?g|gif|svg|webp)$/i.test(s.content);
+      chip.innerHTML = (isImg ? '<img src="' + esc(s.content) + '" />' : '<span>' + esc(s.content) + '</span>') +
+        '<button data-rms="' + i + '">×</button>';
+      box.appendChild(chip);
+    });
+    box.querySelectorAll('[data-rms]').forEach(function (b) {
+      b.addEventListener('click', function () { state.receipt.stickers.splice(+b.dataset.rms, 1); renderStickerList(); render(); });
+    });
+  }
+
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]; }); }
+
+  /* ---------- examples ---------- */
   function loadExample(key) {
-    json.value = JSON.stringify(examples[key], null, 2);
+    var ex = examples[key];
+    state.receipt = deepClone(ex.receipt);
+    state.custom = deepClone(ex.custom);
+    syncFormFromState(); render();
+  }
+
+  /* ---------- downloads ---------- */
+  function downloadBlob(name, blob) {
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a'); a.href = url; a.download = name; a.click();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+  }
+  function currentSvg() {
+    return RE.renderReceiptToSvg(state.receipt, { theme: currentTheme(), includeXmlDeclaration: true });
+  }
+  function downloadPng() {
+    var svg = currentSvg();
+    var img = new Image();
+    var url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml;charset=utf-8' }));
+    img.onload = function () {
+      try {
+        var scale = 2;
+        var canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth * scale; canvas.height = img.naturalHeight * scale;
+        var cx = canvas.getContext('2d'); cx.scale(scale, scale); cx.drawImage(img, 0, 0);
+        canvas.toBlob(function (b) {
+          if (b) downloadBlob('receipt.png', b);
+          else showError('PNG 轉檔失敗,請改用「下載 SVG」。');
+        }, 'image/png');
+      } catch (e) {
+        showError('無法在瀏覽器轉成 PNG(收據裡可能有外部網址的圖片)。請改用「下載 SVG」,或改成上傳圖片。');
+      } finally { URL.revokeObjectURL(url); }
+    };
+    img.onerror = function () { URL.revokeObjectURL(url); showError('PNG 轉檔失敗,請改用「下載 SVG」。'); };
+    img.src = url;
+  }
+
+  /* ---------- file -> data URI ---------- */
+  function readFile(file, cb) {
+    if (file && file.size > 2 * 1024 * 1024) showError('圖片有點大(>2MB),可能會讓 JSON 很肥,建議換小一點的。');
+    var fr = new FileReader();
+    fr.onload = function () { cb(String(fr.result)); };
+    fr.readAsDataURL(file);
+  }
+
+  /* ---------- wire up ---------- */
+  function setTheme(t) {
+    state.theme = t;
+    $('theme-seg').querySelectorAll('button').forEach(function (b) { b.classList.toggle('on', b.dataset.theme === t); });
+    var customOnly = t === 'custom';
+    $('card-look').classList.toggle('hide', !customOnly);
+    $('card-stickers').classList.toggle('hide', !customOnly);
     render();
   }
 
-  document.querySelectorAll(".theme").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      theme = btn.dataset.theme;
-      document.querySelectorAll(".theme").forEach((b) => b.classList.toggle("active", b === btn));
+  $('theme-seg').querySelectorAll('button').forEach(function (b) {
+    b.addEventListener('click', function () { setTheme(b.dataset.theme); });
+  });
+  $('example').addEventListener('change', function (e) { loadExample(e.target.value); });
+
+  $('f-name').addEventListener('input', function () { state.receipt.merchant.name = this.value; render(); });
+  $('f-subtitle').addEventListener('input', function () { state.receipt.merchant.subtitle = this.value || undefined; render(); });
+  $('f-icon').addEventListener('input', function () {
+    state.receipt.merchant.icon = this.value || undefined;
+    if (this.value) state.receipt.merchant.logo = undefined, $('logo-status').textContent = '';
+    render();
+  });
+  $('f-msg-title').addEventListener('input', function () { ensureMsg(); state.receipt.message.title = this.value || undefined; render(); });
+  $('f-msg-body').addEventListener('input', function () { ensureMsg(); state.receipt.message.body = this.value || undefined; render(); });
+  function ensureMsg() { if (!state.receipt.message) state.receipt.message = {}; }
+
+  $('f-logo').addEventListener('change', function () {
+    if (this.files[0]) readFile(this.files[0], function (uri) {
+      state.receipt.merchant.logo = uri;
+      state.receipt.merchant.icon = undefined;
+      $('f-icon').value = '';
+      $('logo-status').textContent = '✓ 已設定商標圖片';
       render();
     });
   });
-  $("example").addEventListener("change", (e) => loadExample(e.target.value));
-
-  let timer;
-  json.addEventListener("input", () => {
-    clearTimeout(timer);
-    timer = setTimeout(render, 250);
+  $('f-sticker').addEventListener('change', function () {
+    if (this.files[0]) readFile(this.files[0], function (uri) {
+      if (!state.receipt.stickers) state.receipt.stickers = [];
+      state.receipt.stickers.push({ content: uri, anchor: 'free' }); renderStickerList(); render();
+    });
   });
 
-  $("dl-svg").addEventListener("click", () => {
-    try {
-      const svg = ReceiptEngine.renderReceiptToSvg(currentReceipt(), { theme: theme, includeXmlDeclaration: true });
-      download("receipt.svg", svg, "image/svg+xml");
-    } catch (e) { showError(e.message); }
+  ['c-primary', 'c-bg', 'c-surface', 'c-text'].forEach(function (id) {
+    $(id).addEventListener('input', function () {
+      var key = { 'c-primary': 'primary', 'c-bg': 'bg', 'c-surface': 'surface', 'c-text': 'text' }[id];
+      state.custom[key] = this.value; render();
+    });
   });
-  $("dl-html").addEventListener("click", () => {
-    try {
-      const html = ReceiptEngine.renderReceiptToHtml(currentReceipt(), { theme: theme });
-      download("receipt.html", html, "text/html");
-    } catch (e) { showError(e.message); }
+  $('f-font').addEventListener('change', function () { state.custom.font = this.value; render(); });
+
+  $('add-item').addEventListener('click', function () {
+    state.receipt.items.push({ name: '新品項', quantity: 1, unitPrice: 100 }); renderItems(); render();
   });
 
-  loadExample("cute");
+  // emoji palette
+  EMOJIS.forEach(function (em) {
+    var b = document.createElement('button'); b.textContent = em; b.type = 'button';
+    b.addEventListener('click', function () {
+      if (!state.receipt.stickers) state.receipt.stickers = [];
+      state.receipt.stickers.push({ content: em, anchor: 'free', x: (state.receipt.stickers.length % 3) * -34 });
+      renderStickerList(); render();
+    });
+    $('emoji-pick').appendChild(b);
+  });
+
+  $('dl-png').addEventListener('click', downloadPng);
+  $('dl-svg').addEventListener('click', function () { downloadBlob('receipt.svg', new Blob([currentSvg()], { type: 'image/svg+xml' })); });
+  $('dl-html').addEventListener('click', function () { downloadBlob('receipt.html', new Blob([RE.renderReceiptToHtml(state.receipt, { theme: currentTheme() })], { type: 'text/html' })); });
+
+  $('load-json').addEventListener('click', function () {
+    var parsed;
+    try { parsed = JSON.parse($('json').value); }
+    catch (e) { showError('JSON 格式有誤:\n' + e.message); return; }
+    var check = RE.safeValidateReceipt(parsed);
+    if (!check.success) { showError('這份 JSON 不是有效的收據:\n\n' + check.error.format()); return; }
+    state.receipt = parsed;
+    syncFormFromState(); render();
+  });
+
+  // boot
+  setTheme('custom');
+  loadExample('cute');
 })();
 </script>
 </body>

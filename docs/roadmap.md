@@ -6,7 +6,9 @@
 - SVG renderer (canonical)
 - HTML renderer
 - PNG renderer
-- Themes (`minimal`, `cute`, `thermal`)
+- Themes (`custom`, `thermal`)
+- Stickers (emoji / image overlays)
+- B&W thermal images (auto grayscale filter)
 - React component
 - CLI
 - Examples

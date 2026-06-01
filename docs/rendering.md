@@ -11,7 +11,7 @@ receipt JSON ──validate──▶ normalize ──▶ SVG ──┬──▶ 
 
 ```ts
 renderReceiptToSvg(receipt, {
-  theme?: ReceiptThemeName | ReceiptTheme, // default 'minimal'
+  theme?: ReceiptThemeName | ReceiptTheme, // default 'custom'
   width?: number,                          // default 720 (card) / 384 (thermal)
   pixelRatio?: number,                     // carried through to PNG
   includeXmlDeclaration?: boolean,
@@ -23,7 +23,8 @@ renderReceiptToSvg(receipt, {
 - **Escaping.** Every piece of user text passes through `escapeXml` (`& < > " '`),
   so item names can't break the SVG.
 - **Block order.** header → merchant → event → transaction → items → discounts →
-  totals → payments → QR → custom blocks → message → footer image.
+  totals → payments → QR → custom blocks → message → footer image → stickers
+  (rendered last, as an overlay).
 
 ### QR codes
 
@@ -46,6 +47,12 @@ them deterministic and usable in the browser / React Native. An image source is:
 - a **local path** — embedded verbatim. The **CLI** resolves local paths to data
   URIs (relative to the receipt JSON's folder) before rendering, so SVG/PNG are
   self-contained.
+
+The **thermal** theme wraps every embedded image (logo, icon, footer, sticker)
+in a grayscale SVG filter (`<feColorMatrix>`, id `re-mono`) so logos, photos, and
+stickers come out black & white — matching thermal paper. Each `<image>` gets
+`filter="url(#re-mono)"`, and resvg honors it when rasterizing to PNG. The
+`custom` theme leaves images in full color.
 
 ## HTML (`@receipt-engine/render-html`)
 

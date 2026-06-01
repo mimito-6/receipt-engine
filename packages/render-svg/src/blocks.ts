@@ -8,12 +8,14 @@ import type {
   ReceiptMessage,
   ReceiptPayment,
   ReceiptQr,
+  ReceiptSticker,
   ReceiptTransaction,
 } from '@receipt-engine/core'
 import { isImageSource } from './assets'
 import {
   lineHeight,
   measureWidth,
+  n,
   wrapText,
   type BlockResult,
   type Painter,
@@ -40,6 +42,36 @@ function divider(ctx: RenderContext, p: Painter, y: number, opacity = 1): string
     strokeWidth: 1,
     dash: dashFor(ctx),
     opacity,
+  })
+}
+
+/** Wrap markup in the mono (grayscale) filter when the theme demands it — e.g. to
+ *  desaturate color emoji on thermal. Images already get the filter via the painter. */
+function monoWrap(ctx: RenderContext, inner: string): string {
+  return ctx.monoFilterId ? `<g filter="${ctx.monoFilterId}">${inner}</g>` : inner
+}
+
+/**
+ * Thermal-only dotted leader between a left label and a right value
+ * (the classic "Label .......... Value" receipt look). No-op for card themes.
+ */
+function dottedLeader(
+  ctx: RenderContext,
+  p: Painter,
+  label: string,
+  value: string,
+  baselineY: number,
+  size: number,
+): string {
+  if (!ctx.mono) return ''
+  const x1 = ctx.contentLeft + measureWidth(label, size, true) + 6
+  const x2 = ctx.contentRight - measureWidth(value, size, true) - 6
+  if (x2 - x1 < 14) return ''
+  return p.line(x1, baselineY - size * 0.28, x2, baselineY - size * 0.28, {
+    stroke: ctx.theme.palette.mutedText,
+    strokeWidth: 1,
+    dash: '1 4',
+    opacity: 0.75,
   })
 }
 
@@ -89,7 +121,7 @@ export function renderHeader(
       cursor += s + 12
     } else {
       const size = 46
-      markup += p.text(merchant.icon, cx, cursor + size, { size, anchor: 'middle' })
+      markup += monoWrap(ctx, p.text(merchant.icon, cx, cursor + size, { size, anchor: 'middle' }))
       cursor += size + 12
     }
   }
@@ -352,12 +384,10 @@ export function renderDiscounts(
   let cursor = y
   let markup = ''
   for (const discount of discounts) {
+    const value = `-${ctx.formatMoney(discount.amount)}`
+    markup += dottedLeader(ctx, p, discount.label, value, cursor + size, size)
     markup += p.text(discount.label, ctx.contentLeft, cursor + size, { size, fill })
-    markup += p.text(`-${ctx.formatMoney(discount.amount)}`, ctx.contentRight, cursor + size, {
-      size,
-      anchor: 'end',
-      fill,
-    })
+    markup += p.text(value, ctx.contentRight, cursor + size, { size, anchor: 'end', fill })
     cursor += lineHeight(size)
   }
   return { markup, height: cursor - y }
@@ -382,6 +412,7 @@ export function renderTotals(
   cursor += 14
 
   const row = (label: string, value: string, muted = true) => {
+    markup += dottedLeader(ctx, p, label, value, cursor + size, size)
     markup += p.text(label, ctx.contentLeft, cursor + size, {
       size,
       fill: muted ? theme.palette.mutedText : theme.palette.text,
@@ -401,6 +432,7 @@ export function renderTotals(
 
   cursor += 6
   const totalSize = size + 4
+  markup += dottedLeader(ctx, p, 'Total', ctx.formatMoney(totals.total), cursor + totalSize, totalSize)
   markup += p.text('Total', ctx.contentLeft, cursor + totalSize, {
     size: totalSize,
     weight: 700,
@@ -436,11 +468,13 @@ export function renderPayments(
   let markup = ''
 
   for (const payment of payments) {
+    const value = ctx.formatMoney(payment.amount)
+    markup += dottedLeader(ctx, p, payment.method, value, cursor + size, size)
     markup += p.text(payment.method, ctx.contentLeft, cursor + size, {
       size,
       fill: theme.palette.text,
     })
-    markup += p.text(ctx.formatMoney(payment.amount), ctx.contentRight, cursor + size, {
+    markup += p.text(value, ctx.contentRight, cursor + size, {
       size,
       anchor: 'end',
       fill: theme.palette.text,
@@ -456,6 +490,7 @@ export function renderPayments(
   }
 
   if (Math.abs(totals.change) > 0.0001) {
+    markup += dottedLeader(ctx, p, 'Change', ctx.formatMoney(totals.change), cursor + size, size)
     markup += p.text('Change', ctx.contentLeft, cursor + size, {
       size,
       weight: 600,
@@ -642,4 +677,65 @@ export function renderFooterImage(
   const w = Math.min(ctx.contentWidth, 260)
   const h = 84
   return { markup: p.image(src, cx - w / 2, y, w, h), height: h }
+}
+
+// ---------------------------------------------------------------------------
+// Stickers (free-floating overlay, rendered last)
+// ---------------------------------------------------------------------------
+
+export interface StickerGeom {
+  cardLeft: number
+  cardRight: number
+  cardTop: number
+  cardBottom: number
+  centerX: number
+}
+
+/**
+ * Draw stickers on top of everything. Each sticker is an emoji (text) or an
+ * image, positioned by `anchor` + (x, y) offset, optionally rotated. Images go
+ * black & white on thermal (via the painter's mono filter). Overlay only — does
+ * not participate in the layout flow.
+ */
+export function renderStickers(
+  ctx: RenderContext,
+  p: Painter,
+  stickers: ReceiptSticker[],
+  geom: StickerGeom,
+): string {
+  let out = ''
+  for (const sticker of stickers) {
+    const isImage = isImageSource(sticker.content)
+    const size = sticker.size ?? (isImage ? 56 : 38)
+
+    let baseX = geom.cardRight - 44
+    let baseY = geom.cardTop + 52
+    switch (sticker.anchor) {
+      case 'header':
+        baseX = geom.centerX
+        baseY = geom.cardTop + 40
+        break
+      case 'logo':
+        baseX = geom.centerX
+        baseY = geom.cardTop + 76
+        break
+      case 'footer':
+        baseX = geom.centerX
+        baseY = geom.cardBottom - 40
+        break
+      // 'free' (default): top-right corner
+    }
+    const cx = baseX + (sticker.x ?? 0)
+    const cy = baseY + (sticker.y ?? 0)
+    const rotate = sticker.rotation
+      ? ` transform="rotate(${n(sticker.rotation)} ${n(cx)} ${n(cy)})"`
+      : ''
+
+    const inner = isImage
+      ? p.image(sticker.content, cx - size / 2, cy - size / 2, size, size)
+      : monoWrap(ctx, p.text(sticker.content, cx, cy + size * 0.34, { size, anchor: 'middle' }))
+
+    out += `<g${rotate}>${inner}</g>`
+  }
+  return out
 }

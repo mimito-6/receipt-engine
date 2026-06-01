@@ -10,10 +10,13 @@ export function isHttpUrl(src: string): boolean {
   return /^https?:\/\//i.test(src)
 }
 
-/** A bare path/filename that points at an image (no scheme). */
+/**
+ * A bare path/filename that points at an image (no scheme). Requires an image
+ * file extension, so plain text like "1/2 off" or "B/W" is NOT treated as an image.
+ */
 export function isLocalImagePath(src: string): boolean {
   if (isDataUri(src) || isHttpUrl(src)) return false
-  return IMAGE_EXT.test(src) || src.includes('/') || src.includes('\\')
+  return IMAGE_EXT.test(src.trim())
 }
 
 /**
@@ -39,6 +42,8 @@ function fmt(value: number): string {
 
 export interface SvgImageOptions {
   preserveAspectRatio?: string
+  /** SVG filter reference, e.g. "url(#re-mono)" for black & white. */
+  filter?: string
 }
 
 /**
@@ -55,5 +60,6 @@ export function svgImage(
   options: SvgImageOptions = {},
 ): string {
   const par = options.preserveAspectRatio ?? 'xMidYMid meet'
-  return `<image href="${escapeXml(href)}" x="${fmt(x)}" y="${fmt(y)}" width="${fmt(width)}" height="${fmt(height)}" preserveAspectRatio="${par}" />`
+  const filter = options.filter ? ` filter="${options.filter}"` : ''
+  return `<image href="${escapeXml(href)}" x="${fmt(x)}" y="${fmt(y)}" width="${fmt(width)}" height="${fmt(height)}" preserveAspectRatio="${par}"${filter} />`
 }

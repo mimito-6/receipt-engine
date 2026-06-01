@@ -27,6 +27,7 @@ const receipt = validateReceipt(json) // throws ReceiptValidationError on failur
 | `message` | Message | | Thank-you note. |
 | `assets` | Assets | | Footer / background images. |
 | `customBlocks` | CustomBlock[] | | Rendered between totals and message. |
+| `stickers` | Sticker[] | | Emoji / image overlays drawn on top of everything. |
 
 ## Merchant
 
@@ -36,6 +37,10 @@ const receipt = validateReceipt(json) // throws ReceiptValidationError on failur
 - `logo` — URL, data URI, or relative path (rendered as an image).
 - `icon` — emoji **or** an image source. Emoji is drawn as text; image sources
   are drawn as an `<image>`.
+
+> Under the `thermal` theme, every embedded image (logo, icon, footer, sticker)
+> is rendered in black & white via a grayscale SVG filter. The `custom` theme
+> keeps images in color.
 
 ## Event
 
@@ -98,3 +103,20 @@ A discriminated union on `type`:
 { "type": "divider", "label": "♡" }
 { "type": "qr",      "value": "…", "label": "…", "caption": "…" }
 ```
+
+## Stickers
+
+Top-level `stickers: Sticker[]` — playful overlays drawn on top of everything
+else (logos, photos, emoji). Each sticker:
+
+| Field | Type | Required | Notes |
+|-------|------|----------|-------|
+| `content` | string | ✅ | An emoji **or** an image source (URL / data URI). |
+| `x` | number | | Horizontal offset. |
+| `y` | number | | Vertical offset. |
+| `size` | number | | Rendered size. |
+| `rotation` | number | | Rotation in degrees. |
+| `anchor` | `'logo' \| 'header' \| 'footer' \| 'free'` | | Where the sticker attaches; `'free'` positions by `x`/`y` alone. |
+
+Image stickers, like every other embedded image, are rendered in black & white
+under the `thermal` theme and in color under `custom`.

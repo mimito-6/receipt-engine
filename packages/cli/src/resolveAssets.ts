@@ -20,7 +20,7 @@ const IMAGE_EXT = /\.(png|jpe?g|gif|svg|webp|avif|bmp|ico)$/i
 function isResolvable(src: string | undefined): src is string {
   if (!src) return false
   if (/^data:/i.test(src) || /^https?:\/\//i.test(src)) return false
-  return IMAGE_EXT.test(src) || src.includes('/') || src.includes('\\')
+  return IMAGE_EXT.test(src.trim())
 }
 
 function toDataUri(src: string, baseDir: string): string {
@@ -65,6 +65,9 @@ export function resolveAssets(receipt: ReceiptDocument, baseDir: string): Resolv
   }
   for (const block of out.customBlocks ?? []) {
     if (block.type === 'image') block.src = field(block.src) ?? block.src
+  }
+  for (const sticker of out.stickers ?? []) {
+    if (isResolvable(sticker.content)) sticker.content = field(sticker.content) ?? sticker.content
   }
 
   return { receipt: out, warnings }

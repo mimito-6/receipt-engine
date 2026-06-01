@@ -1,12 +1,10 @@
-import { cuteTheme } from './cute'
-import { minimalTheme } from './minimal'
+import { customTheme } from './custom'
 import { thermalTheme } from './thermal'
 import type { ReceiptTheme, ReceiptThemeName } from './types'
 
 /** All built-in themes, keyed by name. */
 export const themes: Record<ReceiptThemeName, ReceiptTheme> = {
-  minimal: minimalTheme,
-  cute: cuteTheme,
+  custom: customTheme,
   thermal: thermalTheme,
 }
 
@@ -35,7 +33,7 @@ export function mergeTheme(base: ReceiptTheme, override?: Partial<ReceiptTheme>)
   }
 }
 
-export { minimalTheme, cuteTheme, thermalTheme }
+export { customTheme, thermalTheme }
 export type {
   ReceiptTheme,
   ReceiptThemeName,
