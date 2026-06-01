@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build output
+dist/
+*.tsbuildinfo
+
+# Test / render output at repo root
+/receipt.svg
+/receipt.html
+/receipt.png
+/*.out.svg
+/*.out.html
+/*.out.png
+
+# Generated README samples
+/samples/
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.log

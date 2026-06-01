@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="220" height="120" viewBox="0 0 220 120">
+  <g transform="translate(110 64)">
+    <ellipse cx="0" cy="22" rx="46" ry="32" fill="#ffe3ef" stroke="#d6336c" stroke-width="3" />
+    <circle cx="0" cy="-12" r="30" fill="#fff0f6" stroke="#d6336c" stroke-width="3" />
+    <path d="M-26 -28 L-34 -52 L-12 -36 Z" fill="#fff0f6" stroke="#d6336c" stroke-width="3" stroke-linejoin="round" />
+    <path d="M26 -28 L34 -52 L12 -36 Z" fill="#fff0f6" stroke="#d6336c" stroke-width="3" stroke-linejoin="round" />
+    <circle cx="-10" cy="-14" r="3.6" fill="#5b3256" />
+    <circle cx="10" cy="-14" r="3.6" fill="#5b3256" />
+    <circle cx="-18" cy="-5" r="5" fill="#ff8cc6" opacity="0.6" />
+    <circle cx="18" cy="-5" r="5" fill="#ff8cc6" opacity="0.6" />
+    <path d="M-6 -6 Q0 0 6 -6" fill="none" stroke="#5b3256" stroke-width="2" stroke-linecap="round" />
+    <path d="M44 26 Q74 16 64 -10" fill="none" stroke="#d6336c" stroke-width="4" stroke-linecap="round" />
+  </g>
+  <text x="110" y="114" text-anchor="middle" font-family="'Quicksand','Segoe UI',sans-serif" font-size="13" fill="#d6336c">&#9825; thank you &#9825;</text>
+</svg>

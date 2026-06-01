@@ -1,0 +1,13 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@receipt-engine/core": ["../core/src/index.ts"],
+      "@receipt-engine/render-svg": ["../render-svg/src/index.ts"],
+      "@receipt-engine/render-html": ["../render-html/src/index.ts"],
+      "@receipt-engine/render-png": ["../render-png/src/index.ts"]
+    }
+  },
+  "include": ["src"]
+}

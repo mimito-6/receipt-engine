@@ -1,0 +1,29 @@
+{
+  "name": "@receipt-engine/cli",
+  "version": "0.1.0",
+  "description": "Command-line renderer for receipt-engine: receipt JSON -> SVG / HTML / PNG.",
+  "license": "MIT",
+  "author": "mimito",
+  "type": "module",
+  "bin": {
+    "receipt-engine": "./dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --dts --clean",
+    "dev": "tsx src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "clean": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\""
+  },
+  "dependencies": {
+    "@receipt-engine/core": "workspace:*",
+    "@receipt-engine/render-html": "workspace:*",
+    "@receipt-engine/render-png": "workspace:*",
+    "@receipt-engine/render-svg": "workspace:*"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.2"
+  }
+}

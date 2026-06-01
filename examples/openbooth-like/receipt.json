@@ -1,0 +1,39 @@
+{
+  "schemaVersion": "0.1",
+  "locale": "zh-TW",
+  "currency": "TWD",
+  "merchant": {
+    "name": "微光手作 Glow Handmade",
+    "subtitle": "蠟燭・乾燥花・香氛",
+    "icon": "🕯️"
+  },
+  "event": {
+    "name": "週末手作市集 Weekend Craft Market",
+    "boothName": "Row B · Stall 7",
+    "location": "華山 1914",
+    "date": "2026-06-01"
+  },
+  "transaction": {
+    "receiptNo": "MKT-20260601-031",
+    "issuedAt": "2026-06-01T16:05:00+08:00",
+    "cashier": "阿光",
+    "note": "Pop-up — 感謝光臨"
+  },
+  "items": [
+    { "name": "大豆蠟燭 Soy Candle", "variant": "海鹽鼠尾草", "quantity": 1, "unitPrice": 480 },
+    { "name": "乾燥花束 Dried Bouquet", "variant": "暖陽色", "quantity": 1, "unitPrice": 360 },
+    { "name": "香氛蠟磚 Wax Tablet", "quantity": 3, "unitPrice": 150 },
+    { "name": "禮物包裝 Gift Wrap", "quantity": 1, "unitPrice": 50 }
+  ],
+  "discounts": [{ "label": "市集首日優惠 Opening-day discount", "amount": 134 }],
+  "payments": [{ "method": "Cash", "amount": 1500 }],
+  "qr": {
+    "value": "https://glow.example/feedback",
+    "label": "填回饋拿小禮",
+    "caption": "下次擺攤 9 折券"
+  },
+  "message": {
+    "body": "手工製作，每件都獨一無二。願這份小溫暖陪你一段日子。",
+    "footer": "下次市集見 ☀"
+  }
+}

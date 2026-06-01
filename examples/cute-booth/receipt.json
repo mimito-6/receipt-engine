@@ -1,0 +1,53 @@
+{
+  "schemaVersion": "0.1",
+  "locale": "zh-TW",
+  "currency": "TWD",
+  "merchant": {
+    "name": "Mimito Booth",
+    "subtitle": "手作 × 插畫 × 小誌",
+    "logo": "./assets/logo.svg",
+    "socials": [{ "label": "@mimito.art", "url": "https://instagram.com/mimito.art" }]
+  },
+  "event": {
+    "name": "Artist Alley",
+    "boothNumber": "A12",
+    "location": "Taipei",
+    "date": "2026-06-01"
+  },
+  "transaction": {
+    "receiptNo": "AA-A12-018",
+    "issuedAt": "2026-06-01T14:30:00+08:00",
+    "cashier": "Mimi"
+  },
+  "items": [
+    { "name": "Sticker Set", "variant": "Pastel", "quantity": 2, "unitPrice": 120, "tags": ["新刊"] },
+    {
+      "name": "Mini Zine",
+      "variant": "32p / A6",
+      "quantity": 1,
+      "unitPrice": 180,
+      "tags": ["新刊", "特典"],
+      "note": "含限定書籤"
+    },
+    { "name": "Acrylic Charm", "variant": "Cat", "quantity": 1, "unitPrice": 250 }
+  ],
+  "discounts": [{ "label": "套組優惠 Set deal", "amount": 50 }],
+  "payments": [{ "method": "Cash", "amount": 700 }],
+  "qr": {
+    "value": "https://instagram.com/mimito.art",
+    "label": "追蹤我們",
+    "caption": "新作 & 下次擺攤資訊"
+  },
+  "customBlocks": [
+    { "type": "divider", "label": "♡" },
+    { "type": "text", "text": "謝謝你支持獨立創作者！", "align": "center" }
+  ],
+  "message": {
+    "title": "Thank you! ♡",
+    "body": "感謝支持我們的攤位，希望你喜歡這次的作品。",
+    "footer": "See you next event!"
+  },
+  "assets": {
+    "footerImage": "./assets/mascot.svg"
+  }
+}

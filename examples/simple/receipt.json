@@ -1,0 +1,29 @@
+{
+  "schemaVersion": "0.1",
+  "currency": "USD",
+  "merchant": {
+    "name": "Corner Coffee",
+    "subtitle": "Daily roast & fresh bakes",
+    "icon": "☕"
+  },
+  "transaction": {
+    "receiptNo": "0042",
+    "issuedAt": "2026-06-01T08:15:00-07:00",
+    "cashier": "Sam"
+  },
+  "items": [
+    { "name": "Flat White", "quantity": 1, "unitPrice": 4.5 },
+    { "name": "Butter Croissant", "quantity": 2, "unitPrice": 3.25 }
+  ],
+  "payments": [{ "method": "Cash", "amount": 15 }],
+  "qr": {
+    "value": "https://corner.coffee/r/0042",
+    "label": "View online",
+    "caption": "Scan for your digital copy"
+  },
+  "message": {
+    "title": "Thank you!",
+    "body": "Have a lovely day.",
+    "footer": "See you tomorrow"
+  }
+}

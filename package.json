@@ -1,0 +1,50 @@
+{
+  "name": "receipt-engine",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Receipts, but delightful. Render beautiful digital receipt cards, SVG/HTML previews, PNG images, and future thermal-printer output from structured receipt JSON.",
+  "type": "module",
+  "license": "MIT",
+  "author": "mimito",
+  "packageManager": "pnpm@10.29.2",
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "receipt",
+    "receipt-generator",
+    "pos",
+    "point-of-sale",
+    "thermal-printer",
+    "digital-receipt",
+    "svg",
+    "png",
+    "react",
+    "typescript",
+    "local-first"
+  ],
+  "scripts": {
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r typecheck",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "clean": "pnpm -r clean",
+    "samples": "tsx scripts/build-samples.mts"
+  },
+  "devDependencies": {
+    "@receipt-engine/core": "workspace:*",
+    "@receipt-engine/render-png": "workspace:*",
+    "@receipt-engine/render-svg": "workspace:*",
+    "@types/node": "^22.10.5",
+    "tsup": "^8.3.5",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3",
+    "vitest": "^4.1.8"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "@resvg/resvg-js"
+    ]
+  }
+}
