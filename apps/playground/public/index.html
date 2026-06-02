@@ -7,229 +7,301 @@
 <title>receipt-engine 試玩場</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Quicksand:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&family=Baloo+2:wght@500;600;700&family=Poppins:wght@400;500;600&family=Fredoka:wght@400;500;600&display=swap" rel="stylesheet" />
+<!-- Latin display fonts + a matched CJK web font (Noto Sans TC) so Chinese & Latin look unified -->
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Quicksand:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&family=Baloo+2:wght@500;600;700&family=Poppins:wght@400;500;600&family=Fredoka:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/@fontsource/sarasa-mono-tc@5/index.min.css" rel="stylesheet" />
 <style>
+  /* Bundled OFL pixel/bitmap CJK fonts (cover Latin + Chinese in one pixel style) */
+  @font-face { font-family: 'Cubic 11'; src: url('fonts/Cubic_11.ttf') format('truetype'); font-display: swap; }
+  @font-face { font-family: 'Boutique Bitmap 9x9'; src: url('fonts/BoutiqueBitmap9x9.ttf') format('truetype'); font-display: swap; }
+  @font-face { font-family: 'Boutique Bitmap 9x9 Bold'; src: url('fonts/BoutiqueBitmap9x9_Bold.ttf') format('truetype'); font-display: swap; }
   :root {
-    --desk: #2c2c30;
-    --desk-2: #232327;
-    --panel: #ffffff;
-    --ink: #1f2430;
-    --muted: #6b7280;
-    --line: #e7e7ec;
-    --accent: #d6336c;
-    --accent-soft: #ffe3ef;
-    --radius: 14px;
+    --desk: #2c2c30; --desk-2: #232327; --panel: #fff; --ink: #1f2430;
+    --muted: #6b7280; --line: #e7e7ec; --accent: #d6336c; --accent-soft: #ffe3ef; --radius: 14px;
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; }
   body {
     background: linear-gradient(180deg, var(--desk), var(--desk-2));
     color: var(--ink);
-    font-family: 'Quicksand', system-ui, -apple-system, 'Segoe UI', 'PingFang TC', 'Microsoft JhengHei', sans-serif;
-    min-height: 100vh;
-    padding: env(safe-area-inset-top) 0 0;
+    font-family: 'Quicksand','Noto Sans TC', system-ui, -apple-system, 'Segoe UI', 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+    min-height: 100vh; padding: env(safe-area-inset-top) 0 0;
   }
-  header { text-align: center; color: #fff; padding: 22px 16px 6px; }
-  header h1 { margin: 0; font-size: 21px; font-weight: 700; letter-spacing: .2px; }
+  header { text-align: center; color: #fff; padding: 20px 16px 4px; }
+  header h1 { margin: 0; font-size: 21px; font-weight: 700; }
   header p { margin: 5px 0 0; color: #c9c9d2; font-size: 13px; }
 
-  .layout {
-    max-width: 1060px;
-    margin: 0 auto;
-    padding: 16px 14px 48px;
-    display: grid;
-    gap: 16px;
-    grid-template-columns: 1fr;
-  }
-  @media (min-width: 880px) {
-    .layout { grid-template-columns: minmax(0, 420px) 1fr; align-items: start; }
-    .stage { position: sticky; top: 16px; }
+  .layout { max-width: 1080px; margin: 0 auto; padding: 16px 14px 56px; display: grid; gap: 16px; grid-template-columns: 1fr; }
+  @media (min-width: 900px) {
+    .layout { grid-template-columns: minmax(0, 440px) 1fr; align-items: start; }
+    .stage { position: sticky; top: 16px; order: 2; }
   }
 
-  /* ---- Preview stage ---- */
-  .stage {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 12px;
-    order: -1;
+  .stage { display: flex; flex-direction: column; align-items: center; gap: 12px; order: -1; }
+  #paper { position: relative; width: 100%; max-width: 360px; }
+  #svg-host svg { width: 100%; height: auto; border-radius: 8px; filter: drop-shadow(0 18px 40px rgba(0,0,0,.45)); display: block; }
+  #sticker-overlay { position: absolute; inset: 0; touch-action: none; }
+  .sticker-handle {
+    position: absolute; transform-origin: center; cursor: grab; touch-action: none;
+    user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent;
+    display: flex; align-items: center; justify-content: center; min-width: 34px; min-height: 34px; line-height: 1;
   }
-  @media (min-width: 880px) { .stage { order: 2; } }
-  .paper {
-    width: 100%;
-    max-width: 380px;
-    display: flex;
-    justify-content: center;
-  }
-  .paper svg {
-    width: 100%;
-    height: auto;
-    border-radius: 8px;
-    filter: drop-shadow(0 18px 40px rgba(0,0,0,.45));
-    animation: rise .45s ease-out;
-  }
-  @keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+  .sticker-handle.sel { outline: 2px dashed var(--accent); outline-offset: 2px; border-radius: 6px; }
+  .sticker-handle img { width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
+  #paper.thermal .sticker-handle { filter: grayscale(1) contrast(1.1); }
+
   .dl { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
-  .dl button {
-    font: inherit; font-size: 13px; font-weight: 600;
-    color: #fff; background: rgba(255,255,255,.12);
-    border: 1px solid rgba(255,255,255,.22); border-radius: 999px;
-    padding: 8px 16px; cursor: pointer; -webkit-tap-highlight-color: transparent;
-  }
+  .dl button { font: inherit; font-size: 13px; font-weight: 600; color: #fff; background: rgba(255,255,255,.12);
+    border: 1px solid rgba(255,255,255,.22); border-radius: 999px; padding: 8px 16px; cursor: pointer; }
   .dl button:hover { background: rgba(255,255,255,.22); }
-  .err {
-    display: none; color: #ffd2cf; background: rgba(180,35,24,.35);
-    border: 1px solid rgba(255,120,110,.5); border-radius: 10px;
-    padding: 8px 12px; font-size: 12px; white-space: pre-wrap; max-width: 380px;
-  }
+  .err { display: none; color: #ffd2cf; background: rgba(180,35,24,.35); border: 1px solid rgba(255,120,110,.5);
+    border-radius: 10px; padding: 8px 12px; font-size: 12px; white-space: pre-wrap; max-width: 360px; }
 
-  /* ---- Control panel ---- */
   .controls { display: grid; gap: 12px; }
-  .card { background: var(--panel); border-radius: var(--radius); padding: 14px 14px 16px; box-shadow: 0 6px 20px rgba(0,0,0,.18); }
-  .card h2 { margin: 0 0 10px; font-size: 13px; font-weight: 700; color: var(--ink); display: flex; align-items: center; gap: 6px; }
-  .card h2 .hint { font-weight: 500; color: var(--muted); font-size: 11px; }
+  .card { background: var(--panel); border-radius: var(--radius); padding: 13px 14px 15px; box-shadow: 0 6px 20px rgba(0,0,0,.18); }
+  .card > h2 { margin: 0 0 9px; font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
+  .card > h2 .hint { font-weight: 500; color: var(--muted); font-size: 11px; }
+  details.card > summary { font-size: 13px; font-weight: 700; cursor: pointer; list-style: none; display: flex; align-items: center; gap: 6px; }
+  details.card > summary::after { content: '▸'; color: var(--muted); margin-left: auto; transition: transform .15s; }
+  details.card[open] > summary::after { transform: rotate(90deg); }
+  details.card > summary .hint { font-weight: 500; color: var(--muted); font-size: 11px; }
+  details.card > *:not(summary) { margin-top: 10px; }
+
   label.field { display: block; font-size: 12px; color: var(--muted); margin: 8px 0 3px; }
-  input[type=text], input[type=number], textarea, select {
-    width: 100%; font: inherit; font-size: 14px; color: var(--ink);
-    border: 1px solid var(--line); border-radius: 9px; padding: 8px 10px; background: #fcfcfd;
+  label.field:first-of-type { margin-top: 0; }
+  input[type=text], input[type=number], input[type=url], input[type=datetime-local], textarea, select {
+    width: 100%; font: inherit; font-size: 14px; color: var(--ink); border: 1px solid var(--line);
+    border-radius: 9px; padding: 8px 10px; background: #fcfcfd;
   }
   input:focus, textarea:focus, select:focus { outline: 2px solid var(--accent-soft); border-color: var(--accent); }
-  textarea { font-family: ui-monospace, Consolas, monospace; font-size: 12px; min-height: 150px; resize: vertical; }
+  textarea { font-family: ui-monospace, Consolas, monospace; font-size: 12px; min-height: 130px; resize: vertical; }
+  input[type=range] { width: 100%; accent-color: var(--accent); }
 
   .seg { display: flex; gap: 8px; }
-  .seg button {
-    flex: 1; font: inherit; font-weight: 600; cursor: pointer;
-    border: 1.5px solid var(--line); background: #fff; color: var(--ink);
-    border-radius: 11px; padding: 12px 8px; -webkit-tap-highlight-color: transparent;
-  }
+  .seg button { flex: 1; font: inherit; font-weight: 600; cursor: pointer; border: 1.5px solid var(--line);
+    background: #fff; color: var(--ink); border-radius: 11px; padding: 11px 8px; }
   .seg button .big { font-size: 15px; }
   .seg button .sub { display: block; font-size: 11px; font-weight: 500; color: var(--muted); margin-top: 2px; }
   .seg button.on { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
   .seg button.on .sub { color: var(--accent); }
 
   .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  .btn {
-    font: inherit; font-size: 13px; cursor: pointer; border-radius: 9px;
-    border: 1px solid var(--line); background: #fff; color: var(--ink); padding: 8px 12px;
-  }
+  .row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+  .btn { font: inherit; font-size: 13px; cursor: pointer; border-radius: 9px; border: 1px solid var(--line); background: #fff; color: var(--ink); padding: 8px 12px; }
   .btn:hover { border-color: var(--accent); }
-  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
   .btn.ghost { background: #f6f6f8; }
   .btn.sm { padding: 5px 9px; font-size: 12px; }
+  .slider { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; }
+  .slider .val { font-size: 12px; color: var(--muted); min-width: 44px; text-align: right; font-variant-numeric: tabular-nums; }
 
-  .item { display: grid; grid-template-columns: 1fr 52px 72px 30px; gap: 6px; align-items: center; margin-bottom: 6px; }
-  .item input { padding: 7px 8px; font-size: 13px; }
-  .item .x { border: none; background: #f3f3f5; color: #999; border-radius: 8px; height: 32px; cursor: pointer; font-size: 16px; }
-  .item .x:hover { background: #ffe3ef; color: var(--accent); }
+  .item, .drow, .prow { display: grid; gap: 6px; align-items: center; margin-bottom: 6px; }
+  .item { grid-template-columns: 1fr 46px 64px 28px; }
+  .drow { grid-template-columns: 1fr 72px 28px; }
+  .prow { grid-template-columns: 1fr 72px 28px; }
+  .item input, .drow input, .prow input { padding: 7px 8px; font-size: 13px; }
+  .x { border: none; background: #f3f3f5; color: #999; border-radius: 8px; height: 32px; cursor: pointer; font-size: 16px; }
+  .x:hover { background: var(--accent-soft); color: var(--accent); }
+  .det { font-size: 11px; color: var(--muted); cursor: pointer; margin: 2px 0 8px; }
 
-  .stickers { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
-  .emoji-pick button { font-size: 20px; line-height: 1; padding: 6px; border: 1px solid var(--line); border-radius: 9px; background: #fff; cursor: pointer; }
+  .emoji-pick { display: flex; flex-wrap: wrap; gap: 5px; }
+  .emoji-pick button { font-size: 19px; line-height: 1; padding: 6px; border: 1px solid var(--line); border-radius: 9px; background: #fff; cursor: pointer; }
   .emoji-pick button:hover { background: var(--accent-soft); }
-  .chip { display: inline-flex; align-items: center; gap: 4px; background: #f6f6f8; border-radius: 999px; padding: 3px 4px 3px 9px; font-size: 14px; }
-  .chip img { width: 20px; height: 20px; object-fit: contain; border-radius: 3px; }
-  .chip button { border: none; background: none; cursor: pointer; color: #aaa; font-size: 14px; padding: 0 4px; }
-  .chip button:hover { color: var(--accent); }
+  .stk { border: 1px solid var(--line); border-radius: 10px; padding: 8px; margin-top: 8px; }
+  .stk-head { display: flex; align-items: center; gap: 8px; }
+  .stk-head .glyph { font-size: 22px; width: 28px; text-align: center; }
+  .stk-head .glyph img { width: 24px; height: 24px; object-fit: contain; vertical-align: middle; }
+  .stk-head .grow { flex: 1; font-size: 12px; color: var(--muted); }
 
   .colors { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
   .colors label { font-size: 11px; color: var(--muted); display: flex; flex-direction: column; gap: 3px; align-items: center; }
   .colors input[type=color] { width: 100%; height: 34px; border: 1px solid var(--line); border-radius: 8px; padding: 2px; background: #fff; cursor: pointer; }
+  .check { display: flex; align-items: center; gap: 8px; font-size: 13px; margin-top: 10px; cursor: pointer; }
   .upload { position: relative; overflow: hidden; }
   .upload input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
-  details { border-top: 1px solid var(--line); margin-top: 4px; padding-top: 8px; }
-  details summary { cursor: pointer; font-size: 12px; color: var(--muted); }
-  .hide { display: none !important; }
-  footer { text-align: center; color: #9a9aa6; font-size: 11px; padding: 0 16px 26px; }
+  .thumb { display: inline-block; vertical-align: middle; width: 30px; height: 30px; object-fit: contain; border: 1px solid var(--line); border-radius: 6px; background: #fff; margin-right: 6px; }
+  .muted-note { font-size: 11px; color: var(--muted); margin-top: 6px; }
+  footer { text-align: center; color: #9a9aa6; font-size: 11px; padding: 4px 16px 26px; }
   footer code { background: rgba(255,255,255,.1); color: #cfcfd8; padding: 1px 5px; border-radius: 4px; }
 </style>
 </head>
 <body>
 <header>
   <h1>🧾 receipt-engine 試玩場</h1>
-  <p>填一填、上傳張圖、貼幾張貼紙——收據即時生成。整個過程都在你的瀏覽器裡跑,手機也行。</p>
+  <p>每個欄位都能改、貼紙直接在收據上拖、滑桿調尺寸。全程在你的瀏覽器裡跑,手機也行。</p>
 </header>
 
 <div class="layout">
-  <!-- ============ CONTROLS ============ -->
+  <!-- ===================== CONTROLS ===================== -->
   <div class="controls">
+
     <div class="card">
       <h2>樣式</h2>
       <div class="seg" id="theme-seg">
         <button data-theme="custom" class="on"><span class="big">🎨 自訂</span><span class="sub">彩色,可改色/字/貼紙</span></button>
         <button data-theme="thermal"><span class="big">🧾 收據機</span><span class="sub">黑白等寬,圖自動轉灰</span></button>
       </div>
-      <label class="field">從範例開始</label>
-      <select id="example">
-        <option value="cute">同人攤位</option>
-        <option value="coffee">咖啡店</option>
-        <option value="market">手作市集</option>
-      </select>
+      <div class="row2" style="margin-top:10px">
+        <div><label class="field">從範例開始</label>
+          <select id="example"><option value="cute">同人攤位</option><option value="coffee">咖啡店</option><option value="market">手作市集</option></select></div>
+        <div><label class="field">幣別</label>
+          <select id="f-currency"><option>TWD</option><option>USD</option><option>JPY</option><option>EUR</option><option>CNY</option><option>HKD</option><option>KRW</option><option>THB</option><option>SGD</option></select></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>尺寸 <span class="hint">拖滑桿即時變</span></h2>
+      <label class="field">收據寬度 <span id="v-width" class="hint"></span></label>
+      <input type="range" id="s-width" min="280" max="900" step="10" />
+      <label class="field" style="margin-top:8px">頂部留白 <span id="v-padtop" class="hint"></span></label>
+      <input type="range" id="s-padtop" min="0" max="320" step="4" />
+      <label class="field" style="margin-top:8px">底部留白 <span id="v-padbottom" class="hint"></span></label>
+      <input type="range" id="s-padbottom" min="0" max="320" step="4" />
+      <label class="field" style="margin-top:8px">左右留白 <span id="v-padx" class="hint"></span></label>
+      <input type="range" id="s-padx" min="8" max="140" step="2" />
+      <label class="field" style="margin-top:8px">預覽大小 <span id="v-scale" class="hint"></span></label>
+      <input type="range" id="s-scale" min="220" max="520" step="10" />
     </div>
 
     <div class="card">
       <h2>店家</h2>
-      <label class="field">店名</label>
-      <input type="text" id="f-name" placeholder="你的店名" />
+      <label class="field">店名 <span class="hint">留空 → 用 LOGO 當招牌</span></label>
+      <input type="text" id="f-name" placeholder="你的店名(可留空)" />
       <label class="field">標語(副標)</label>
       <input type="text" id="f-subtitle" placeholder="例如:手作 × 插畫" />
       <label class="field">商標 / 圖示</label>
       <div class="row2">
         <button class="btn ghost upload">上傳圖片<input type="file" id="f-logo" accept="image/*" /></button>
-        <input type="text" id="f-icon" placeholder="或貼 emoji,如 🎀" />
+        <input type="text" id="f-icon" placeholder="或貼 emoji 🎀" />
       </div>
-      <div id="logo-status" style="font-size:11px;color:var(--muted);margin-top:5px"></div>
+      <div id="logo-status" class="muted-note"></div>
     </div>
+
+    <details class="card" id="card-bg"><summary>底圖 / 背景 <span class="hint">透明度・大小・位置</span></summary>
+      <div class="row2">
+        <button class="btn ghost upload">上傳底圖<input type="file" id="f-bg" accept="image/*" /></button>
+        <button class="btn sm" id="bg-remove">移除底圖</button>
+      </div>
+      <div id="bg-status" class="muted-note"></div>
+      <label class="field">透明度 <span id="v-bgop" class="hint"></span></label>
+      <input type="range" id="s-bgop" min="0" max="100" step="1" />
+      <label class="field">大小 <span id="v-bgsc" class="hint"></span></label>
+      <input type="range" id="s-bgsc" min="50" max="300" step="5" />
+      <label class="field">水平位置 <span id="v-bgx" class="hint"></span></label>
+      <input type="range" id="s-bgx" min="-300" max="300" step="5" />
+      <label class="field">垂直位置 <span id="v-bgy" class="hint"></span></label>
+      <input type="range" id="s-bgy" min="-300" max="300" step="5" />
+    </details>
+
+    <details class="card" id="card-event"><summary>攤位 / 活動 <span class="hint">CWT・FF・市集…</span></summary>
+      <label class="field">活動名稱</label><input type="text" id="e-name" placeholder="例如:Artist Alley" />
+      <div class="row2">
+        <div><label class="field">攤位編號</label><input type="text" id="e-booth" placeholder="A12" /></div>
+        <div><label class="field">地點</label><input type="text" id="e-location" placeholder="Taipei" /></div>
+      </div>
+      <label class="field">日期</label><input type="text" id="e-date" placeholder="2026-06-01" />
+    </details>
+
+    <details class="card" id="card-tx"><summary>交易資訊 <span class="hint">單號・時間・收銀</span></summary>
+      <label class="field">收據編號</label><input type="text" id="t-no" placeholder="AA-A12-018" />
+      <label class="field">開立時間</label><input type="datetime-local" id="t-at" />
+      <label class="field">收銀員(選填)</label><input type="text" id="t-cashier" placeholder="Mimi" />
+    </details>
 
     <div class="card">
       <h2>品項 <span class="hint">名稱 / 數量 / 單價</span></h2>
       <div id="items"></div>
-      <button class="btn sm" id="add-item">+ 新增品項</button>
+      <div class="row2">
+        <button class="btn sm" id="add-item">+ 新增品項</button>
+        <button class="btn sm ghost" id="import-items" title="貼上 POS / 訂單系統的 JSON">⇩ 從訂單匯入</button>
+      </div>
     </div>
 
-    <div class="card" id="card-stickers">
-      <h2>貼紙 <span class="hint">點一下加上去</span></h2>
-      <div class="emoji-pick stickers" id="emoji-pick"></div>
-      <div class="row2" style="margin-top:8px">
-        <button class="btn ghost upload">上傳貼紙圖<input type="file" id="f-sticker" accept="image/*" /></button>
-      </div>
-      <div class="stickers" id="sticker-list" style="margin-top:8px"></div>
+    <details class="card" id="card-discounts"><summary>折扣 <span class="hint">選填,可多筆</span></summary>
+      <div id="discounts"></div>
+      <button class="btn sm" id="add-discount">+ 新增折扣</button>
+    </details>
+
+    <details class="card" id="card-payments"><summary>付款 <span class="hint">選填,可多筆</span></summary>
+      <div id="payments"></div>
+      <button class="btn sm" id="add-payment">+ 新增付款</button>
+    </details>
+
+    <details class="card" id="card-qr"><summary>QR 條碼 <span class="hint">社群 / 回饋 / 優惠</span></summary>
+      <label class="check"><input type="checkbox" id="q-on" /> 顯示 QR</label>
+      <label class="field">連結 / 內容</label><input type="text" id="q-value" placeholder="https://…" />
+      <label class="field">標題</label><input type="text" id="q-label" placeholder="追蹤我們" />
+      <label class="field">說明</label><input type="text" id="q-caption" placeholder="新作 & 下次擺攤資訊" />
+    </details>
+
+    <div class="card">
+      <h2>結尾訊息</h2>
+      <label class="field">標題</label><input type="text" id="m-title" placeholder="Thank you! ♡" />
+      <label class="field">內文</label><input type="text" id="m-body" placeholder="一句感謝的話" />
+      <label class="field">頁尾</label><input type="text" id="m-footer" placeholder="See you next event!" />
+    </div>
+
+    <div class="card">
+      <h2>貼紙 <span class="hint">加上去後,直接在收據上拖</span></h2>
+      <div class="emoji-pick" id="emoji-pick"></div>
+      <button class="btn sm ghost upload" style="margin-top:8px">上傳貼紙圖<input type="file" id="f-sticker" accept="image/*" /></button>
+      <div id="sticker-list"></div>
     </div>
 
     <div class="card" id="card-look">
-      <h2>外觀 <span class="hint">自訂專屬</span></h2>
+      <h2>外觀 <span class="hint">顏色 / 字體 / 星星 · 兩種風格都能改</span></h2>
       <div class="colors">
         <label>主色<input type="color" id="c-primary" /></label>
         <label>背景<input type="color" id="c-bg" /></label>
         <label>卡片<input type="color" id="c-surface" /></label>
         <label>文字<input type="color" id="c-text" /></label>
       </div>
-      <label class="field" style="margin-top:10px">字體</label>
-      <select id="f-font">
+      <label class="field" style="margin-top:10px">英文字體</label>
+      <select id="f-font-latin">
         <option value="quicksand">圓潤 Quicksand</option>
         <option value="nunito">柔和 Nunito</option>
         <option value="baloo">粗胖 Baloo 2</option>
         <option value="poppins">簡約 Poppins</option>
         <option value="fredoka">俏皮 Fredoka</option>
+        <option value="spacemono">等寬 Space Mono</option>
+        <option value="cubic">像素 Cubic 11</option>
+        <option value="boutique">像素 Boutique 9x9</option>
+        <option value="boutiqueBold">像素 Boutique 9x9 粗</option>
       </select>
+      <label class="field" style="margin-top:8px">中文字體</label>
+      <select id="f-font-cjk">
+        <option value="noto">思源黑體 Noto Sans TC</option>
+        <option value="cubic">像素 Cubic 11(粒方)</option>
+        <option value="boutique">像素 Boutique 9x9</option>
+        <option value="boutiqueBold">像素 Boutique 9x9 粗</option>
+        <option value="sarasa">等寬 Sarasa Mono</option>
+        <option value="system">系統內建</option>
+      </select>
+      <label class="check"><input type="checkbox" id="c-stars" /> 角落星星裝飾(裝飾用,非貼紙)</label>
     </div>
 
     <div class="card">
-      <h2>結尾訊息</h2>
-      <label class="field">標題</label>
-      <input type="text" id="f-msg-title" placeholder="例如:Thank you! ♡" />
-      <label class="field">內文</label>
-      <input type="text" id="f-msg-body" placeholder="一句感謝的話" />
-      <details>
-        <summary>進階:看 / 貼上 JSON</summary>
-        <textarea id="json" spellcheck="false" style="margin-top:8px"></textarea>
-        <button class="btn sm" id="load-json" style="margin-top:6px">從上面的 JSON 載入</button>
-      </details>
+      <h2>設定檔 <span class="hint">存檔 / 還原整個設計</span></h2>
+      <div class="row2">
+        <button class="btn" id="cfg-save">⬇ 下載設定檔</button>
+        <button class="btn ghost upload">⬆ 載入設定檔<input type="file" id="cfg-load" accept="application/json,.json" /></button>
+      </div>
+      <div class="muted-note">含收據內容、主題、中英字體、顏色、上下/左右留白、底圖、貼紙——載回 100% 還原。</div>
     </div>
+
+    <details class="card"><summary>進階:JSON <span class="hint">收據 or 訂單</span></summary>
+      <textarea id="json" spellcheck="false"></textarea>
+      <div class="row2" style="margin-top:6px">
+        <button class="btn sm" id="load-receipt">載入收據 JSON</button>
+        <button class="btn sm ghost" id="load-order">載入訂單 JSON</button>
+      </div>
+      <div class="muted-note">「訂單 JSON」會經由 <code>importOrder()</code> 轉成收據——之後接 POS / 電商系統就走這條。</div>
+    </details>
   </div>
 
-  <!-- ============ STAGE ============ -->
+  <!-- ===================== STAGE ===================== -->
   <div class="stage">
     <div class="err" id="err"></div>
-    <div class="paper" id="paper"></div>
+    <div id="paper"><div id="svg-host"></div><div id="sticker-overlay"></div></div>
     <div class="dl">
       <button id="dl-png">下載 PNG</button>
       <button id="dl-svg">下載 SVG</button>
@@ -243,288 +315,391 @@
 <script src="./receipt-engine.global.js"></script>
 <script>
 (function () {
-  var RE = window.ReceiptEngine;
-  var $ = function (id) { return document.getElementById(id); };
+  var RE = window.ReceiptEngine, $ = function (id) { return document.getElementById(id); };
+  var clamp = function (v, a, b) { return Math.max(a, Math.min(b, v)); };
+  var deepClone = function (o) { return JSON.parse(JSON.stringify(o)); };
+  function esc(s){ return String(s).replace(/[&<>"']/g, function(c){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]; }); }
+  function isImg(s){ return /^data:|^https?:|\.(png|jpe?g|gif|svg|webp)$/i.test(String(s||'')); }
 
-  var FONTS = {
-    quicksand: "'Quicksand','PingFang TC','Microsoft JhengHei','Noto Sans TC',sans-serif",
-    nunito: "'Nunito','PingFang TC','Microsoft JhengHei','Noto Sans TC',sans-serif",
-    baloo: "'Baloo 2','PingFang TC','Microsoft JhengHei','Noto Sans TC',cursive",
-    poppins: "'Poppins','PingFang TC','Microsoft JhengHei','Noto Sans TC',sans-serif",
-    fredoka: "'Fredoka','PingFang TC','Microsoft JhengHei','Noto Sans TC',sans-serif"
+  // Latin & CJK fonts are picked independently; per-character fallback means Latin
+  // glyphs use the Latin font and Chinese glyphs use the CJK font.
+  var LATIN = {
+    quicksand:"'Quicksand'", nunito:"'Nunito'", baloo:"'Baloo 2'", poppins:"'Poppins'", fredoka:"'Fredoka'",
+    spacemono:"'Space Mono'", cubic:"'Cubic 11'", boutique:"'Boutique Bitmap 9x9'", boutiqueBold:"'Boutique Bitmap 9x9 Bold'"
   };
-  var EMOJIS = ['🎀','🌸','✨','💖','🐱','⭐','🍰','🎁','🧁','☕','🌟','💐'];
+  var CJK = {
+    noto:"'Noto Sans TC'", cubic:"'Cubic 11'", boutique:"'Boutique Bitmap 9x9'", boutiqueBold:"'Boutique Bitmap 9x9 Bold'",
+    sarasa:"'Sarasa Mono TC'", system:"'PingFang TC','Microsoft JhengHei'"
+  };
+  function fontStack(latin, cjk){
+    return (LATIN[latin]||LATIN.quicksand) + ',' + (CJK[cjk]||CJK.noto) + ",'PingFang TC','Microsoft JhengHei',sans-serif";
+  }
+  var EMOJIS = ['🎀','🌸','✨','💖','🐱','⭐','🍰','🎁','🧁','☕','🌟','💐','🐰','🍓'];
+  var DEFAULT_W = { custom: 720, thermal: 384 };
 
   var examples = {
-    coffee: {
-      receipt: {
-        schemaVersion: '0.1', currency: 'USD',
-        merchant: { name: 'Corner Coffee', subtitle: 'Daily roast & fresh bakes', icon: '☕' },
-        transaction: { receiptNo: '0042', issuedAt: '2026-06-01T08:15:00-07:00', cashier: 'Sam' },
-        items: [ { name: 'Flat White', quantity: 1, unitPrice: 4.5 }, { name: 'Butter Croissant', quantity: 2, unitPrice: 3.25 } ],
-        payments: [ { method: 'Cash', amount: 15 } ],
-        qr: { value: 'https://corner.coffee/r/0042', label: 'View online' },
-        message: { title: 'Thank you!', body: 'Have a lovely day.' }
-      },
-      custom: { primary: '#8a5a2b', bg: '#f6efe6', surface: '#fffdf8', text: '#4a3b2a', font: 'poppins' }
-    },
-    cute: {
-      receipt: {
-        schemaVersion: '0.1', locale: 'zh-TW', currency: 'TWD',
-        merchant: { name: 'Mimito Booth', subtitle: '手作 × 插畫 × 小誌', icon: '🎀' },
-        event: { name: 'Artist Alley', boothNumber: 'A12', location: 'Taipei', date: '2026-06-01' },
-        transaction: { receiptNo: 'AA-A12-018', issuedAt: '2026-06-01T14:30:00+08:00', cashier: 'Mimi' },
-        items: [
-          { name: 'Sticker Set', variant: 'Pastel', quantity: 2, unitPrice: 120, tags: ['新刊'] },
-          { name: 'Mini Zine', variant: '32p / A6', quantity: 1, unitPrice: 180, tags: ['新刊','特典'] },
-          { name: 'Acrylic Charm', quantity: 1, unitPrice: 250 }
-        ],
-        discounts: [ { label: '套組優惠', amount: 50 } ],
-        payments: [ { method: 'Cash', amount: 700 } ],
-        qr: { value: 'https://instagram.com/mimito.art', label: '追蹤我們', caption: '新作 & 下次擺攤資訊' },
-        message: { title: 'Thank you! ♡', body: '感謝支持我們的攤位,希望你喜歡這次的作品。' },
-        stickers: [ { content: '✨', anchor: 'free' }, { content: '🎀', anchor: 'logo', x: -64 } ]
-      },
-      custom: { primary: '#d6336c', bg: '#fff0f6', surface: '#fffdfb', text: '#5b3256', font: 'quicksand' }
-    },
-    market: {
-      receipt: {
-        schemaVersion: '0.1', locale: 'zh-TW', currency: 'TWD',
-        merchant: { name: '微光手作 Glow', subtitle: '蠟燭・乾燥花・香氛', icon: '🕯️' },
-        event: { name: '週末手作市集', boothName: 'Row B · Stall 7', location: '華山 1914', date: '2026-06-01' },
-        transaction: { receiptNo: 'MKT-20260601-031', issuedAt: '2026-06-01T16:05:00+08:00', cashier: '阿光' },
-        items: [
-          { name: '大豆蠟燭 Soy Candle', variant: '海鹽鼠尾草', quantity: 1, unitPrice: 480 },
-          { name: '乾燥花束 Dried Bouquet', quantity: 1, unitPrice: 360 },
-          { name: '香氛蠟磚 Wax Tablet', quantity: 3, unitPrice: 150 }
-        ],
-        discounts: [ { label: '市集首日優惠', amount: 129 } ],
-        payments: [ { method: 'Cash', amount: 1500 } ],
-        qr: { value: 'https://glow.example/feedback', label: '填回饋拿小禮' },
-        message: { body: '手工製作,每件都獨一無二。', footer: '下次市集見 ☀' }
-      },
-      custom: { primary: '#2f6f4f', bg: '#eef4ef', surface: '#ffffff', text: '#2c3a32', font: 'nunito' }
-    }
+    coffee: { receipt: { schemaVersion:'0.1', currency:'USD',
+      merchant:{ name:'Corner Coffee', subtitle:'Daily roast & fresh bakes', icon:'☕' },
+      transaction:{ receiptNo:'0042', issuedAt:'2026-06-01T08:15', cashier:'Sam' },
+      items:[{name:'Flat White',quantity:1,unitPrice:4.5},{name:'Butter Croissant',quantity:2,unitPrice:3.25}],
+      payments:[{method:'Cash',amount:15}], qr:{value:'https://corner.coffee/r/0042',label:'View online'},
+      message:{title:'Thank you!',body:'Have a lovely day.'} },
+      custom:{ primary:'#8a5a2b', bg:'#f6efe6', surface:'#fffdf8', text:'#4a3b2a', latinFont:'poppins', cjkFont:'noto' } },
+    cute: { receipt: { schemaVersion:'0.1', locale:'zh-TW', currency:'TWD',
+      merchant:{ name:'Mimito Booth', subtitle:'手作 × 插畫 × 小誌', icon:'🎀' },
+      event:{ name:'Artist Alley', boothNumber:'A12', location:'Taipei', date:'2026-06-01' },
+      transaction:{ receiptNo:'AA-A12-018', issuedAt:'2026-06-01T14:30', cashier:'Mimi' },
+      items:[{name:'Sticker Set',variant:'Pastel',quantity:2,unitPrice:120,tags:['新刊']},
+        {name:'Mini Zine',variant:'32p / A6',quantity:1,unitPrice:180,tags:['新刊','特典']},
+        {name:'Acrylic Charm',quantity:1,unitPrice:250}],
+      discounts:[{label:'套組優惠',amount:50}], payments:[{method:'Cash',amount:700}],
+      qr:{value:'https://instagram.com/mimito.art',label:'追蹤我們',caption:'新作 & 下次擺攤資訊'},
+      message:{title:'Thank you! ♡',body:'感謝支持我們的攤位,希望你喜歡這次的作品。',footer:'See you next event!'},
+      stickers:[{content:'✨',anchor:'free',x:610,y:90,size:46},{content:'🎀',anchor:'free',x:120,y:120,size:46}] },
+      custom:{ primary:'#d6336c', bg:'#fff0f6', surface:'#fffdfb', text:'#5b3256', latinFont:'quicksand', cjkFont:'noto' } },
+    market: { receipt: { schemaVersion:'0.1', locale:'zh-TW', currency:'TWD',
+      merchant:{ name:'微光手作 Glow', subtitle:'蠟燭・乾燥花・香氛', icon:'🕯️' },
+      event:{ name:'週末手作市集', boothName:'Row B · Stall 7', location:'華山 1914', date:'2026-06-01' },
+      transaction:{ receiptNo:'MKT-20260601-031', issuedAt:'2026-06-01T16:05', cashier:'阿光' },
+      items:[{name:'大豆蠟燭 Soy Candle',variant:'海鹽鼠尾草',quantity:1,unitPrice:480},
+        {name:'乾燥花束 Dried Bouquet',quantity:1,unitPrice:360},
+        {name:'香氛蠟磚 Wax Tablet',quantity:3,unitPrice:150}],
+      discounts:[{label:'市集首日優惠',amount:129}], payments:[{method:'Cash',amount:1500}],
+      qr:{value:'https://glow.example/feedback',label:'填回饋拿小禮'},
+      message:{body:'手工製作,每件都獨一無二。',footer:'下次市集見 ☀'} },
+      custom:{ primary:'#2f6f4f', bg:'#eef4ef', surface:'#ffffff', text:'#2c3a32', latinFont:'nunito', cjkFont:'noto' } }
   };
 
-  var state = { theme: 'custom', receipt: null, custom: null };
+  // Each theme remembers its OWN look (colors / font / corner stars).
+  var THERMAL_LOOK = { primary:'#111111', bg:'#e7e7e7', surface:'#fbfbfb', text:'#1a1a1a', latinFont:'spacemono', cjkFont:'sarasa', stars:false };
+  var state = { theme:'custom', receipt:null, look:{ custom:null, thermal:null }, width:{custom:720,thermal:384}, pad:{ custom:null, thermal:null }, scale:340, sel:-1 };
+  function curLook(){ return state.look[state.theme]; }
+  function curPad(){ return state.pad[state.theme]; }
+  function defaultPad(theme){ var p = (RE.getTheme(theme).spacing.page) || 30; return { top: p*4, bottom: p*4, x: p }; }
 
-  function deepClone(o) { return JSON.parse(JSON.stringify(o)); }
-
-  function currentTheme() {
-    if (state.theme === 'thermal') return 'thermal';
-    var c = state.custom;
-    return RE.mergeTheme(RE.getTheme('custom'), {
-      palette: { primary: c.primary, accent: c.primary, secondary: c.primary, background: c.bg, surface: c.surface, text: c.text },
-      typography: { fontFamily: FONTS[c.font] || FONTS.quicksand }
-    });
+  /* ---------- import boundary (future POS/order connector plugs in here) ---------- */
+  function mapLineItem(li){
+    return { name: li.name || li.title || '', variant: li.variant || (li.options&&li.options.join(' / ')) || undefined,
+      quantity: Number(li.quantity != null ? li.quantity : (li.qty != null ? li.qty : 1)),
+      unitPrice: Number(li.unitPrice != null ? li.unitPrice : (li.price != null ? li.price : (li.total/(li.quantity||1)) || 0)),
+      note: li.note || undefined, tags: li.tags || undefined };
+  }
+  function importOrder(ext){
+    ext = ext || {};
+    return { schemaVersion:'0.1', locale: ext.locale, currency: ext.currency || 'TWD',
+      merchant:{ name:(ext.store&&ext.store.name)||ext.merchant||'Shop', subtitle:(ext.store&&ext.store.tagline), icon:(ext.store&&ext.store.icon), logo:(ext.store&&ext.store.logoUrl) },
+      transaction:{ receiptNo:String(ext.orderId||ext.number||ext.receiptNo||''), issuedAt: ext.createdAt||ext.issuedAt||'', cashier: ext.cashier },
+      items: (ext.lineItems||ext.items||[]).map(mapLineItem),
+      discounts: (ext.discounts||[]).map(function(d){ return { label:d.title||d.label||'Discount', amount:Math.abs(Number(d.amount||0)) }; }),
+      payments: (ext.payments||ext.tenders||[]).map(function(p){ return { method:p.method||p.type||'Cash', amount:Number(p.amount||0), reference:p.reference }; }),
+      message: ext.note ? { body: ext.note } : undefined };
   }
 
-  function showError(msg) { var e = $('err'); e.textContent = msg; e.style.display = 'block'; }
-  function clearError() { $('err').style.display = 'none'; }
+  /* ---------- theme ---------- */
+  function currentTheme(){
+    // Both themes go through mergeTheme so 外觀 (colors/font/stars) works for either.
+    // The thermal base keeps perforatedEdges + monochromeImages (images stay B&W).
+    var L = curLook();
+    return RE.mergeTheme(RE.getTheme(state.theme), {
+      palette:{ primary:L.primary, accent:L.primary, secondary:L.primary, background:L.bg, surface:L.surface, text:L.text },
+      typography:{ fontFamily: fontStack(L.latinFont, L.cjkFont) },
+      decoration:{ showCornerStars: !!L.stars }
+    });
+  }
+  function curWidth(){ return state.width[state.theme]; }
 
-  function render() {
+  /* ---------- render ---------- */
+  function showError(m){ var e=$('err'); e.textContent=m; e.style.display='block'; }
+  function clearError(){ $('err').style.display='none'; }
+
+  function render(){
     var check = RE.safeValidateReceipt(state.receipt);
-    if (!check.success) { showError('資料還沒填完整:\n\n' + check.error.format()); return; }
-    try {
-      $('paper').innerHTML = RE.renderReceiptToSvg(check.data, { theme: currentTheme() });
-      clearError();
-    } catch (e) { showError(String(e && e.message || e)); }
+    if (!check.success){ showError('資料還沒填完整:\n\n'+check.error.format()); layoutOverlay(); return; }
+    clearError();
+    var forSvg = deepClone(check.data); delete forSvg.stickers; // overlay owns stickers while editing
+    try { $('svg-host').innerHTML = RE.renderReceiptToSvg(forSvg, { theme: currentTheme(), width: curWidth(), padTop: curPad().top, padBottom: curPad().bottom, padX: curPad().x }); }
+    catch(e){ showError(String(e && e.message || e)); return; }
+    $('paper').className = state.theme === 'thermal' ? 'thermal' : '';
+    applyScale();
+    layoutOverlay();
     $('json').value = JSON.stringify(state.receipt, null, 2);
   }
 
-  /* ---------- form rendering ---------- */
-  function syncFormFromState() {
-    var r = state.receipt, c = state.custom;
-    $('f-name').value = r.merchant.name || '';
-    $('f-subtitle').value = r.merchant.subtitle || '';
-    $('f-icon').value = (r.merchant.icon && !/^data:|^https?:|\//.test(r.merchant.icon)) ? r.merchant.icon : '';
-    $('logo-status').textContent = r.merchant.logo ? '✓ 已設定商標圖片' : '';
-    $('f-msg-title').value = (r.message && r.message.title) || '';
-    $('f-msg-body').value = (r.message && r.message.body) || '';
-    $('c-primary').value = c.primary; $('c-bg').value = c.bg; $('c-surface').value = c.surface; $('c-text').value = c.text;
-    $('f-font').value = c.font;
-    renderItems(); renderStickerList();
+  /* ---------- sticker overlay + drag ---------- */
+  function svgEl(){ return $('svg-host').querySelector('svg'); }
+  function rectOf(el){ return el.getBoundingClientRect(); }
+  function scaleFactor(){ var s=svgEl(); return s ? (s.viewBox.baseVal.width / rectOf(s).width) : 1; }
+  function clientToReceipt(cx, cy){ var s=svgEl(); if(!s) return {x:0,y:0}; var r=rectOf(s), k=scaleFactor(); return { x:(cx-r.left)*k, y:(cy-r.top)*k }; }
+  function placeEl(el, sk){
+    var s=svgEl(); if(!s) return; var r=rectOf(s), pr=rectOf($('paper')), k=scaleFactor();
+    el.style.left = ((r.left-pr.left) + (sk.x||0)/k) + 'px';
+    el.style.top  = ((r.top-pr.top) + (sk.y||0)/k) + 'px';
+    el.style.transform = 'translate(-50%,-50%) rotate(' + (sk.rotation||0) + 'deg)';
+    var px = (sk.size || 38)/k;
+    if (el._img){ el.style.width = px+'px'; el.style.height = px+'px'; }
+    else { el.style.fontSize = px+'px'; }
+  }
+  function layoutOverlay(){
+    var ov=$('sticker-overlay'); ov.innerHTML=''; if(!svgEl()) return;
+    (state.receipt.stickers||[]).forEach(function(sk, i){
+      var el=document.createElement('div'); el.className='sticker-handle'+(i===state.sel?' sel':''); el.dataset.i=i;
+      if (isImg(sk.content)){ var im=document.createElement('img'); im.src=sk.content; el.appendChild(im); el._img=true; }
+      else { el.textContent = sk.content; }
+      placeEl(el, sk);
+      el.addEventListener('pointerdown', function(e){
+        if (e.isPrimary === false) return;
+        e.preventDefault(); state.sel=i; try{ el.setPointerCapture(e.pointerId); }catch(_){} el.style.cursor='grabbing';
+        document.querySelectorAll('.sticker-handle').forEach(function(h){ h.classList.toggle('sel', h===el); });
+        renderStickerList();
+        var down = clientToReceipt(e.clientX, e.clientY);
+        var grab = { dx:(sk.x||0)-down.x, dy:(sk.y||0)-down.y };
+        function move(ev){
+          var p = clientToReceipt(ev.clientX, ev.clientY); var vb = svgEl().viewBox.baseVal;
+          sk.x = clamp(p.x+grab.dx, 0, vb.width); sk.y = clamp(p.y+grab.dy, 0, vb.height);
+          placeEl(el, sk);
+        }
+        function up(ev){ try{ el.releasePointerCapture(e.pointerId); }catch(_){} el.style.cursor='grab';
+          el.removeEventListener('pointermove',move); el.removeEventListener('pointerup',up); el.removeEventListener('pointercancel',up);
+          $('json').value = JSON.stringify(state.receipt, null, 2); renderStickerList();
+        }
+        el.addEventListener('pointermove', move); el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up);
+      });
+      ov.appendChild(el);
+    });
   }
 
-  function renderItems() {
-    var box = $('items'); box.innerHTML = '';
-    var canDelete = state.receipt.items.length > 1;
-    state.receipt.items.forEach(function (it, i) {
-      var row = document.createElement('div'); row.className = 'item';
-      row.innerHTML =
-        '<input type="text" value="' + esc(it.name) + '" placeholder="名稱" data-i="' + i + '" data-k="name" />' +
-        '<input type="number" value="' + it.quantity + '" min="1" data-i="' + i + '" data-k="quantity" />' +
-        '<input type="number" value="' + it.unitPrice + '" min="0" step="0.01" data-i="' + i + '" data-k="unitPrice" />' +
-        (canDelete ? '<button class="x" data-rm="' + i + '" title="刪除">×</button>' : '<span></span>');
-      box.appendChild(row);
+  /* ---------- repeatable rows ---------- */
+  function renderItems(){
+    var box=$('items'); box.innerHTML=''; var canDel = state.receipt.items.length>1;
+    state.receipt.items.forEach(function(it,i){
+      var wrap=document.createElement('div');
+      var row=document.createElement('div'); row.className='item';
+      row.innerHTML='<input type="text" value="'+esc(it.name)+'" placeholder="名稱" data-i="'+i+'" data-k="name" />'+
+        '<input type="number" value="'+it.quantity+'" min="1" data-i="'+i+'" data-k="quantity" />'+
+        '<input type="number" value="'+it.unitPrice+'" min="0" step="0.01" data-i="'+i+'" data-k="unitPrice" />'+
+        (canDel?'<button class="x" data-rm="'+i+'">×</button>':'<span></span>');
+      wrap.appendChild(row);
+      var det=document.createElement('div'); det.className='row2'; det.style.display='none';
+      det.innerHTML='<input type="text" value="'+esc(it.variant||'')+'" placeholder="款式/變體" data-i="'+i+'" data-k="variant" />'+
+        '<input type="text" value="'+esc((it.tags||[]).join(', '))+'" placeholder="標籤(逗號分隔)" data-i="'+i+'" data-k="tags" />';
+      var toggle=document.createElement('div'); toggle.className='det'; toggle.textContent='⋯ 款式 / 標籤';
+      toggle.onclick=function(){ det.style.display = det.style.display==='none'?'grid':'none'; };
+      wrap.appendChild(toggle); wrap.appendChild(det); box.appendChild(wrap);
     });
-    box.querySelectorAll('input').forEach(function (inp) {
-      inp.addEventListener('input', function () {
-        var i = +inp.dataset.i, k = inp.dataset.k;
-        if (k === 'name') { state.receipt.items[i].name = inp.value; }
-        else {
-          if (inp.value === '') return; // mid-edit blank: keep last valid number
-          var num = Number(inp.value);
-          if (!Number.isFinite(num)) return;
-          state.receipt.items[i][k] = num;
-        }
+    box.querySelectorAll('input').forEach(function(inp){
+      inp.addEventListener('input', function(){
+        var i=+inp.dataset.i, k=inp.dataset.k, it=state.receipt.items[i];
+        if (k==='name'||k==='variant'){ it[k]=inp.value||undefined; }
+        else if (k==='tags'){ var t=inp.value.split(',').map(function(s){return s.trim();}).filter(Boolean); it.tags = t.length?t:undefined; }
+        else { if(inp.value==='')return; var n=Number(inp.value); if(!Number.isFinite(n))return; it[k]=n; }
         render();
       });
     });
-    box.querySelectorAll('[data-rm]').forEach(function (b) {
-      b.addEventListener('click', function () {
-        if (state.receipt.items.length <= 1) return;
-        state.receipt.items.splice(+b.dataset.rm, 1); renderItems(); render();
-      });
-    });
+    box.querySelectorAll('[data-rm]').forEach(function(b){ b.onclick=function(){ state.receipt.items.splice(+b.dataset.rm,1); renderItems(); render(); }; });
   }
 
-  function renderStickerList() {
-    var box = $('sticker-list'); box.innerHTML = '';
-    (state.receipt.stickers || []).forEach(function (s, i) {
-      var chip = document.createElement('span'); chip.className = 'chip';
-      var isImg = /^data:|^https?:|\.(png|jpe?g|gif|svg|webp)$/i.test(s.content);
-      chip.innerHTML = (isImg ? '<img src="' + esc(s.content) + '" />' : '<span>' + esc(s.content) + '</span>') +
-        '<button data-rms="' + i + '">×</button>';
-      box.appendChild(chip);
+  function renderDiscounts(){
+    var box=$('discounts'); box.innerHTML='';
+    (state.receipt.discounts||[]).forEach(function(d,i){
+      var row=document.createElement('div'); row.className='drow';
+      row.innerHTML='<input type="text" value="'+esc(d.label)+'" placeholder="折扣名稱" data-i="'+i+'" data-k="label" />'+
+        '<input type="number" value="'+d.amount+'" min="0" step="0.01" data-i="'+i+'" data-k="amount" />'+
+        '<button class="x" data-rm="'+i+'">×</button>';
+      box.appendChild(row);
     });
-    box.querySelectorAll('[data-rms]').forEach(function (b) {
-      b.addEventListener('click', function () { state.receipt.stickers.splice(+b.dataset.rms, 1); renderStickerList(); render(); });
-    });
+    box.querySelectorAll('input').forEach(function(inp){ inp.addEventListener('input',function(){
+      var i=+inp.dataset.i,k=inp.dataset.k,d=state.receipt.discounts[i];
+      if(k==='label'){ d.label=inp.value; } else { if(inp.value==='')return; var n=Number(inp.value); if(!Number.isFinite(n))return; d.amount=n; } render(); }); });
+    box.querySelectorAll('[data-rm]').forEach(function(b){ b.onclick=function(){ state.receipt.discounts.splice(+b.dataset.rm,1); if(!state.receipt.discounts.length) delete state.receipt.discounts; renderDiscounts(); render(); }; });
   }
 
-  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]; }); }
+  function renderPayments(){
+    var box=$('payments'); box.innerHTML='';
+    (state.receipt.payments||[]).forEach(function(p,i){
+      var row=document.createElement('div'); row.className='prow';
+      row.innerHTML='<input type="text" value="'+esc(p.method)+'" placeholder="付款方式" data-i="'+i+'" data-k="method" />'+
+        '<input type="number" value="'+p.amount+'" min="0" step="0.01" data-i="'+i+'" data-k="amount" />'+
+        '<button class="x" data-rm="'+i+'">×</button>';
+      box.appendChild(row);
+    });
+    box.querySelectorAll('input').forEach(function(inp){ inp.addEventListener('input',function(){
+      var i=+inp.dataset.i,k=inp.dataset.k,p=state.receipt.payments[i];
+      if(k==='method'){ p.method=inp.value; } else { if(inp.value==='')return; var n=Number(inp.value); if(!Number.isFinite(n))return; p.amount=n; } render(); }); });
+    box.querySelectorAll('[data-rm]').forEach(function(b){ b.onclick=function(){ state.receipt.payments.splice(+b.dataset.rm,1); if(!state.receipt.payments.length) delete state.receipt.payments; renderPayments(); render(); }; });
+  }
 
-  /* ---------- examples ---------- */
-  function loadExample(key) {
-    var ex = examples[key];
-    state.receipt = deepClone(ex.receipt);
-    state.custom = deepClone(ex.custom);
+  function renderStickerList(){
+    var box=$('sticker-list'); box.innerHTML='';
+    (state.receipt.stickers||[]).forEach(function(s,i){
+      var card=document.createElement('div'); card.className='stk';
+      var glyph = isImg(s.content) ? '<span class="glyph"><img src="'+esc(s.content)+'"/></span>' : '<span class="glyph">'+esc(s.content)+'</span>';
+      card.innerHTML = '<div class="stk-head">'+glyph+'<span class="grow">'+(i===state.sel?'已選取 · 在收據上可拖':'點收據上的貼紙可選取')+'</span>'+
+        '<button class="x" data-rm="'+i+'">×</button></div>'+
+        '<label class="field">大小 '+(s.size||38)+'</label><input type="range" min="14" max="120" step="2" value="'+(s.size||38)+'" data-i="'+i+'" data-k="size" />'+
+        '<label class="field">旋轉 '+(s.rotation||0)+'°</label><input type="range" min="-180" max="180" step="1" value="'+(s.rotation||0)+'" data-i="'+i+'" data-k="rotation" />';
+      box.appendChild(card);
+    });
+    box.querySelectorAll('input[type=range]').forEach(function(inp){ inp.addEventListener('input',function(){
+      var i=+inp.dataset.i,k=inp.dataset.k; state.receipt.stickers[i][k]=Number(inp.value);
+      var lab=inp.previousElementSibling; if(lab) lab.textContent = (k==='size'?'大小 '+inp.value:'旋轉 '+inp.value+'°');
+      layoutOverlay(); $('json').value=JSON.stringify(state.receipt,null,2);
+    }); });
+    box.querySelectorAll('[data-rm]').forEach(function(b){ b.onclick=function(){ state.receipt.stickers.splice(+b.dataset.rm,1); if(!state.receipt.stickers.length) delete state.receipt.stickers; state.sel=-1; renderStickerList(); render(); }; });
+  }
+
+  function addSticker(content){
+    if(!state.receipt.stickers) state.receipt.stickers=[];
+    var w=curWidth(); var n=state.receipt.stickers.length;
+    state.receipt.stickers.push({ content:content, anchor:'free', x: Math.round(w*0.5 + (n%3-1)*60), y: 70 + Math.floor(n/3)*60, size: isImg(content)?64:46, rotation:0 });
+    state.sel = state.receipt.stickers.length-1;
+    renderStickerList(); render();
+  }
+
+  /* ---------- form <- state ---------- */
+  function val(id,v){ $(id).value = v==null?'':v; }
+  function syncFormFromState(){
+    var r=state.receipt, c=curLook(), m=r.merchant, ev=r.event||{}, tx=r.transaction||{}, q=r.qr||{}, msg=r.message||{};
+    $('f-currency').value = r.currency||'TWD';
+    val('f-name', m.name); val('f-subtitle', m.subtitle);
+    val('f-icon', (m.icon && !isImg(m.icon)) ? m.icon : '');
+    $('logo-status').textContent = m.logo ? '✓ 已設定商標圖片(清空 emoji 欄改回文字圖示)' : '';
+    val('e-name', ev.name); val('e-booth', ev.boothNumber||ev.boothName); val('e-location', ev.location); val('e-date', ev.date);
+    val('t-no', tx.receiptNo); val('t-cashier', tx.cashier);
+    $('t-at').value = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(tx.issuedAt||'') ? tx.issuedAt.slice(0,16) : '';
+    $('q-on').checked = !!r.qr; val('q-value', q.value); val('q-label', q.label); val('q-caption', q.caption);
+    val('m-title', msg.title); val('m-body', msg.body); val('m-footer', msg.footer);
+    $('c-primary').value=c.primary; $('c-bg').value=c.bg; $('c-surface').value=c.surface; $('c-text').value=c.text; $('f-font-latin').value=c.latinFont; $('f-font-cjk').value=c.cjkFont; $('c-stars').checked=!!c.stars;
+    $('s-width').value = curWidth(); $('v-width').textContent = curWidth()+'px';
+    $('s-padtop').value = curPad().top; $('v-padtop').textContent = curPad().top+'px';
+    $('s-padbottom').value = curPad().bottom; $('v-padbottom').textContent = curPad().bottom+'px';
+    $('s-padx').value = curPad().x; $('v-padx').textContent = curPad().x+'px';
+    $('s-scale').value = state.scale; $('v-scale').textContent = state.scale+'px';
+    var a = r.assets || {};
+    $('bg-status').textContent = a.backgroundImage ? '✓ 已設定底圖' : '(尚未設定底圖)';
+    var bop = a.backgroundOpacity!=null ? a.backgroundOpacity : 0.3; $('s-bgop').value=Math.round(bop*100); $('v-bgop').textContent=Math.round(bop*100)+'%';
+    var bsc = a.backgroundScale!=null ? a.backgroundScale : 1; $('s-bgsc').value=Math.round(bsc*100); $('v-bgsc').textContent=Math.round(bsc*100)+'%';
+    $('s-bgx').value = a.backgroundX!=null ? a.backgroundX : 0; $('v-bgx').textContent=$('s-bgx').value+'px';
+    $('s-bgy').value = a.backgroundY!=null ? a.backgroundY : 0; $('v-bgy').textContent=$('s-bgy').value+'px';
+    if (ev.name||ev.boothNumber) $('card-event').open = true;
+    if ((r.discounts||[]).length) $('card-discounts').open = true;
+    if ((r.payments||[]).length) $('card-payments').open = true;
+    renderItems(); renderDiscounts(); renderPayments(); renderStickerList();
+  }
+
+  function ensure(k){ if(!state.receipt[k]) state.receipt[k]={}; return state.receipt[k]; }
+
+  /* ---------- load ---------- */
+  function normalize(r){
+    if(!r.transaction) r.transaction={receiptNo:'R-001',issuedAt:'2026-06-01T12:00'};
+    if(!r.items||!r.items.length) r.items=[{name:'品項',quantity:1,unitPrice:100}];
+    (r.stickers||[]).forEach(function(s){ s.anchor='free'; if(s.x==null)s.x=Math.round((720)*0.5); if(s.y==null)s.y=80; if(s.size==null)s.size=isImg(s.content)?64:46; if(s.rotation==null)s.rotation=0; });
+    return r;
+  }
+  function loadExample(key){
+    var ex=examples[key]; state.receipt=normalize(deepClone(ex.receipt)); state.sel=-1;
+    state.look.custom = Object.assign({ stars:false }, deepClone(ex.custom));
+    state.look.thermal = deepClone(THERMAL_LOOK);
+    state.pad = { custom: defaultPad('custom'), thermal: defaultPad('thermal') };
     syncFormFromState(); render();
   }
+  function applyScale(){ $('paper').style.maxWidth = state.scale+'px'; }
 
   /* ---------- downloads ---------- */
-  function downloadBlob(name, blob) {
-    var url = URL.createObjectURL(blob);
-    var a = document.createElement('a'); a.href = url; a.download = name; a.click();
-    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+  function currentSvg(){ return RE.renderReceiptToSvg(state.receipt, { theme: currentTheme(), width: curWidth(), padTop: curPad().top, padBottom: curPad().bottom, padX: curPad().x, includeXmlDeclaration:true }); }
+  function dl(name, blob){ var u=URL.createObjectURL(blob); var a=document.createElement('a'); a.href=u; a.download=name; a.click(); setTimeout(function(){URL.revokeObjectURL(u);},800); }
+  function downloadPng(){
+    var svg=currentSvg(); var img=new Image(); var url=URL.createObjectURL(new Blob([svg],{type:'image/svg+xml;charset=utf-8'}));
+    img.onload=function(){ try{ var sc=2,cv=document.createElement('canvas'); cv.width=img.naturalWidth*sc; cv.height=img.naturalHeight*sc;
+      var cx=cv.getContext('2d'); cx.scale(sc,sc); cx.drawImage(img,0,0);
+      cv.toBlob(function(b){ b?dl('receipt.png',b):showError('PNG 轉檔失敗,請改用「下載 SVG」。'); },'image/png');
+    }catch(e){ showError('無法在瀏覽器轉 PNG(收據含外部網址圖片時),請改用「下載 SVG」或改成上傳圖片。'); } finally{ URL.revokeObjectURL(url); } };
+    img.onerror=function(){ URL.revokeObjectURL(url); showError('PNG 轉檔失敗,請改用「下載 SVG」。'); };
+    img.src=url;
   }
-  function currentSvg() {
-    return RE.renderReceiptToSvg(state.receipt, { theme: currentTheme(), includeXmlDeclaration: true });
+  function readFile(file, cb){ if(file&&file.size>2*1024*1024) showError('圖片有點大(>2MB),JSON 會變肥,建議換小一點。'); var fr=new FileReader(); fr.onload=function(){cb(String(fr.result));}; fr.readAsDataURL(file); }
+
+  /* ---------- wiring ---------- */
+  function setTheme(t){ state.theme=t; $('theme-seg').querySelectorAll('button').forEach(function(b){ b.classList.toggle('on', b.dataset.theme===t); });
+    syncFormFromState(); render(); }
+  $('theme-seg').querySelectorAll('button').forEach(function(b){ b.onclick=function(){ setTheme(b.dataset.theme); }; });
+  $('example').addEventListener('change', function(e){ loadExample(e.target.value); });
+  $('f-currency').addEventListener('change', function(){ state.receipt.currency=this.value; render(); });
+
+  $('s-width').addEventListener('input', function(){ state.width[state.theme]=+this.value; $('v-width').textContent=this.value+'px'; render(); });
+  $('s-padtop').addEventListener('input', function(){ curPad().top=+this.value; $('v-padtop').textContent=this.value+'px'; render(); });
+  $('s-padbottom').addEventListener('input', function(){ curPad().bottom=+this.value; $('v-padbottom').textContent=this.value+'px'; render(); });
+  $('s-padx').addEventListener('input', function(){ curPad().x=+this.value; $('v-padx').textContent=this.value+'px'; render(); });
+  $('s-scale').addEventListener('input', function(){ state.scale=+this.value; $('v-scale').textContent=this.value+'px'; applyScale(); layoutOverlay(); });
+
+  $('f-name').addEventListener('input', function(){ state.receipt.merchant.name=this.value||undefined; render(); });
+  $('f-subtitle').addEventListener('input', function(){ state.receipt.merchant.subtitle=this.value||undefined; render(); });
+  $('f-icon').addEventListener('input', function(){ state.receipt.merchant.icon=this.value||undefined; if(this.value){ state.receipt.merchant.logo=undefined; $('logo-status').textContent=''; } render(); });
+  $('f-logo').addEventListener('change', function(){ if(this.files[0]) readFile(this.files[0], function(uri){ state.receipt.merchant.logo=uri; state.receipt.merchant.icon=undefined; $('f-icon').value=''; $('logo-status').textContent='✓ 已設定商標圖片'; render(); }); });
+
+  function evField(id,key){ $(id).addEventListener('input', function(){ var ev=ensure('event'); ev[key]=this.value||undefined; if(!Object.keys(ev).some(function(k){return ev[k];})) delete state.receipt.event; render(); }); }
+  evField('e-name','name'); evField('e-booth','boothNumber'); evField('e-location','location'); evField('e-date','date');
+  $('t-no').addEventListener('input', function(){ ensure('transaction').receiptNo=this.value; render(); });
+  $('t-at').addEventListener('input', function(){ ensure('transaction').issuedAt=this.value||''; render(); });
+  $('t-cashier').addEventListener('input', function(){ ensure('transaction').cashier=this.value||undefined; render(); });
+
+  function qrUpdate(){ var on=$('q-on').checked, v=$('q-value').value; if(on&&v){ state.receipt.qr={ value:v, label:$('q-label').value||undefined, caption:$('q-caption').value||undefined }; } else { delete state.receipt.qr; } render(); }
+  ['q-on','q-value','q-label','q-caption'].forEach(function(id){ $(id).addEventListener('input', qrUpdate); });
+
+  function msgUpdate(){ var m={ title:$('m-title').value||undefined, body:$('m-body').value||undefined, footer:$('m-footer').value||undefined }; if(m.title||m.body||m.footer) state.receipt.message=m; else delete state.receipt.message; render(); }
+  ['m-title','m-body','m-footer'].forEach(function(id){ $(id).addEventListener('input', msgUpdate); });
+
+  ['c-primary','c-bg','c-surface','c-text'].forEach(function(id){ $(id).addEventListener('input', function(){ curLook()[{ 'c-primary':'primary','c-bg':'bg','c-surface':'surface','c-text':'text' }[id]]=this.value; render(); }); });
+  $('f-font-latin').addEventListener('change', function(){ curLook().latinFont=this.value; render(); });
+  $('f-font-cjk').addEventListener('change', function(){ curLook().cjkFont=this.value; render(); });
+  $('c-stars').addEventListener('change', function(){ curLook().stars=this.checked; render(); });
+
+  $('add-item').onclick=function(){ state.receipt.items.push({name:'新品項',quantity:1,unitPrice:100}); renderItems(); render(); };
+  $('add-discount').onclick=function(){ if(!state.receipt.discounts)state.receipt.discounts=[]; state.receipt.discounts.push({label:'折扣',amount:10}); renderDiscounts(); render(); };
+  $('add-payment').onclick=function(){ if(!state.receipt.payments)state.receipt.payments=[]; state.receipt.payments.push({method:'Cash',amount:0}); renderPayments(); render(); };
+
+  EMOJIS.forEach(function(em){ var b=document.createElement('button'); b.type='button'; b.textContent=em; b.onclick=function(){ addSticker(em); }; $('emoji-pick').appendChild(b); });
+  $('f-sticker').addEventListener('change', function(){ if(this.files[0]) readFile(this.files[0], function(uri){ addSticker(uri); }); });
+
+  $('dl-png').onclick=downloadPng;
+  $('dl-svg').onclick=function(){ dl('receipt.svg', new Blob([currentSvg()],{type:'image/svg+xml'})); };
+  $('dl-html').onclick=function(){ dl('receipt.html', new Blob([RE.renderReceiptToHtml(state.receipt,{theme:currentTheme(),width:curWidth(),padTop:curPad().top,padBottom:curPad().bottom,padX:curPad().x})],{type:'text/html'})); };
+
+  $('load-receipt').onclick=function(){ var p; try{ p=JSON.parse($('json').value); }catch(e){ showError('JSON 格式有誤:\n'+e.message); return; } var c=RE.safeValidateReceipt(p); if(!c.success){ showError('這份 JSON 不是有效的收據:\n\n'+c.error.format()); return; } state.receipt=normalize(c.data); state.sel=-1; syncFormFromState(); render(); };
+  $('load-order').onclick=function(){ var ext; try{ ext=JSON.parse($('json').value); }catch(e){ showError('JSON 格式有誤:\n'+e.message); return; } var doc=importOrder(ext); var c=RE.safeValidateReceipt(doc); if(!c.success){ showError('訂單轉成收據後不合格(請檢查欄位):\n\n'+c.error.format()); return; } state.receipt=normalize(c.data); state.sel=-1; syncFormFromState(); render(); };
+  $('import-items').onclick=function(){ document.querySelector('details.card:last-of-type').open=true; $('json').focus(); showError('把 POS/訂單系統的 JSON 貼到下方「進階:JSON」,按「載入訂單 JSON」即可。之後接系統就走 importOrder()。'); };
+
+  window.addEventListener('resize', layoutOverlay);
+
+  // background image
+  $('f-bg').addEventListener('change', function(){ if(this.files[0]) readFile(this.files[0], function(uri){ var a=ensure('assets'); a.backgroundImage=uri; if(a.backgroundOpacity==null)a.backgroundOpacity=0.3; if(a.backgroundScale==null)a.backgroundScale=1; if(a.backgroundX==null)a.backgroundX=0; if(a.backgroundY==null)a.backgroundY=0; syncFormFromState(); render(); }); });
+  $('bg-remove').onclick=function(){ var a=state.receipt.assets; if(a){ delete a.backgroundImage; delete a.backgroundOpacity; delete a.backgroundScale; delete a.backgroundX; delete a.backgroundY; if(!Object.keys(a).length) delete state.receipt.assets; } syncFormFromState(); render(); };
+  $('s-bgop').addEventListener('input', function(){ ensure('assets').backgroundOpacity=+this.value/100; $('v-bgop').textContent=this.value+'%'; render(); });
+  $('s-bgsc').addEventListener('input', function(){ ensure('assets').backgroundScale=+this.value/100; $('v-bgsc').textContent=this.value+'%'; render(); });
+  $('s-bgx').addEventListener('input', function(){ ensure('assets').backgroundX=+this.value; $('v-bgx').textContent=this.value+'px'; render(); });
+  $('s-bgy').addEventListener('input', function(){ ensure('assets').backgroundY=+this.value; $('v-bgy').textContent=this.value+'px'; render(); });
+
+  // config file (save / restore the whole design)
+  function buildConfig(){ return { _type:'receipt-engine-config', version:1, theme:state.theme, width:state.width, pad:state.pad, scale:state.scale, look:state.look, receipt:state.receipt }; }
+  function normPad(pd, theme){ var d=defaultPad(theme); pd=pd||{}; return { top: pd.top!=null?pd.top:d.top, bottom: pd.bottom!=null?pd.bottom:d.bottom, x: pd.x!=null?pd.x:d.x }; }
+  function fixLook(l, fb){ l = l || deepClone(fb); if(!l.latinFont) l.latinFont='quicksand'; if(!l.cjkFont) l.cjkFont='noto'; return l; }
+  function applyConfig(cfg){
+    if(!cfg || !cfg.receipt){ showError('這不是有效的設定檔(缺 receipt)。'); return; }
+    var c=RE.safeValidateReceipt(cfg.receipt);
+    if(!c.success){ showError('設定檔內的收據不合格:\n\n'+c.error.format()); return; }
+    state.receipt = normalize(c.data);
+    state.look.custom = fixLook(cfg.look&&cfg.look.custom, state.look.custom);
+    state.look.thermal = fixLook(cfg.look&&cfg.look.thermal, THERMAL_LOOK);
+    state.width = { custom:(cfg.width&&cfg.width.custom)||720, thermal:(cfg.width&&cfg.width.thermal)||384 };
+    state.pad = { custom: normPad(cfg.pad&&cfg.pad.custom,'custom'), thermal: normPad(cfg.pad&&cfg.pad.thermal,'thermal') };
+    if(typeof cfg.scale==='number') state.scale=cfg.scale;
+    state.sel=-1;
+    setTheme(cfg.theme==='thermal'?'thermal':'custom');
   }
-  function downloadPng() {
-    var svg = currentSvg();
-    var img = new Image();
-    var url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml;charset=utf-8' }));
-    img.onload = function () {
-      try {
-        var scale = 2;
-        var canvas = document.createElement('canvas');
-        canvas.width = img.naturalWidth * scale; canvas.height = img.naturalHeight * scale;
-        var cx = canvas.getContext('2d'); cx.scale(scale, scale); cx.drawImage(img, 0, 0);
-        canvas.toBlob(function (b) {
-          if (b) downloadBlob('receipt.png', b);
-          else showError('PNG 轉檔失敗,請改用「下載 SVG」。');
-        }, 'image/png');
-      } catch (e) {
-        showError('無法在瀏覽器轉成 PNG(收據裡可能有外部網址的圖片)。請改用「下載 SVG」,或改成上傳圖片。');
-      } finally { URL.revokeObjectURL(url); }
-    };
-    img.onerror = function () { URL.revokeObjectURL(url); showError('PNG 轉檔失敗,請改用「下載 SVG」。'); };
-    img.src = url;
-  }
+  $('cfg-save').onclick=function(){ dl('receipt-config.json', new Blob([JSON.stringify(buildConfig(),null,2)],{type:'application/json'})); };
+  $('cfg-load').addEventListener('change', function(){ var f=this.files[0]; if(!f)return; var fr=new FileReader(); fr.onload=function(){ try{ applyConfig(JSON.parse(String(fr.result))); }catch(e){ showError('設定檔讀取失敗:\n'+e.message); } }; fr.readAsText(f); this.value=''; });
 
-  /* ---------- file -> data URI ---------- */
-  function readFile(file, cb) {
-    if (file && file.size > 2 * 1024 * 1024) showError('圖片有點大(>2MB),可能會讓 JSON 很肥,建議換小一點的。');
-    var fr = new FileReader();
-    fr.onload = function () { cb(String(fr.result)); };
-    fr.readAsDataURL(file);
-  }
-
-  /* ---------- wire up ---------- */
-  function setTheme(t) {
-    state.theme = t;
-    $('theme-seg').querySelectorAll('button').forEach(function (b) { b.classList.toggle('on', b.dataset.theme === t); });
-    var customOnly = t === 'custom';
-    $('card-look').classList.toggle('hide', !customOnly);
-    $('card-stickers').classList.toggle('hide', !customOnly);
-    render();
-  }
-
-  $('theme-seg').querySelectorAll('button').forEach(function (b) {
-    b.addEventListener('click', function () { setTheme(b.dataset.theme); });
-  });
-  $('example').addEventListener('change', function (e) { loadExample(e.target.value); });
-
-  $('f-name').addEventListener('input', function () { state.receipt.merchant.name = this.value; render(); });
-  $('f-subtitle').addEventListener('input', function () { state.receipt.merchant.subtitle = this.value || undefined; render(); });
-  $('f-icon').addEventListener('input', function () {
-    state.receipt.merchant.icon = this.value || undefined;
-    if (this.value) state.receipt.merchant.logo = undefined, $('logo-status').textContent = '';
-    render();
-  });
-  $('f-msg-title').addEventListener('input', function () { ensureMsg(); state.receipt.message.title = this.value || undefined; render(); });
-  $('f-msg-body').addEventListener('input', function () { ensureMsg(); state.receipt.message.body = this.value || undefined; render(); });
-  function ensureMsg() { if (!state.receipt.message) state.receipt.message = {}; }
-
-  $('f-logo').addEventListener('change', function () {
-    if (this.files[0]) readFile(this.files[0], function (uri) {
-      state.receipt.merchant.logo = uri;
-      state.receipt.merchant.icon = undefined;
-      $('f-icon').value = '';
-      $('logo-status').textContent = '✓ 已設定商標圖片';
-      render();
-    });
-  });
-  $('f-sticker').addEventListener('change', function () {
-    if (this.files[0]) readFile(this.files[0], function (uri) {
-      if (!state.receipt.stickers) state.receipt.stickers = [];
-      state.receipt.stickers.push({ content: uri, anchor: 'free' }); renderStickerList(); render();
-    });
-  });
-
-  ['c-primary', 'c-bg', 'c-surface', 'c-text'].forEach(function (id) {
-    $(id).addEventListener('input', function () {
-      var key = { 'c-primary': 'primary', 'c-bg': 'bg', 'c-surface': 'surface', 'c-text': 'text' }[id];
-      state.custom[key] = this.value; render();
-    });
-  });
-  $('f-font').addEventListener('change', function () { state.custom.font = this.value; render(); });
-
-  $('add-item').addEventListener('click', function () {
-    state.receipt.items.push({ name: '新品項', quantity: 1, unitPrice: 100 }); renderItems(); render();
-  });
-
-  // emoji palette
-  EMOJIS.forEach(function (em) {
-    var b = document.createElement('button'); b.textContent = em; b.type = 'button';
-    b.addEventListener('click', function () {
-      if (!state.receipt.stickers) state.receipt.stickers = [];
-      state.receipt.stickers.push({ content: em, anchor: 'free', x: (state.receipt.stickers.length % 3) * -34 });
-      renderStickerList(); render();
-    });
-    $('emoji-pick').appendChild(b);
-  });
-
-  $('dl-png').addEventListener('click', downloadPng);
-  $('dl-svg').addEventListener('click', function () { downloadBlob('receipt.svg', new Blob([currentSvg()], { type: 'image/svg+xml' })); });
-  $('dl-html').addEventListener('click', function () { downloadBlob('receipt.html', new Blob([RE.renderReceiptToHtml(state.receipt, { theme: currentTheme() })], { type: 'text/html' })); });
-
-  $('load-json').addEventListener('click', function () {
-    var parsed;
-    try { parsed = JSON.parse($('json').value); }
-    catch (e) { showError('JSON 格式有誤:\n' + e.message); return; }
-    var check = RE.safeValidateReceipt(parsed);
-    if (!check.success) { showError('這份 JSON 不是有效的收據:\n\n' + check.error.format()); return; }
-    state.receipt = parsed;
-    syncFormFromState(); render();
-  });
-
-  // boot
-  setTheme('custom');
-  loadExample('cute');
+  // boot — load data first (sets state.receipt), then apply theme UI
+  loadExample('cute'); setTheme('custom');
 })();
 </script>
 </body>

@@ -9,7 +9,8 @@ export const SocialLinkSchema = z.object({
 })
 
 export const MerchantSchema = z.object({
-  name: z.string().min(1, 'Merchant name is required'),
+  /** Optional — leave empty to brand with the logo alone (no name text is drawn). */
+  name: z.string().optional(),
   subtitle: z.string().optional(),
   /** URL, data URI, or relative path. */
   logo: z.string().optional(),
@@ -86,7 +87,16 @@ export const MessageSchema = z.object({
 
 export const AssetsSchema = z.object({
   footerImage: z.string().optional(),
+  /** Background image source (URL, data URI, or path), drawn behind the receipt content. */
   backgroundImage: z.string().optional(),
+  /** Background image opacity, 0–1. Defaults to 1. */
+  backgroundOpacity: z.number().min(0).max(1).optional(),
+  /** Background image scale multiplier over the card's cover size. Defaults to 1. */
+  backgroundScale: z.number().positive().optional(),
+  /** Background image horizontal offset in px. */
+  backgroundX: z.number().optional(),
+  /** Background image vertical offset in px. */
+  backgroundY: z.number().optional(),
 })
 
 export const CustomBlockSchema = z.discriminatedUnion('type', [

@@ -21,13 +21,9 @@ describe('validateReceipt', () => {
     expect(parsed.merchant.name).toBe('Test Shop')
   })
 
-  it('fails when merchant name is missing', () => {
-    const bad = { ...validReceipt, merchant: { name: '' } }
-    expect(() => validateReceipt(bad)).toThrow(ReceiptValidationError)
-
-    const result = safeValidateReceipt(bad)
-    expect(result.success).toBe(false)
-    expect(result.error?.issues.some((i) => i.path === 'merchant.name')).toBe(true)
+  it('allows an empty or omitted merchant name (logo-only branding)', () => {
+    expect(() => validateReceipt({ ...validReceipt, merchant: { name: '' } })).not.toThrow()
+    expect(safeValidateReceipt({ ...validReceipt, merchant: {} }).success).toBe(true)
   })
 
   it('fails when item quantity is <= 0', () => {

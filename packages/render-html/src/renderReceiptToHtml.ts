@@ -4,6 +4,12 @@ import { escapeXml, renderReceiptToSvg, type RenderSvgOptions } from '@receipt-e
 export interface RenderHtmlOptions {
   theme?: RenderSvgOptions['theme']
   width?: number
+  /** Top whitespace inside the card, in px (forwarded to the SVG renderer). */
+  padTop?: number
+  /** Bottom whitespace inside the card, in px (forwarded to the SVG renderer). */
+  padBottom?: number
+  /** Left/right padding inside the card, in px (forwarded to the SVG renderer). */
+  padX?: number
   /** Override the document `<title>`. Defaults to `merchant · receiptNo`. */
   title?: string
   /** CSS color for the page behind the receipt. */
@@ -20,8 +26,14 @@ function maxWidthFor(options: RenderHtmlOptions): number {
 /** Wrap a receipt's SVG in a standalone, mobile-friendly HTML document. */
 export function renderReceiptToHtml(receipt: ReceiptDocument, options: RenderHtmlOptions = {}): string {
   const doc = validateReceipt(receipt)
-  const svg = renderReceiptToSvg(doc, { theme: options.theme, width: options.width })
-  const title = options.title ?? `${doc.merchant.name} · ${doc.transaction.receiptNo}`
+  const svg = renderReceiptToSvg(doc, {
+    theme: options.theme,
+    width: options.width,
+    padTop: options.padTop,
+    padBottom: options.padBottom,
+    padX: options.padX,
+  })
+  const title = options.title ?? `${doc.merchant.name || 'Receipt'} · ${doc.transaction.receiptNo}`
   const pageBackground = options.pageBackground ?? '#e9e9ee'
   const maxWidth = maxWidthFor(options)
   const lang = doc.locale ?? 'en'

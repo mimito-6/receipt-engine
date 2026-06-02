@@ -18,8 +18,10 @@ export const thermalTheme: ReceiptTheme = {
     border: '#1a1a1a',
   },
   typography: {
+    // Monospace Latin (Space Mono) + a TRUE monospace CJK (Sarasa Mono TC) before
+    // system fonts, so CJK keeps the fixed-width column alignment.
     fontFamily:
-      "'Space Mono','IBM Plex Mono','DejaVu Sans Mono','Noto Sans Mono CJK TC','Sarasa Mono TC','Consolas','Courier New',monospace",
+      "'Space Mono','Sarasa Mono TC','Noto Sans Mono CJK TC','DejaVu Sans Mono','Consolas',monospace",
     titleSize: 20,
     bodySize: 13,
     smallSize: 11,

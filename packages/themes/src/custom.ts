@@ -19,8 +19,9 @@ export const customTheme: ReceiptTheme = {
     accent: '#ff8cc6',
   },
   typography: {
-    fontFamily:
-      "'Quicksand','Nunito','Baloo 2','Segoe UI','PingFang TC','Microsoft JhengHei','Noto Sans TC',sans-serif",
+    // Latin (Quicksand) + matched CJK (Noto Sans TC) before any system font, so
+    // Latin and CJK glyphs look like one typeface instead of two.
+    fontFamily: "'Quicksand','Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif",
     titleSize: 32,
     bodySize: 16,
     smallSize: 12,
@@ -29,7 +30,9 @@ export const customTheme: ReceiptTheme = {
   spacing: { page: 34, section: 22, row: 14 },
   decoration: {
     borderStyle: 'dashed',
-    showCornerStars: true,
+    // Off by default: corner sparkles read like uneditable stickers. The
+    // playground exposes a toggle; users who want them opt in.
+    showCornerStars: false,
     showItemBadges: true,
     perforatedEdges: false,
     monochromeImages: false,

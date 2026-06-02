@@ -23,6 +23,7 @@ import {
   renderTransactionMeta,
   type StickerGeom,
 } from './blocks'
+import { isImageSource } from './assets'
 import { escapeXml } from './escape'
 import {
   createMoneyFormatter,
@@ -36,6 +37,12 @@ import {
 export interface RenderSvgOptions {
   theme?: ReceiptThemeName | ReceiptTheme
   width?: number
+  /** Top whitespace inside the card, in px. Defaults to 4× the side padding. */
+  padTop?: number
+  /** Bottom whitespace inside the card, in px. Defaults to 4× the side padding. */
+  padBottom?: number
+  /** Left/right padding inside the card, in px. Defaults to the theme's page spacing. */
+  padX?: number
   /** Carried through for PNG rasterization; does not change SVG geometry. */
   pixelRatio?: number
   includeXmlDeclaration?: boolean
@@ -81,11 +88,11 @@ function perforation(
 }
 
 /** Black & white image filter (luminance-weighted grayscale), resvg-supported. */
-function monoFilterDefs(id: string): string {
+function monoFilter(id: string): string {
   return (
-    `<defs><filter id="${id}" x="0%" y="0%" width="100%" height="100%" color-interpolation-filters="sRGB">` +
+    `<filter id="${id}" x="0%" y="0%" width="100%" height="100%" color-interpolation-filters="sRGB">` +
     `<feColorMatrix type="matrix" values="0.2126 0.7152 0.0722 0 0 0.2126 0.7152 0.0722 0 0 0.2126 0.7152 0.0722 0 0 0 0 0 1 0"/>` +
-    `</filter></defs>`
+    `</filter>`
   )
 }
 
@@ -104,11 +111,18 @@ export function renderReceiptToSvg(
   const width = options.width ?? (isThermal ? THERMAL_WIDTH : DEFAULT_CARD_WIDTH)
   const outerMargin = isThermal ? 22 : 26
   const innerPad = theme.spacing.page
+  // Top & bottom whitespace inside the card. Default is 4× the side padding for a
+  // roomy, receipt-like feed margin, but each edge is independently overridable
+  // (so the UI can expose separate top/bottom sliders).
+  const defaultVerticalPad = innerPad * 4
+  const padTop = Math.max(0, options.padTop ?? defaultVerticalPad)
+  const padBottom = Math.max(0, options.padBottom ?? defaultVerticalPad)
   const cardX = outerMargin
   const cardTop = outerMargin
+  const sidePad = Math.max(8, options.padX ?? innerPad)
   const cardWidth = width - outerMargin * 2
-  const contentLeft = cardX + innerPad
-  const contentRight = cardX + cardWidth - innerPad
+  const contentLeft = cardX + sidePad
+  const contentRight = cardX + cardWidth - sidePad
   const contentWidth = contentRight - contentLeft
 
   const ctx: RenderContext = {
@@ -129,7 +143,7 @@ export function renderReceiptToSvg(
 
   const parts: string[] = []
   const section = theme.spacing.section
-  let y = cardTop + innerPad
+  let y = cardTop + padTop
 
   const place = (block: BlockResult, gap = section): void => {
     if (block.height <= 0) return
@@ -152,7 +166,7 @@ export function renderReceiptToSvg(
   if (doc.assets?.footerImage) place(renderFooterImage(ctx, p, doc.assets.footerImage, y))
 
   const lastContentBottom = y - section
-  const cardBottom = lastContentBottom + innerPad
+  const cardBottom = lastContentBottom + padBottom
   const cardHeight = cardBottom - cardTop
   const totalHeight = Math.round(cardBottom + outerMargin)
 
@@ -195,7 +209,28 @@ export function renderReceiptToSvg(
     stickerLayer = renderStickers(ctx, p, doc.stickers, geom)
   }
 
-  const defs = monoImages ? monoFilterDefs(MONO_FILTER_ID) : ''
+  // Background image (clipped to the card; opacity / scale / offset adjustable).
+  const bgSrc = doc.assets?.backgroundImage
+  let bgImage = ''
+  let bgClip = ''
+  if (bgSrc && isImageSource(bgSrc)) {
+    const op = doc.assets?.backgroundOpacity ?? 1
+    const scale = doc.assets?.backgroundScale ?? 1
+    const bgW = cardWidth * scale
+    const bgH = cardHeight * scale
+    const bgX = cardX + (cardWidth - bgW) / 2 + (doc.assets?.backgroundX ?? 0)
+    const bgY = cardTop + (cardHeight - bgH) / 2 + (doc.assets?.backgroundY ?? 0)
+    const filterAttr = monoFilterId ? ` filter="${monoFilterId}"` : ''
+    bgClip =
+      `<clipPath id="re-bg"><rect x="${n(cardX)}" y="${n(cardTop)}" width="${n(cardWidth)}" ` +
+      `height="${n(cardHeight)}" rx="${n(theme.radius.card)}"/></clipPath>`
+    bgImage =
+      `<g clip-path="url(#re-bg)"><image href="${escapeXml(bgSrc)}" x="${n(bgX)}" y="${n(bgY)}" ` +
+      `width="${n(bgW)}" height="${n(bgH)}" preserveAspectRatio="xMidYMid slice" opacity="${op}"${filterAttr} /></g>`
+  }
+
+  const defsInner = (monoImages ? monoFilter(MONO_FILTER_ID) : '') + bgClip
+  const defs = defsInner ? `<defs>${defsInner}</defs>` : ''
   const xmlDecl = options.includeXmlDeclaration ? '<?xml version="1.0" encoding="UTF-8"?>\n' : ''
   const open =
     `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${totalHeight}" ` +
@@ -207,6 +242,7 @@ export function renderReceiptToSvg(
     defs +
     background +
     card +
+    bgImage +
     edges +
     decorations +
     parts.join('') +

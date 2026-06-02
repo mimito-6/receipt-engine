@@ -31,9 +31,11 @@ const receipt = validateReceipt(json) // throws ReceiptValidationError on failur
 
 ## Merchant
 
-`name` (required), `subtitle`, `logo`, `icon`, `address`, `website`,
-`socials: { label, url }[]`.
+`name`, `subtitle`, `logo`, `icon`, `address`, `website`,
+`socials: { label, url }[]` — all optional.
 
+- `name` — **optional**. Leave it empty to brand with the logo alone; no name
+  text (and no empty name block) is drawn.
 - `logo` — URL, data URI, or relative path (rendered as an image).
 - `icon` — emoji **or** an image source. Emoji is drawn as text; image sources
   are drawn as an `<image>`.
@@ -91,7 +93,13 @@ brand page, social link, next-visit coupon, feedback form, or product page.
 
 ## Assets
 
-`footerImage`, `backgroundImage`.
+- `footerImage` — image drawn at the bottom of the receipt.
+- `backgroundImage` — image drawn behind the content (clipped to the card).
+- `backgroundOpacity` — `0`–`1` (default `1`).
+- `backgroundScale` — multiplier over the card's cover size (default `1`).
+- `backgroundX`, `backgroundY` — background offset in px.
+
+Under the `thermal` theme the background image is rendered in black & white too.
 
 ## Custom blocks
 

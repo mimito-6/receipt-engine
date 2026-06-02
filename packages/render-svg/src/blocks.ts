@@ -126,15 +126,18 @@ export function renderHeader(
     }
   }
 
-  const titleSize = theme.typography.titleSize
-  const nameLines = wrapText(merchant.name, ctx.contentWidth, titleSize, ctx.mono)
-  const name = textLines(p, nameLines, cx, cursor, titleSize, {
-    anchor: 'middle',
-    weight: 700,
-    fill: theme.palette.primary,
-  })
-  markup += name.markup
-  cursor += name.height
+  // Name is optional — when empty, the logo/icon alone is the branding (no name frame).
+  if (merchant.name && merchant.name.trim()) {
+    const titleSize = theme.typography.titleSize
+    const nameLines = wrapText(merchant.name, ctx.contentWidth, titleSize, ctx.mono)
+    const name = textLines(p, nameLines, cx, cursor, titleSize, {
+      anchor: 'middle',
+      weight: 700,
+      fill: theme.palette.primary,
+    })
+    markup += name.markup
+    cursor += name.height
+  }
 
   if (merchant.subtitle) {
     cursor += 2
@@ -531,23 +534,33 @@ export function renderQrBlock(
     dark: theme.palette.text,
     light: '#ffffff',
   })
-  cursor += size + 8
+  cursor += size
 
+  // Consistent vertical rhythm for the caption stack under the QR.
+  const gap = Math.round(theme.typography.bodySize * 0.6)
   if (qr.label) {
-    markup += p.text(qr.label, cx, cursor + theme.typography.bodySize, {
-      size: theme.typography.bodySize,
-      anchor: 'middle',
-      weight: 600,
-      fill: theme.palette.primary,
-    })
-    cursor += lineHeight(theme.typography.bodySize)
+    cursor += gap
+    const block = textLines(
+      p,
+      wrapText(qr.label, ctx.contentWidth, theme.typography.bodySize, ctx.mono),
+      cx,
+      cursor,
+      theme.typography.bodySize,
+      { anchor: 'middle', weight: 600, fill: theme.palette.primary },
+    )
+    markup += block.markup
+    cursor += block.height
   }
   if (qr.caption) {
-    const lines = wrapText(qr.caption, ctx.contentWidth, theme.typography.smallSize, ctx.mono)
-    const block = textLines(p, lines, cx, cursor, theme.typography.smallSize, {
-      anchor: 'middle',
-      fill: theme.palette.mutedText,
-    })
+    cursor += Math.round(gap * 0.4)
+    const block = textLines(
+      p,
+      wrapText(qr.caption, ctx.contentWidth, theme.typography.smallSize, ctx.mono),
+      cx,
+      cursor,
+      theme.typography.smallSize,
+      { anchor: 'middle', fill: theme.palette.mutedText },
+    )
     markup += block.markup
     cursor += block.height
   }
@@ -621,43 +634,23 @@ export function renderMessage(
   let cursor = y
   let markup = ''
 
-  if (message.title) {
-    const size = theme.typography.bodySize + 2
-    markup += p.text(message.title, cx, cursor + size, {
-      size,
+  // One consistent gap between title / body / footer; a clear 3-step type scale.
+  const gap = Math.round(theme.typography.bodySize * 0.6)
+  let first = true
+  const part = (text: string | undefined, size: number, opts: TextOptions): void => {
+    if (!text) return
+    if (!first) cursor += gap
+    first = false
+    const block = textLines(p, wrapText(text, ctx.contentWidth, size, ctx.mono), cx, cursor, size, {
       anchor: 'middle',
-      weight: 700,
-      fill: theme.palette.primary,
+      ...opts,
     })
-    cursor += lineHeight(size) + 2
-  }
-  if (message.body) {
-    const size = theme.typography.bodySize
-    const block = textLines(
-      p,
-      wrapText(message.body, ctx.contentWidth, size, ctx.mono),
-      cx,
-      cursor,
-      size,
-      { anchor: 'middle', fill: theme.palette.text },
-    )
     markup += block.markup
     cursor += block.height
   }
-  if (message.footer) {
-    cursor += 2
-    const size = theme.typography.smallSize
-    const block = textLines(
-      p,
-      wrapText(message.footer, ctx.contentWidth, size, ctx.mono),
-      cx,
-      cursor,
-      size,
-      { anchor: 'middle', fill: theme.palette.mutedText },
-    )
-    markup += block.markup
-    cursor += block.height
-  }
+  part(message.title, theme.typography.bodySize + 3, { weight: 700, fill: theme.palette.primary })
+  part(message.body, theme.typography.bodySize, { fill: theme.palette.text })
+  part(message.footer, theme.typography.smallSize, { fill: theme.palette.mutedText })
 
   return { markup, height: cursor - y }
 }
@@ -708,25 +701,24 @@ export function renderStickers(
     const isImage = isImageSource(sticker.content)
     const size = sticker.size ?? (isImage ? 56 : 38)
 
-    let baseX = geom.cardRight - 44
-    let baseY = geom.cardTop + 52
-    switch (sticker.anchor) {
-      case 'header':
-        baseX = geom.centerX
-        baseY = geom.cardTop + 40
-        break
-      case 'logo':
-        baseX = geom.centerX
+    // 'free' (default): x/y are the ABSOLUTE center in receipt px (drag-friendly,
+    // stable across SVG/PNG/HTML). Other anchors follow content with x/y as offset.
+    let cx: number
+    let cy: number
+    if (!sticker.anchor || sticker.anchor === 'free') {
+      cx = sticker.x ?? geom.cardRight - 44
+      cy = sticker.y ?? geom.cardTop + 52
+    } else {
+      let baseX = geom.centerX
+      let baseY = geom.cardTop + 40
+      if (sticker.anchor === 'logo') {
         baseY = geom.cardTop + 76
-        break
-      case 'footer':
-        baseX = geom.centerX
+      } else if (sticker.anchor === 'footer') {
         baseY = geom.cardBottom - 40
-        break
-      // 'free' (default): top-right corner
+      }
+      cx = baseX + (sticker.x ?? 0)
+      cy = baseY + (sticker.y ?? 0)
     }
-    const cx = baseX + (sticker.x ?? 0)
-    const cy = baseY + (sticker.y ?? 0)
     const rotate = sticker.rotation
       ? ` transform="rotate(${n(sticker.rotation)} ${n(cx)} ${n(cy)})"`
       : ''

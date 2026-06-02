@@ -13,6 +13,9 @@ receipt JSON ──validate──▶ normalize ──▶ SVG ──┬──▶ 
 renderReceiptToSvg(receipt, {
   theme?: ReceiptThemeName | ReceiptTheme, // default 'custom'
   width?: number,                          // default 720 (card) / 384 (thermal)
+  padTop?: number,                         // top whitespace; default 4× side padding
+  padBottom?: number,                      // bottom whitespace; default 4× side padding
+  padX?: number,                           // left/right padding; default theme page spacing
   pixelRatio?: number,                     // carried through to PNG
   includeXmlDeclaration?: boolean,
 }): string
