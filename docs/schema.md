@@ -28,6 +28,26 @@ const receipt = validateReceipt(json) // throws ReceiptValidationError on failur
 | `assets` | Assets | | Footer / background images. |
 | `customBlocks` | CustomBlock[] | | Rendered between totals and message. |
 | `stickers` | Sticker[] | | Emoji / image overlays drawn on top of everything. |
+| `styleOverrides` | `Record<string, TextStyle>` | | Per-element style overrides, keyed by element id. |
+| `blockOrder` | BlockKey[] | | Override the top-to-bottom order of the major sections. |
+
+## Style overrides
+
+`styleOverrides` lets any individual text element be restyled, keyed by a stable
+**element id** (the same id the editor uses for hit-testing). `TextStyle` =
+`{ fontFamily?, color?, size?, weight?, align? }`. Example ids: `merchant.name`,
+`merchant.subtitle`, `items.0.name`, `items.0.price`, `totals.subtotal`,
+`totals.total`, `qr.label`, `qr.caption`, `message.title`, `message.body`,
+`message.footer`. Overrides merge over the theme defaults and are applied on every
+output (SVG / HTML / PNG), so they travel with the receipt.
+
+## Block order
+
+`blockOrder` is an array of section keys controlling top-to-bottom order:
+`'header' | 'event' | 'transaction' | 'items' | 'discounts' | 'totals' |
+'payments' | 'qr' | 'customBlocks' | 'message' | 'footerImage'`. Any omitted keys
+are appended in the default order, so a partial list can reorder without dropping
+content.
 
 ## Merchant
 

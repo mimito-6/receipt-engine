@@ -1,6 +1,7 @@
 import {
   normalizeReceipt,
   validateReceipt,
+  type BlockKey,
   type ReceiptDocument,
 } from '@receipt-engine/core'
 import {
@@ -43,10 +44,28 @@ export interface RenderSvgOptions {
   padBottom?: number
   /** Left/right padding inside the card, in px. Defaults to the theme's page spacing. */
   padX?: number
+  /** Editor opt-in: tag blocks/text with data-re-block / data-re-id for hit-testing. */
+  interactive?: boolean
+  /** CSS injected as a <style> after <defs> — e.g. @font-face rules to embed fonts. */
+  fontFaceCss?: string
   /** Carried through for PNG rasterization; does not change SVG geometry. */
   pixelRatio?: number
   includeXmlDeclaration?: boolean
 }
+
+const DEFAULT_BLOCK_ORDER: BlockKey[] = [
+  'header',
+  'event',
+  'transaction',
+  'items',
+  'discounts',
+  'totals',
+  'payments',
+  'qr',
+  'customBlocks',
+  'message',
+  'footerImage',
+]
 
 const DEFAULT_CARD_WIDTH = 720
 const THERMAL_WIDTH = 384
@@ -138,6 +157,8 @@ export function renderReceiptToSvg(
     currency: doc.currency,
     formatMoney: createMoneyFormatter(doc.currency),
     monoFilterId,
+    interactive: !!options.interactive,
+    styleOverrides: doc.styleOverrides,
   }
   const p = createPainter(ctx)
 
@@ -145,25 +166,73 @@ export function renderReceiptToSvg(
   const section = theme.spacing.section
   let y = cardTop + padTop
 
-  const place = (block: BlockResult, gap = section): void => {
+  // Place one block, advancing the cursor and (in interactive mode) wrapping it in
+  // a <g data-re-block="…"> so the editor can hit-test/reorder it.
+  const placeOne = (block: BlockResult, key: string): void => {
     if (block.height <= 0) return
-    parts.push(block.markup)
-    y += block.height + gap
+    parts.push(options.interactive ? `<g data-re-block="${key}">${block.markup}</g>` : block.markup)
+    y += block.height + section
   }
 
-  place(renderHeader(ctx, p, doc.merchant, y))
-  if (doc.event) place(renderEvent(ctx, p, doc.event, y))
-  place(renderTransactionMeta(ctx, p, doc.transaction, y))
-  place(renderItems(ctx, p, doc.items, y))
-  if (doc.discounts && doc.discounts.length > 0) place(renderDiscounts(ctx, p, doc.discounts, y))
-  place(renderTotals(ctx, p, doc.totals, y))
-  if (doc.payments && doc.payments.length > 0) {
-    place(renderPayments(ctx, p, doc.payments, doc.totals, y))
+  const placeKey = (key: BlockKey): void => {
+    switch (key) {
+      case 'header':
+        placeOne(renderHeader(ctx, p, doc.merchant, y), 'header')
+        break
+      case 'event':
+        if (doc.event) placeOne(renderEvent(ctx, p, doc.event, y), 'event')
+        break
+      case 'transaction':
+        placeOne(renderTransactionMeta(ctx, p, doc.transaction, y), 'transaction')
+        break
+      case 'items':
+        placeOne(renderItems(ctx, p, doc.items, y), 'items')
+        break
+      case 'discounts':
+        if (doc.discounts && doc.discounts.length > 0) {
+          placeOne(renderDiscounts(ctx, p, doc.discounts, y), 'discounts')
+        }
+        break
+      case 'totals':
+        placeOne(renderTotals(ctx, p, doc.totals, y), 'totals')
+        break
+      case 'payments':
+        if (doc.payments && doc.payments.length > 0) {
+          placeOne(renderPayments(ctx, p, doc.payments, doc.totals, y), 'payments')
+        }
+        break
+      case 'qr':
+        if (doc.qr) placeOne(renderQrBlock(ctx, p, doc.qr, y), 'qr')
+        break
+      case 'customBlocks':
+        ;(doc.customBlocks ?? []).forEach((b, i) =>
+          placeOne(renderCustomBlock(ctx, p, b, y), `customBlocks.${i}`),
+        )
+        break
+      case 'message':
+        if (doc.message) placeOne(renderMessage(ctx, p, doc.message, y), 'message')
+        break
+      case 'footerImage':
+        if (doc.assets?.footerImage) {
+          placeOne(renderFooterImage(ctx, p, doc.assets.footerImage, y), 'footerImage')
+        }
+        break
+    }
   }
-  if (doc.qr) place(renderQrBlock(ctx, p, doc.qr, y))
-  for (const block of doc.customBlocks ?? []) place(renderCustomBlock(ctx, p, block, y))
-  if (doc.message) place(renderMessage(ctx, p, doc.message, y))
-  if (doc.assets?.footerImage) place(renderFooterImage(ctx, p, doc.assets.footerImage, y))
+
+  // Honor a custom block order, but always include every section (missing keys
+  // are appended in default order so a partial blockOrder can't drop content).
+  const requested = doc.blockOrder && doc.blockOrder.length > 0 ? doc.blockOrder : DEFAULT_BLOCK_ORDER
+  const seen = new Set<BlockKey>()
+  const order: BlockKey[] = []
+  for (const k of requested) {
+    if (!seen.has(k)) {
+      seen.add(k)
+      order.push(k)
+    }
+  }
+  for (const k of DEFAULT_BLOCK_ORDER) if (!seen.has(k)) order.push(k)
+  for (const key of order) placeKey(key)
 
   const lastContentBottom = y - section
   const cardBottom = lastContentBottom + padBottom
@@ -231,6 +300,9 @@ export function renderReceiptToSvg(
 
   const defsInner = (monoImages ? monoFilter(MONO_FILTER_ID) : '') + bgClip
   const defs = defsInner ? `<defs>${defsInner}</defs>` : ''
+  // Optional embedded @font-face CSS — lets a rasterizer (e.g. canvas PNG export)
+  // use the intended fonts instead of falling back to a system font.
+  const fontStyle = options.fontFaceCss ? `<style>${options.fontFaceCss}</style>` : ''
   const xmlDecl = options.includeXmlDeclaration ? '<?xml version="1.0" encoding="UTF-8"?>\n' : ''
   const open =
     `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${totalHeight}" ` +
@@ -240,6 +312,7 @@ export function renderReceiptToSvg(
     xmlDecl +
     open +
     defs +
+    fontStyle +
     background +
     card +
     bgImage +

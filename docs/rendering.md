@@ -16,6 +16,8 @@ renderReceiptToSvg(receipt, {
   padTop?: number,                         // top whitespace; default 4× side padding
   padBottom?: number,                      // bottom whitespace; default 4× side padding
   padX?: number,                           // left/right padding; default theme page spacing
+  interactive?: boolean,                   // tag blocks/text with data-re-block / data-re-id (editor)
+  fontFaceCss?: string,                    // injected as <style> after <defs> (embed fonts for PNG)
   pixelRatio?: number,                     // carried through to PNG
   includeXmlDeclaration?: boolean,
 }): string

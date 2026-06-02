@@ -1,3 +1,4 @@
+import type { TextStyle } from '@receipt-engine/core'
 import type { ReceiptTheme } from '@receipt-engine/themes'
 import { svgImage } from './assets'
 import { escapeXml } from './escape'
@@ -17,6 +18,29 @@ export interface RenderContext {
   formatMoney: (amount: number) => string
   /** When set (thermal), every image is rendered through this filter, e.g. "url(#re-mono)". */
   monoFilterId?: string
+  /** Editor opt-in: tag elements with data-re-id / data-re-block for hit-testing. */
+  interactive?: boolean
+  /** Per-element style overrides, keyed by element id. */
+  styleOverrides?: Record<string, TextStyle>
+}
+
+/**
+ * Merge a per-element style override (and, in interactive mode, the element id)
+ * onto a base text style. Used by block builders so any text can be restyled
+ * by id from the document's `styleOverrides`.
+ */
+export function styleFor(ctx: RenderContext, id: string, base: TextOptions): TextOptions {
+  const out: TextOptions = { ...base }
+  if (ctx.interactive) out.dataId = id
+  const o = ctx.styleOverrides?.[id]
+  if (o) {
+    if (o.fontFamily) out.family = o.fontFamily
+    if (o.color) out.fill = o.color
+    if (o.size) out.size = o.size
+    if (o.weight !== undefined) out.weight = o.weight
+    // `align` is applied by the caller (it also moves x), see blocks.ts.
+  }
+  return out
 }
 
 export interface BlockResult {
@@ -137,6 +161,8 @@ export interface TextOptions {
   opacity?: number
   letterSpacing?: number
   italic?: boolean
+  /** Editor hit-test id, emitted as data-re-id (interactive mode only). */
+  dataId?: string
 }
 
 export function svgText(content: string, x: number, y: number, options: TextOptions = {}): string {
@@ -151,6 +177,7 @@ export function svgText(content: string, x: number, y: number, options: TextOpti
     options.opacity !== undefined ? `opacity="${options.opacity}"` : '',
     options.letterSpacing ? `letter-spacing="${n(options.letterSpacing)}"` : '',
     options.italic ? `font-style="italic"` : '',
+    options.dataId ? `data-re-id="${escapeXml(options.dataId)}"` : '',
   ]
     .filter(Boolean)
     .join(' ')

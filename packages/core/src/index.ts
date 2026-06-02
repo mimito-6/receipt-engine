@@ -52,6 +52,8 @@ export {
   AssetsSchema,
   CustomBlockSchema,
   StickerSchema,
+  TextStyleSchema,
+  BlockKeySchema,
   SocialLinkSchema,
 } from './schema'
 export type {
@@ -68,5 +70,7 @@ export type {
   ReceiptAssets,
   ReceiptCustomBlock,
   ReceiptSticker,
+  TextStyle,
+  BlockKey,
   ReceiptSocialLink,
 } from './schema'

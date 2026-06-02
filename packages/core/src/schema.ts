@@ -139,6 +139,29 @@ export const StickerSchema = z.object({
   anchor: z.enum(['logo', 'header', 'footer', 'free']).optional(),
 })
 
+/** Per-element style override, keyed by element id in `styleOverrides`. */
+export const TextStyleSchema = z.object({
+  fontFamily: z.string().optional(),
+  color: z.string().optional(),
+  size: z.number().positive().optional(),
+  weight: z.union([z.number(), z.string()]).optional(),
+  align: z.enum(['left', 'center', 'right']).optional(),
+})
+
+export const BlockKeySchema = z.enum([
+  'header',
+  'event',
+  'transaction',
+  'items',
+  'discounts',
+  'totals',
+  'payments',
+  'qr',
+  'customBlocks',
+  'message',
+  'footerImage',
+])
+
 export const ReceiptDocumentSchema = z.object({
   schemaVersion: z.literal(SCHEMA_VERSION),
   id: z.string().optional(),
@@ -157,6 +180,10 @@ export const ReceiptDocumentSchema = z.object({
   customBlocks: z.array(CustomBlockSchema).optional(),
   /** Free-floating decorations (emoji or images) rendered on top of the receipt. */
   stickers: z.array(StickerSchema).optional(),
+  /** Per-element style overrides, keyed by element id (e.g. "items.0.name", "totals.total"). */
+  styleOverrides: z.record(z.string(), TextStyleSchema).optional(),
+  /** Override the top-to-bottom order of the major sections. */
+  blockOrder: z.array(BlockKeySchema).optional(),
 })
 
 export type ReceiptSocialLink = z.infer<typeof SocialLinkSchema>
@@ -172,4 +199,6 @@ export type ReceiptMessage = z.infer<typeof MessageSchema>
 export type ReceiptAssets = z.infer<typeof AssetsSchema>
 export type ReceiptCustomBlock = z.infer<typeof CustomBlockSchema>
 export type ReceiptSticker = z.infer<typeof StickerSchema>
+export type TextStyle = z.infer<typeof TextStyleSchema>
+export type BlockKey = z.infer<typeof BlockKeySchema>
 export type ReceiptDocument = z.infer<typeof ReceiptDocumentSchema>

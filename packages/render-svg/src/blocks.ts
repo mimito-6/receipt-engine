@@ -16,6 +16,7 @@ import {
   lineHeight,
   measureWidth,
   n,
+  styleFor,
   wrapText,
   type BlockResult,
   type Painter,
@@ -130,11 +131,14 @@ export function renderHeader(
   if (merchant.name && merchant.name.trim()) {
     const titleSize = theme.typography.titleSize
     const nameLines = wrapText(merchant.name, ctx.contentWidth, titleSize, ctx.mono)
-    const name = textLines(p, nameLines, cx, cursor, titleSize, {
-      anchor: 'middle',
-      weight: 700,
-      fill: theme.palette.primary,
-    })
+    const name = textLines(
+      p,
+      nameLines,
+      cx,
+      cursor,
+      titleSize,
+      styleFor(ctx, 'merchant.name', { anchor: 'middle', weight: 700, fill: theme.palette.primary }),
+    )
     markup += name.markup
     cursor += name.height
   }
@@ -147,7 +151,7 @@ export function renderHeader(
       cx,
       cursor,
       theme.typography.bodySize,
-      { anchor: 'middle', fill: theme.palette.secondary },
+      styleFor(ctx, 'merchant.subtitle', { anchor: 'middle', fill: theme.palette.secondary }),
     )
     markup += sub.markup
     cursor += sub.height
@@ -304,18 +308,24 @@ export function renderItems(
 
     const firstBaseline = cursor + body
     nameLines.forEach((line, i) => {
-      markup += p.text(line, ctx.contentLeft, cursor + body + i * lineHeight(body), {
+      markup += p.text(
+        line,
+        ctx.contentLeft,
+        cursor + body + i * lineHeight(body),
+        styleFor(ctx, `items.${index}.name`, { size: body, weight: 500, fill: theme.palette.text }),
+      )
+    })
+    markup += p.text(
+      priceText,
+      ctx.contentRight,
+      firstBaseline,
+      styleFor(ctx, `items.${index}.price`, {
         size: body,
-        weight: 500,
+        weight: 600,
+        anchor: 'end',
         fill: theme.palette.text,
-      })
-    })
-    markup += p.text(priceText, ctx.contentRight, firstBaseline, {
-      size: body,
-      weight: 600,
-      anchor: 'end',
-      fill: theme.palette.text,
-    })
+      }),
+    )
     cursor += nameLines.length * lineHeight(body)
 
     const subParts = [`${item.quantity} × ${ctx.formatMoney(item.unitPrice)}`]
@@ -414,39 +424,45 @@ export function renderTotals(
   markup += divider(ctx, p, cursor)
   cursor += 14
 
-  const row = (label: string, value: string, muted = true) => {
+  const row = (id: string, label: string, value: string, muted = true) => {
+    const fill = muted ? theme.palette.mutedText : theme.palette.text
     markup += dottedLeader(ctx, p, label, value, cursor + size, size)
-    markup += p.text(label, ctx.contentLeft, cursor + size, {
-      size,
-      fill: muted ? theme.palette.mutedText : theme.palette.text,
-    })
-    markup += p.text(value, ctx.contentRight, cursor + size, {
-      size,
-      anchor: 'end',
-      fill: muted ? theme.palette.mutedText : theme.palette.text,
-    })
+    markup += p.text(label, ctx.contentLeft, cursor + size, styleFor(ctx, id, { size, fill }))
+    markup += p.text(
+      value,
+      ctx.contentRight,
+      cursor + size,
+      styleFor(ctx, id, { size, anchor: 'end', fill }),
+    )
     cursor += lineHeight(size)
   }
 
-  row('Subtotal', ctx.formatMoney(totals.subtotal))
-  if (totals.discountTotal > 0) row('Discount', `-${ctx.formatMoney(totals.discountTotal)}`)
-  if (totals.taxTotal > 0) row('Tax', ctx.formatMoney(totals.taxTotal))
-  if (totals.serviceFee > 0) row('Service', ctx.formatMoney(totals.serviceFee))
+  row('totals.subtotal', 'Subtotal', ctx.formatMoney(totals.subtotal))
+  if (totals.discountTotal > 0) row('totals.discount', 'Discount', `-${ctx.formatMoney(totals.discountTotal)}`)
+  if (totals.taxTotal > 0) row('totals.tax', 'Tax', ctx.formatMoney(totals.taxTotal))
+  if (totals.serviceFee > 0) row('totals.service', 'Service', ctx.formatMoney(totals.serviceFee))
 
   cursor += 6
   const totalSize = size + 4
-  markup += dottedLeader(ctx, p, 'Total', ctx.formatMoney(totals.total), cursor + totalSize, totalSize)
-  markup += p.text('Total', ctx.contentLeft, cursor + totalSize, {
-    size: totalSize,
-    weight: 700,
-    fill: theme.palette.primary,
-  })
-  markup += p.text(ctx.formatMoney(totals.total), ctx.contentRight, cursor + totalSize, {
-    size: totalSize,
-    weight: 700,
-    anchor: 'end',
-    fill: theme.palette.primary,
-  })
+  const totalValue = ctx.formatMoney(totals.total)
+  markup += dottedLeader(ctx, p, 'Total', totalValue, cursor + totalSize, totalSize)
+  markup += p.text(
+    'Total',
+    ctx.contentLeft,
+    cursor + totalSize,
+    styleFor(ctx, 'totals.total', { size: totalSize, weight: 700, fill: theme.palette.primary }),
+  )
+  markup += p.text(
+    totalValue,
+    ctx.contentRight,
+    cursor + totalSize,
+    styleFor(ctx, 'totals.total', {
+      size: totalSize,
+      weight: 700,
+      anchor: 'end',
+      fill: theme.palette.primary,
+    }),
+  )
   cursor += lineHeight(totalSize)
 
   return { markup, height: cursor - y }
@@ -546,7 +562,7 @@ export function renderQrBlock(
       cx,
       cursor,
       theme.typography.bodySize,
-      { anchor: 'middle', weight: 600, fill: theme.palette.primary },
+      styleFor(ctx, 'qr.label', { anchor: 'middle', weight: 600, fill: theme.palette.primary }),
     )
     markup += block.markup
     cursor += block.height
@@ -559,7 +575,7 @@ export function renderQrBlock(
       cx,
       cursor,
       theme.typography.smallSize,
-      { anchor: 'middle', fill: theme.palette.mutedText },
+      styleFor(ctx, 'qr.caption', { anchor: 'middle', fill: theme.palette.mutedText }),
     )
     markup += block.markup
     cursor += block.height
@@ -637,20 +653,24 @@ export function renderMessage(
   // One consistent gap between title / body / footer; a clear 3-step type scale.
   const gap = Math.round(theme.typography.bodySize * 0.6)
   let first = true
-  const part = (text: string | undefined, size: number, opts: TextOptions): void => {
+  const part = (id: string, text: string | undefined, size: number, opts: TextOptions): void => {
     if (!text) return
     if (!first) cursor += gap
     first = false
-    const block = textLines(p, wrapText(text, ctx.contentWidth, size, ctx.mono), cx, cursor, size, {
-      anchor: 'middle',
-      ...opts,
-    })
+    const block = textLines(
+      p,
+      wrapText(text, ctx.contentWidth, size, ctx.mono),
+      cx,
+      cursor,
+      size,
+      styleFor(ctx, id, { anchor: 'middle', ...opts }),
+    )
     markup += block.markup
     cursor += block.height
   }
-  part(message.title, theme.typography.bodySize + 3, { weight: 700, fill: theme.palette.primary })
-  part(message.body, theme.typography.bodySize, { fill: theme.palette.text })
-  part(message.footer, theme.typography.smallSize, { fill: theme.palette.mutedText })
+  part('message.title', message.title, theme.typography.bodySize + 3, { weight: 700, fill: theme.palette.primary })
+  part('message.body', message.body, theme.typography.bodySize, { fill: theme.palette.text })
+  part('message.footer', message.footer, theme.typography.smallSize, { fill: theme.palette.mutedText })
 
   return { markup, height: cursor - y }
 }

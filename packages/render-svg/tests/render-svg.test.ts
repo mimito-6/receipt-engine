@@ -102,4 +102,31 @@ describe('renderReceiptToSvg', () => {
     const svg = renderReceiptToSvg(withLogo, { theme: 'custom' })
     expect(svg).toContain('<image')
   })
+
+  it('applies per-element styleOverrides by id', () => {
+    const styled = renderReceiptToSvg({
+      ...receipt,
+      styleOverrides: { 'totals.total': { color: '#123456' } },
+    })
+    expect(styled).toContain('fill="#123456"')
+    expect(renderReceiptToSvg(receipt)).not.toContain('#123456')
+  })
+
+  it('honors blockOrder (message before header)', () => {
+    const reordered = renderReceiptToSvg({
+      ...receipt,
+      blockOrder: ['message', 'header', 'transaction', 'items', 'totals'],
+    })
+    expect(reordered.indexOf('Thank you!')).toBeLessThan(reordered.indexOf('Mimito Booth'))
+    // default order keeps the merchant name above the message
+    const def = renderReceiptToSvg(receipt)
+    expect(def.indexOf('Mimito Booth')).toBeLessThan(def.indexOf('Thank you!'))
+  })
+
+  it('tags elements only in interactive mode', () => {
+    const interactive = renderReceiptToSvg(receipt, { interactive: true })
+    expect(interactive).toContain('data-re-block="items"')
+    expect(interactive).toContain('data-re-id="merchant.name"')
+    expect(renderReceiptToSvg(receipt)).not.toContain('data-re-')
+  })
 })
