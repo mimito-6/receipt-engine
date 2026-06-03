@@ -60,7 +60,20 @@
     border-radius: 10px; padding: 8px 12px; font-size: 12px; white-space: pre-wrap; max-width: 360px; }
   .canvas-hint { color: #b9b9c4; font-size: 11px; text-align: center; max-width: 360px; line-height: 1.6; }
 
-  .controls { display: grid; gap: 12px; }
+  .controls { display: grid; gap: 20px; }
+  .group { display: grid; gap: 12px; }
+  .group-title { color: #d7d7df; font-size: 12px; font-weight: 800; letter-spacing: .06em;
+    margin: 0 4px -2px; display: flex; align-items: center; gap: 10px; }
+  .group-title::after { content: ''; flex: 1; height: 1px; background: rgba(255,255,255,.16); }
+  .sub-label { font-size: 11px; color: var(--muted); font-weight: 700; margin: 14px 0 4px;
+    display: flex; align-items: center; gap: 8px; }
+  .sub-label::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+  details.sub { border: 1px solid var(--line); border-radius: 10px; padding: 9px 11px; margin-top: 12px; background: #fafafb; }
+  details.sub > summary { font-size: 12px; font-weight: 600; color: var(--muted); cursor: pointer; list-style: none; display: flex; align-items: center; gap: 6px; }
+  details.sub > summary::-webkit-details-marker { display: none; }
+  details.sub > summary::after { content: '▸'; color: var(--muted); margin-left: auto; transition: transform .15s; }
+  details.sub[open] > summary::after { transform: rotate(90deg); }
+  details.sub > *:not(summary) { margin-top: 8px; }
   .card { background: var(--panel); border-radius: var(--radius); padding: 13px 14px 15px; box-shadow: 0 6px 20px rgba(0,0,0,.18); }
   .card > h2 { margin: 0 0 9px; font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
   .card > h2 .hint { font-weight: 500; color: var(--muted); font-size: 11px; }
@@ -227,164 +240,176 @@
   <!-- ===================== CONTROLS ===================== -->
   <div class="controls">
 
-    <details class="card"><summary>樣式 <span class="hint">主題 / 範例 / 幣別</span></summary>
-      <div class="seg" id="theme-seg">
-        <button data-theme="custom" class="on"><span class="big">🎨 自訂</span><span class="sub">彩色,可改色/字/貼紙</span></button>
-        <button data-theme="thermal"><span class="big">🧾 收據機</span><span class="sub">黑白等寬,圖自動轉灰</span></button>
-      </div>
-      <div class="row2" style="margin-top:10px">
-        <div><label class="field">從範例開始</label>
-          <select id="example"><option value="cute">同人攤位</option><option value="coffee">咖啡店</option><option value="market">手作市集</option></select></div>
-        <div><label class="field">幣別</label>
-          <select id="f-currency"><option>TWD</option><option>USD</option><option>JPY</option><option>EUR</option><option>CNY</option><option>HKD</option><option>KRW</option><option>THB</option><option>SGD</option></select></div>
-      </div>
-    </details>
+    <!-- ===== Group 1 · 外觀與版面(長相) ===== -->
+    <section class="group">
+      <div class="group-title">🎨 外觀與版面</div>
 
-    <details class="card"><summary>尺寸 <span class="hint">寬度・留白・預覽大小</span></summary>
-      <label class="field">收據寬度 <span id="v-width" class="hint"></span></label>
-      <input type="range" id="s-width" min="280" max="900" step="10" />
-      <label class="field" style="margin-top:8px">頂部留白 <span id="v-padtop" class="hint"></span></label>
-      <input type="range" id="s-padtop" min="0" max="320" step="4" />
-      <label class="field" style="margin-top:8px">底部留白 <span id="v-padbottom" class="hint"></span></label>
-      <input type="range" id="s-padbottom" min="0" max="320" step="4" />
-      <label class="field" style="margin-top:8px">左右留白 <span id="v-padx" class="hint"></span></label>
-      <input type="range" id="s-padx" min="8" max="140" step="2" />
-      <label class="field" style="margin-top:8px">預覽大小 <span id="v-scale" class="hint"></span></label>
-      <input type="range" id="s-scale" min="220" max="520" step="10" />
-    </details>
+      <details class="card" open><summary>風格與顏色字體 <span class="hint">主題 / 範例 / 顏色 / 字體</span></summary>
+        <div class="seg" id="theme-seg">
+          <button data-theme="custom" class="on"><span class="big">🎨 自訂</span><span class="sub">彩色,可改色/字/貼紙</span></button>
+          <button data-theme="thermal"><span class="big">🧾 收據機</span><span class="sub">黑白等寬,圖自動轉灰</span></button>
+        </div>
+        <div class="row2" style="margin-top:10px">
+          <div><label class="field">從範例開始</label>
+            <select id="example"><option value="cute">同人攤位</option><option value="coffee">咖啡店</option><option value="market">手作市集</option></select></div>
+          <div><label class="field">幣別</label>
+            <select id="f-currency"><option>TWD</option><option>USD</option><option>JPY</option><option>EUR</option><option>CNY</option><option>HKD</option><option>KRW</option><option>THB</option><option>SGD</option></select></div>
+        </div>
+        <div class="sub-label">細部調整(顏色 / 字體 / 星星)</div>
+        <div class="colors">
+          <label>主色<input type="color" id="c-primary" /></label>
+          <label>背景<input type="color" id="c-bg" /></label>
+          <label>卡片<input type="color" id="c-surface" /></label>
+          <label>文字<input type="color" id="c-text" /></label>
+        </div>
+        <label class="field" style="margin-top:10px">英文字體</label>
+        <select id="f-font-latin">
+          <option value="quicksand">圓潤 Quicksand</option>
+          <option value="nunito">柔和 Nunito</option>
+          <option value="baloo">粗胖 Baloo 2</option>
+          <option value="poppins">簡約 Poppins</option>
+          <option value="fredoka">俏皮 Fredoka</option>
+          <option value="spacemono">等寬 Space Mono</option>
+          <option value="cubic">像素 Cubic 11</option>
+          <option value="boutique">像素 Boutique 9x9</option>
+          <option value="boutiqueBold">像素 Boutique 9x9 粗</option>
+        </select>
+        <label class="field" style="margin-top:8px">中文字體</label>
+        <select id="f-font-cjk">
+          <option value="noto">思源黑體 Noto Sans TC</option>
+          <option value="cubic">像素 Cubic 11(粒方)</option>
+          <option value="boutique">像素 Boutique 9x9</option>
+          <option value="boutiqueBold">像素 Boutique 9x9 粗</option>
+          <option value="sarasa">等寬 Sarasa Mono</option>
+          <option value="system">系統內建</option>
+        </select>
+        <label class="check"><input type="checkbox" id="c-stars" /> 角落星星裝飾(裝飾用,非貼紙)</label>
+      </details>
 
-    <details class="card"><summary>店家 <span class="hint">店名 / 標語 / 商標</span></summary>
-      <label class="field">店名 <span class="hint">留空 → 用 LOGO 當招牌</span></label>
-      <input type="text" id="f-name" placeholder="你的店名(可留空)" />
-      <label class="field">標語(副標)</label>
-      <input type="text" id="f-subtitle" placeholder="例如:手作 × 插畫" />
-      <label class="field">商標 / 圖示</label>
-      <div class="row2">
-        <button class="btn ghost upload">上傳圖片<input type="file" id="f-logo" accept="image/*" /></button>
-        <input type="text" id="f-icon" placeholder="或貼 emoji 🎀" />
-      </div>
-      <div id="logo-status" class="muted-note"></div>
-    </details>
+      <details class="card"><summary>尺寸 <span class="hint">寬度・留白・預覽大小</span></summary>
+        <label class="field">收據寬度 <span id="v-width" class="hint"></span></label>
+        <input type="range" id="s-width" min="280" max="900" step="10" />
+        <label class="field" style="margin-top:8px">頂部留白 <span id="v-padtop" class="hint"></span></label>
+        <input type="range" id="s-padtop" min="0" max="320" step="4" />
+        <label class="field" style="margin-top:8px">底部留白 <span id="v-padbottom" class="hint"></span></label>
+        <input type="range" id="s-padbottom" min="0" max="320" step="4" />
+        <label class="field" style="margin-top:8px">左右留白 <span id="v-padx" class="hint"></span></label>
+        <input type="range" id="s-padx" min="8" max="140" step="2" />
+        <label class="field" style="margin-top:8px">預覽大小 <span id="v-scale" class="hint"></span></label>
+        <input type="range" id="s-scale" min="220" max="520" step="10" />
+      </details>
 
-    <details class="card" id="card-bg"><summary>底圖 / 背景 <span class="hint">透明度・大小・位置</span></summary>
-      <div class="row2">
-        <button class="btn ghost upload">上傳底圖<input type="file" id="f-bg" accept="image/*" /></button>
-        <button class="btn sm" id="bg-remove">移除底圖</button>
-      </div>
-      <div id="bg-status" class="muted-note"></div>
-      <label class="field">透明度 <span id="v-bgop" class="hint"></span></label>
-      <input type="range" id="s-bgop" min="0" max="100" step="1" />
-      <label class="field">大小(放大才能左右/上下移動) <span id="v-bgsc" class="hint"></span></label>
-      <input type="range" id="s-bgsc" min="100" max="300" step="5" />
-      <label class="field">水平位置 <span id="v-bgx" class="hint"></span></label>
-      <input type="range" id="s-bgx" min="-300" max="300" step="5" />
-      <label class="field">垂直位置 <span id="v-bgy" class="hint"></span></label>
-      <input type="range" id="s-bgy" min="-300" max="300" step="5" />
-    </details>
+      <details class="card" id="card-bg"><summary>底圖 / 背景 <span class="hint">透明度・大小・位置</span></summary>
+        <div class="row2">
+          <button class="btn ghost upload">上傳底圖<input type="file" id="f-bg" accept="image/*" /></button>
+          <button class="btn sm" id="bg-remove">移除底圖</button>
+        </div>
+        <div id="bg-status" class="muted-note"></div>
+        <label class="field">透明度 <span id="v-bgop" class="hint"></span></label>
+        <input type="range" id="s-bgop" min="0" max="100" step="1" />
+        <label class="field">大小(放大才能左右/上下移動) <span id="v-bgsc" class="hint"></span></label>
+        <input type="range" id="s-bgsc" min="100" max="300" step="5" />
+        <label class="field">水平位置 <span id="v-bgx" class="hint"></span></label>
+        <input type="range" id="s-bgx" min="-300" max="300" step="5" />
+        <label class="field">垂直位置 <span id="v-bgy" class="hint"></span></label>
+        <input type="range" id="s-bgy" min="-300" max="300" step="5" />
+      </details>
 
-    <details class="card" id="card-event"><summary>攤位 / 活動 <span class="hint">CWT・FF・市集…</span></summary>
-      <label class="field">活動名稱</label><input type="text" id="e-name" placeholder="例如:Artist Alley" />
-      <div class="row2">
-        <div><label class="field">攤位編號</label><input type="text" id="e-booth" placeholder="A12" /></div>
-        <div><label class="field">地點</label><input type="text" id="e-location" placeholder="Taipei" /></div>
-      </div>
-      <label class="field">日期</label><input type="text" id="e-date" placeholder="2026-06-01" />
-    </details>
+      <details class="card"><summary>貼紙 <span class="hint">加上去後,直接在收據上拖</span></summary>
+        <div class="emoji-pick" id="emoji-pick"></div>
+        <button class="btn sm ghost upload" style="margin-top:8px">上傳貼紙圖<input type="file" id="f-sticker" accept="image/*" /></button>
+        <div id="sticker-list"></div>
+      </details>
 
-    <details class="card" id="card-tx"><summary>交易資訊 <span class="hint">單號・時間・收銀</span></summary>
-      <label class="field">收據編號</label><input type="text" id="t-no" placeholder="AA-A12-018" />
-      <label class="field">開立時間</label><input type="datetime-local" id="t-at" />
-      <label class="field">收銀員(選填)</label><input type="text" id="t-cashier" placeholder="Mimi" />
-    </details>
+      <details class="card" id="card-order"><summary>版面順序 <span class="hint">↑↓ 排序,或在收據上直接拖區塊</span></summary>
+        <div id="order-list"></div>
+      </details>
+    </section>
 
-    <details class="card"><summary>品項 <span class="hint">名稱 / 數量 / 單價</span></summary>
-      <div id="items"></div>
-      <div class="row2">
-        <button class="btn sm" id="add-item">+ 新增品項</button>
-        <button class="btn sm ghost" id="import-items" title="貼上 POS / 訂單系統的 JSON">⇩ 從訂單匯入</button>
-      </div>
-    </details>
+    <!-- ===== Group 2 · 收據內容(寫什麼) ===== -->
+    <section class="group">
+      <div class="group-title">🧾 收據內容</div>
 
-    <details class="card" id="card-discounts"><summary>折扣 <span class="hint">選填,可多筆</span></summary>
-      <div id="discounts"></div>
-      <button class="btn sm" id="add-discount">+ 新增折扣</button>
-    </details>
+      <details class="card"><summary>店家 <span class="hint">店名 / 標語 / 商標</span></summary>
+        <label class="field">店名 <span class="hint">留空 → 用 LOGO 當招牌</span></label>
+        <input type="text" id="f-name" placeholder="你的店名(可留空)" />
+        <label class="field">標語(副標)</label>
+        <input type="text" id="f-subtitle" placeholder="例如:手作 × 插畫" />
+        <label class="field">商標 / 圖示</label>
+        <div class="row2">
+          <button class="btn ghost upload">上傳圖片<input type="file" id="f-logo" accept="image/*" /></button>
+          <input type="text" id="f-icon" placeholder="或貼 emoji 🎀" />
+        </div>
+        <div id="logo-status" class="muted-note"></div>
+      </details>
 
-    <details class="card" id="card-payments"><summary>付款 <span class="hint">選填,可多筆</span></summary>
-      <div id="payments"></div>
-      <button class="btn sm" id="add-payment">+ 新增付款</button>
-    </details>
+      <details class="card" id="card-event"><summary>攤位 / 活動 <span class="hint">CWT・FF・市集…</span></summary>
+        <label class="field">活動名稱</label><input type="text" id="e-name" placeholder="例如:Artist Alley" />
+        <div class="row2">
+          <div><label class="field">攤位編號</label><input type="text" id="e-booth" placeholder="A12" /></div>
+          <div><label class="field">地點</label><input type="text" id="e-location" placeholder="Taipei" /></div>
+        </div>
+        <label class="field">日期</label><input type="text" id="e-date" placeholder="2026-06-01" />
+      </details>
 
-    <details class="card" id="card-qr"><summary>QR 條碼 <span class="hint">社群 / 回饋 / 優惠</span></summary>
-      <label class="check"><input type="checkbox" id="q-on" /> 顯示 QR</label>
-      <label class="field">連結 / 內容</label><input type="text" id="q-value" placeholder="https://…" />
-      <label class="field">標題</label><input type="text" id="q-label" placeholder="追蹤我們" />
-      <label class="field">說明</label><input type="text" id="q-caption" placeholder="新作 & 下次擺攤資訊" />
-    </details>
+      <details class="card" id="card-tx"><summary>交易資訊 <span class="hint">單號・時間・收銀</span></summary>
+        <label class="field">收據編號</label><input type="text" id="t-no" placeholder="AA-A12-018" />
+        <label class="field">開立時間</label><input type="datetime-local" id="t-at" />
+        <label class="field">收銀員(選填)</label><input type="text" id="t-cashier" placeholder="Mimi" />
+      </details>
 
-    <details class="card" id="card-order"><summary>版面順序 <span class="hint">↑↓ 排序,或在收據上直接拖區塊</span></summary>
-      <div id="order-list"></div>
-    </details>
+      <details class="card"><summary>品項 <span class="hint">名稱 / 數量 / 單價</span></summary>
+        <div id="items"></div>
+        <div class="row2">
+          <button class="btn sm" id="add-item">+ 新增品項</button>
+          <button class="btn sm ghost" id="import-items" title="貼上 POS / 訂單系統的 JSON">⇩ 從訂單匯入</button>
+        </div>
+      </details>
 
-    <details class="card"><summary>結尾訊息 <span class="hint">標題 / 內文 / 頁尾</span></summary>
-      <label class="field">標題</label><input type="text" id="m-title" placeholder="Thank you! ♡" />
-      <label class="field">內文</label><input type="text" id="m-body" placeholder="一句感謝的話" />
-      <label class="field">頁尾</label><input type="text" id="m-footer" placeholder="See you next event!" />
-    </details>
+      <details class="card" id="card-discounts"><summary>折扣 <span class="hint">選填,可多筆</span></summary>
+        <div id="discounts"></div>
+        <button class="btn sm" id="add-discount">+ 新增折扣</button>
+      </details>
 
-    <details class="card"><summary>貼紙 <span class="hint">加上去後,直接在收據上拖</span></summary>
-      <div class="emoji-pick" id="emoji-pick"></div>
-      <button class="btn sm ghost upload" style="margin-top:8px">上傳貼紙圖<input type="file" id="f-sticker" accept="image/*" /></button>
-      <div id="sticker-list"></div>
-    </details>
+      <details class="card" id="card-payments"><summary>付款 <span class="hint">選填,可多筆</span></summary>
+        <div id="payments"></div>
+        <button class="btn sm" id="add-payment">+ 新增付款</button>
+      </details>
 
-    <details class="card" id="card-look"><summary>外觀 <span class="hint">顏色 / 字體 / 星星 · 兩種風格都能改</span></summary>
-      <div class="colors">
-        <label>主色<input type="color" id="c-primary" /></label>
-        <label>背景<input type="color" id="c-bg" /></label>
-        <label>卡片<input type="color" id="c-surface" /></label>
-        <label>文字<input type="color" id="c-text" /></label>
-      </div>
-      <label class="field" style="margin-top:10px">英文字體</label>
-      <select id="f-font-latin">
-        <option value="quicksand">圓潤 Quicksand</option>
-        <option value="nunito">柔和 Nunito</option>
-        <option value="baloo">粗胖 Baloo 2</option>
-        <option value="poppins">簡約 Poppins</option>
-        <option value="fredoka">俏皮 Fredoka</option>
-        <option value="spacemono">等寬 Space Mono</option>
-        <option value="cubic">像素 Cubic 11</option>
-        <option value="boutique">像素 Boutique 9x9</option>
-        <option value="boutiqueBold">像素 Boutique 9x9 粗</option>
-      </select>
-      <label class="field" style="margin-top:8px">中文字體</label>
-      <select id="f-font-cjk">
-        <option value="noto">思源黑體 Noto Sans TC</option>
-        <option value="cubic">像素 Cubic 11(粒方)</option>
-        <option value="boutique">像素 Boutique 9x9</option>
-        <option value="boutiqueBold">像素 Boutique 9x9 粗</option>
-        <option value="sarasa">等寬 Sarasa Mono</option>
-        <option value="system">系統內建</option>
-      </select>
-      <label class="check"><input type="checkbox" id="c-stars" /> 角落星星裝飾(裝飾用,非貼紙)</label>
-    </details>
+      <details class="card" id="card-qr"><summary>QR 條碼 <span class="hint">社群 / 回饋 / 優惠</span></summary>
+        <label class="check"><input type="checkbox" id="q-on" /> 顯示 QR</label>
+        <label class="field">連結 / 內容</label><input type="text" id="q-value" placeholder="https://…" />
+        <label class="field">標題</label><input type="text" id="q-label" placeholder="追蹤我們" />
+        <label class="field">說明</label><input type="text" id="q-caption" placeholder="新作 & 下次擺攤資訊" />
+      </details>
 
-    <details class="card"><summary>設定檔 <span class="hint">存檔 / 還原整個設計</span></summary>
-      <div class="row2">
-        <button class="btn" id="cfg-save">⬇ 下載設定檔</button>
-        <button class="btn ghost upload">⬆ 載入設定檔<input type="file" id="cfg-load" accept="application/json,.json" /></button>
-      </div>
-      <div class="muted-note">含收據內容、主題、中英字體、顏色、上下/左右留白、底圖、貼紙——載回 100% 還原。</div>
-    </details>
+      <details class="card"><summary>結尾訊息 <span class="hint">標題 / 內文 / 頁尾</span></summary>
+        <label class="field">標題</label><input type="text" id="m-title" placeholder="Thank you! ♡" />
+        <label class="field">內文</label><input type="text" id="m-body" placeholder="一句感謝的話" />
+        <label class="field">頁尾</label><input type="text" id="m-footer" placeholder="See you next event!" />
+      </details>
+    </section>
 
-    <details class="card"><summary>進階:JSON <span class="hint">收據 or 訂單</span></summary>
-      <textarea id="json" spellcheck="false"></textarea>
-      <div class="row2" style="margin-top:6px">
-        <button class="btn sm" id="load-receipt">載入收據 JSON</button>
-        <button class="btn sm ghost" id="load-order">載入訂單 JSON</button>
-      </div>
-      <div class="muted-note">「訂單 JSON」會經由 <code>importOrder()</code> 轉成收據——之後接 POS / 電商系統就走這條。</div>
-    </details>
+    <!-- ===== Group 3 · 存檔 / 匯入 ===== -->
+    <section class="group">
+      <div class="group-title">💾 存檔 / 匯入</div>
+
+      <details class="card"><summary>存檔 / 匯入 <span class="hint">設定檔 · 進階 JSON</span></summary>
+        <div class="row2">
+          <button class="btn" id="cfg-save">⬇ 下載設定檔</button>
+          <button class="btn ghost upload">⬆ 載入設定檔<input type="file" id="cfg-load" accept="application/json,.json" /></button>
+        </div>
+        <div class="muted-note">含收據內容、主題、中英字體、顏色、上下/左右留白、底圖、貼紙——載回 100% 還原。</div>
+        <details class="sub" id="card-json"><summary>進階:JSON(收據 / 訂單)</summary>
+          <textarea id="json" spellcheck="false"></textarea>
+          <div class="row2" style="margin-top:6px">
+            <button class="btn sm" id="load-receipt">載入收據 JSON</button>
+            <button class="btn sm ghost" id="load-order">載入訂單 JSON</button>
+          </div>
+          <div class="muted-note">「訂單 JSON」會經由 <code>importOrder()</code> 轉成收據——之後接 POS / 電商系統就走這條。</div>
+        </details>
+      </details>
+    </section>
   </div>
 
   <!-- ===================== STAGE ===================== -->

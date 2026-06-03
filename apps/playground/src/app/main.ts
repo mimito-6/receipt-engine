@@ -334,7 +334,14 @@ function wire(): void {
     render()
   })
   $('import-items').addEventListener('click', () => {
-    ;(document.querySelector('details.card:last-of-type') as HTMLDetailsElement).open = true
+    // open every <details> ancestor of the JSON box (it's nested in 存檔/匯入)
+    let node: HTMLElement | null = $('json')
+    while (node) {
+      const d = node.closest('details') as HTMLDetailsElement | null
+      if (!d) break
+      d.open = true
+      node = d.parentElement
+    }
     $('json').focus()
     showError('把 POS/訂單系統的 JSON 貼到下方「進階:JSON」,按「載入訂單 JSON」即可。之後接系統就走 importOrder()。')
   })
