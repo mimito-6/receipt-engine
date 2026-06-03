@@ -15,6 +15,7 @@ import { layoutOverlay } from './overlay'
 import { refreshInspector } from './inspector'
 import { positionEdgeHandles } from './resize'
 import { renderOrderPanel } from './reorder'
+import { scheduleHistory } from './history'
 
 /** Build the active theme: both themes go through mergeTheme so 外觀 works for either. */
 export function currentTheme(): ReceiptTheme {
@@ -77,4 +78,5 @@ export function render(): void {
   positionEdgeHandles()
   renderOrderPanel()
   ;($('json') as HTMLTextAreaElement).value = JSON.stringify(state.receipt, null, 2)
+  scheduleHistory()
 }

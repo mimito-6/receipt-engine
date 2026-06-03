@@ -59,6 +59,12 @@
   .err { display: none; color: #ffd2cf; background: rgba(180,35,24,.35); border: 1px solid rgba(255,120,110,.5);
     border-radius: 10px; padding: 8px 12px; font-size: 12px; white-space: pre-wrap; max-width: 360px; }
   .canvas-hint { color: #b9b9c4; font-size: 11px; text-align: center; max-width: 360px; line-height: 1.6; }
+  .canvas-tools { display: flex; gap: 8px; }
+  .canvas-tools button { font: inherit; font-size: 12px; font-weight: 600; color: #fff;
+    background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.22); border-radius: 999px;
+    padding: 6px 14px; cursor: pointer; }
+  .canvas-tools button:hover:not(:disabled) { background: rgba(255,255,255,.22); }
+  .canvas-tools button:disabled { opacity: .35; cursor: default; }
 
   .controls { display: grid; gap: 20px; }
   .group { display: grid; gap: 12px; }
@@ -428,6 +434,10 @@
   <!-- ===================== STAGE ===================== -->
   <div class="stage">
     <div class="err" id="err"></div>
+    <div class="canvas-tools">
+      <button id="undo" title="上一步 (Ctrl+Z)" disabled>↶ 上一步</button>
+      <button id="redo" title="下一步 (Ctrl+Y)" disabled>↷ 下一步</button>
+    </div>
     <div id="paper"><div id="svg-host"></div><div id="sticker-overlay"></div></div>
     <div class="canvas-hint">點文字改內容/字體 · 拖貼紙縮放旋轉 · 拖邊界改尺寸 · 拖區塊排順序</div>
     <label class="dl-clean"><input type="checkbox" id="dl-clean" /> 乾淨背景(透明 PNG,適合印製)</label>

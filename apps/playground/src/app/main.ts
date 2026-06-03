@@ -33,6 +33,7 @@ import { layoutOverlay, setStickerCommit, setStickerDelete, setStickerSelect } f
 import { clearSelection, onCanvasDblClick, refreshInspector } from './inspector'
 import { installEdgeHandles } from './resize'
 import { beginCanvasGesture } from './reorder'
+import { redo, resetHistory, undo } from './history'
 
 // Expose the engine under the historical global so embedders/docs keep working.
 ;(window as unknown as Record<string, unknown>).ReceiptEngine = {
@@ -66,8 +67,10 @@ function loadExample(key: string): void {
   state.look.thermal = deepClone(THERMAL_LOOK)
   state.pad = { custom: defaultPad('custom'), thermal: defaultPad('thermal') }
   state.mono = { custom: false, thermal: true }
+  state.cleanExport = false
   syncFormFromState()
   render()
+  resetHistory()
 }
 
 function applyConfig(cfg: any): void {
@@ -99,6 +102,7 @@ function applyConfig(cfg: any): void {
   state.sel = -1
   state.selection = null
   setTheme(cfg.theme === 'thermal' ? 'thermal' : 'custom')
+  resetHistory()
 }
 
 function wire(): void {
@@ -119,6 +123,24 @@ function wire(): void {
   // canvas: tap text to style it; drag a section to reorder it; double-tap to edit text
   $('svg-host').addEventListener('pointerdown', beginCanvasGesture as EventListener)
   $('svg-host').addEventListener('dblclick', onCanvasDblClick as EventListener)
+
+  // undo / redo (buttons + keyboard)
+  $('undo').addEventListener('click', undo)
+  $('redo').addEventListener('click', redo)
+  window.addEventListener('keydown', (e) => {
+    if (!(e.ctrlKey || e.metaKey)) return
+    const tag = (e.target as HTMLElement | null)?.tagName
+    // let text fields use their own native undo
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
+    const k = e.key.toLowerCase()
+    if (k === 'z' && !e.shiftKey) {
+      e.preventDefault()
+      undo()
+    } else if (k === 'y' || (k === 'z' && e.shiftKey)) {
+      e.preventDefault()
+      redo()
+    }
+  })
 
   // theme + example
   $('theme-seg')
