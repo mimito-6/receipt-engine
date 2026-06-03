@@ -152,6 +152,20 @@
   .insp-reset:hover { border-color: var(--accent); color: var(--accent); }
   .inspector.as-sheet { left: 0; right: 0; bottom: 0; top: auto; width: auto; border-radius: 16px 16px 0 0;
     padding-bottom: calc(13px + env(safe-area-inset-bottom)); box-shadow: 0 -10px 30px rgba(0,0,0,.3); }
+
+  /* ---- sticker PS-style transform frame + alignment guides ---- */
+  .re-guide { position: absolute; pointer-events: none; z-index: 5; }
+  .re-frame { position: absolute; pointer-events: none; z-index: 4; border: 1.5px dashed var(--accent); border-radius: 3px; }
+  .re-h { position: absolute; pointer-events: auto; width: 16px; height: 16px; background: #fff;
+    border: 2px solid var(--accent); border-radius: 50%; box-shadow: 0 1px 3px rgba(0,0,0,.35); touch-action: none; }
+  .re-c.tl { left: 0; top: 0; transform: translate(-50%, -50%); cursor: nwse-resize; }
+  .re-c.tr { right: 0; top: 0; transform: translate(50%, -50%); cursor: nesw-resize; }
+  .re-c.bl { left: 0; bottom: 0; transform: translate(-50%, 50%); cursor: nesw-resize; }
+  .re-c.br { right: 0; bottom: 0; transform: translate(50%, 50%); cursor: nwse-resize; }
+  .re-rot { left: 50%; top: 0; transform: translate(-50%, -28px); cursor: grab; background: var(--accent); }
+  .re-stem { position: absolute; left: 50%; top: 0; width: 0; height: 28px; transform: translate(-50%, -100%);
+    border-left: 1.5px dashed var(--accent); pointer-events: none; }
+  #paper.thermal .re-frame, #paper.thermal .re-h, #paper.thermal .re-stem, #paper.thermal .re-guide { filter: none; }
 </style>
 </head>
 <body>

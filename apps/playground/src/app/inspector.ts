@@ -6,6 +6,7 @@ import { $ } from './dom'
 import { render } from './render'
 import { FONT_PRESETS, state } from './state'
 import { renderStickerList } from './form'
+import { clearFrame } from './overlay'
 
 const PAD = 4 // selection box padding (screen px)
 
@@ -198,6 +199,7 @@ export function selectText(id: string): void {
   if (!el) return
   state.selection = { kind: 'text', id }
   state.sel = -1 // drop any sticker selection
+  clearFrame()
   document.querySelectorAll('.sticker-handle.sel').forEach((h) => h.classList.remove('sel'))
   renderStickerList()
   syncControls(id, el)
