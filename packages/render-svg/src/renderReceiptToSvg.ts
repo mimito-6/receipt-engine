@@ -362,30 +362,26 @@ export function renderReceiptToSvg(
   let bgClip = ''
   if (bgSrc && isImageSource(bgSrc)) {
     const op = doc.assets?.backgroundOpacity ?? 1
-    // Free zoom both ways (floor 0.05, no upper cap):
-    //  • scale >= 1 (cover / zoomed-in): grow the box by the pan offset so panning
-    //    the visible crop never pulls an edge inside — no accidental blank gap.
-    //  • scale < 1 (shrunk): the image is an intentionally-small element; keep it that
-    //    size and let the user place it freely (card surface showing around it is the
-    //    point of shrinking).
+    // ONE continuous model — no cover/contain mode switch (the switch made the size
+    // JUMP when crossing 100%). The image keeps its aspect ratio ("meet") and scales
+    // smoothly with `scale`: the placement box is the card scaled by `scale`, so width
+    // tracks scale linearly. Small → a small whole image on the card; scale up → it
+    // grows and, once it exceeds the card in both dimensions, fills it (clipped to the
+    // card). Centered, then panned. Floor 0.05, no upper cap.
     const scale = Math.max(0.05, doc.assets?.backgroundScale ?? 1)
     const panX = doc.assets?.backgroundX ?? 0
     const panY = doc.assets?.backgroundY ?? 0
-    const cover = scale >= 1
-    const bgW = cardWidth * scale + (cover ? 2 * Math.abs(panX) : 0)
-    const bgH = cardHeight * scale + (cover ? 2 * Math.abs(panY) : 0)
+    const bgW = cardWidth * scale
+    const bgH = cardHeight * scale
     const bgX = cardX + (cardWidth - bgW) / 2 + panX
     const bgY = cardTop + (cardHeight - bgH) / 2 + panY
     const filterAttr = monoFilterId ? ` filter="${monoFilterId}"` : ''
     bgClip =
       `<clipPath id="re-bg"><rect x="${n(cardX)}" y="${n(cardTop)}" width="${n(cardWidth)}" ` +
       `height="${n(cardHeight)}" rx="${n(theme.radius.card)}"/></clipPath>`
-    // Cover (>=1): "slice" fills the card and crops the overflow. Shrunk (<1): "meet"
-    // shows the WHOLE image at its own aspect ratio (no crop to the card rectangle).
-    const fit = cover ? 'xMidYMid slice' : 'xMidYMid meet'
     bgImage =
       `<g clip-path="url(#re-bg)"><image href="${escapeXml(bgSrc)}" x="${n(bgX)}" y="${n(bgY)}" ` +
-      `width="${n(bgW)}" height="${n(bgH)}" preserveAspectRatio="${fit}" opacity="${op}"${filterAttr} /></g>`
+      `width="${n(bgW)}" height="${n(bgH)}" preserveAspectRatio="xMidYMid meet" opacity="${op}"${filterAttr} /></g>`
   }
 
   const defsInner = (monoImages ? monoFilter(MONO_FILTER_ID) : '') + bgClip

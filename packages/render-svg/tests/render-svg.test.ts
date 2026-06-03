@@ -144,27 +144,25 @@ describe('renderReceiptToSvg', () => {
     expect(def.indexOf('Mimito Booth')).toBeLessThan(def.indexOf('Thank you!'))
   })
 
-  it('background zooms freely both ways: covers when panned at ≥1×, shrinks below 1×', () => {
-    const cardX = 26 // outerMargin (custom)
+  it('background scales continuously (no jump at 100%) and keeps its aspect ratio', () => {
     const cardWidth = 720 - 52
-    const num = (svg: string, attr: string): number =>
-      parseFloat(svg.match(new RegExp(`<image[^>]*\\s${attr}="([-\\d.]+)"`))![1])
     const at = (assets: Record<string, unknown>): string =>
       renderReceiptToSvg(
         { ...baseReceipt, assets: { backgroundImage: PNG, ...assets } },
         { theme: 'custom', width: 720 },
       )
-    // scale 1 + a big pan must STILL cover the card — the box grows on pan (no gap)
-    const panned = at({ backgroundScale: 1, backgroundX: 200 })
-    expect(num(panned, 'x')).toBeLessThanOrEqual(cardX)
-    expect(num(panned, 'x') + num(panned, 'width')).toBeGreaterThanOrEqual(cardX + cardWidth)
-    // scale < 1 shrinks below cover — a small image, NOT grown to cover (gaps are intended)
-    expect(num(at({ backgroundScale: 0.5 }), 'width')).toBeCloseTo(cardWidth * 0.5, 0)
-    // zoom goes well past the old 3× cap (no upper limit)
-    expect(num(at({ backgroundScale: 5 }), 'width')).toBeCloseTo(cardWidth * 5, 0)
-    // shrunk shows the WHOLE image (contain), cover crops to fill (slice)
+    const w = (s: number): number =>
+      parseFloat(at({ backgroundScale: s }).match(/<image[^>]*\swidth="([\d.]+)"/)![1])
+    // width tracks scale LINEARLY across the 1.0 boundary — the 95%↔100% size jump is gone
+    expect(w(0.95)).toBeCloseTo(cardWidth * 0.95, 0)
+    expect(w(1.0)).toBeCloseTo(cardWidth * 1.0, 0)
+    expect(w(1.05)).toBeCloseTo(cardWidth * 1.05, 0)
+    expect(Math.abs(w(1.0) - w(0.95))).toBeLessThan(cardWidth * 0.1) // continuous, not a cliff
+    // full range with one consistent fit mode (whole image, never force-cropped/distorted)
+    expect(w(0.3)).toBeCloseTo(cardWidth * 0.3, 0)
+    expect(w(8)).toBeCloseTo(cardWidth * 8, 0)
     expect(at({ backgroundScale: 0.5 })).toContain('preserveAspectRatio="xMidYMid meet"')
-    expect(at({ backgroundScale: 1 })).toContain('preserveAspectRatio="xMidYMid slice"')
+    expect(at({ backgroundScale: 2 })).toContain('preserveAspectRatio="xMidYMid meet"')
   })
 
   it('tags elements only in interactive mode', () => {
@@ -217,7 +215,7 @@ describe('renderReceiptToSvg', () => {
     expect(clean).not.toContain(`fill="${bg}"`)
     // …but the card itself is kept: its surface fill + its background image stay
     expect(clean).toContain(`fill="${surface}"`)
-    expect(clean).toContain('preserveAspectRatio="xMidYMid slice"') // card bg image kept
+    expect(clean).toContain('preserveAspectRatio="xMidYMid meet"') // card bg image kept
   })
 
   it('perforatedEdges overrides the theme + renders a torn silhouette', () => {
