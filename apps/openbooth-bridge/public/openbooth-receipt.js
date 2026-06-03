@@ -77,7 +77,7 @@
   }
 
   // target: 'print' (force thermal, 384) or 'send'/'preview' (template theme).
-  function renderSvg(merged, tpl, target) {
+  function renderOpts(tpl, target) {
     var themeName = target === 'print' ? 'thermal' : (tpl && tpl.theme) || 'custom'
     var look = tpl && tpl.look ? tpl.look[themeName] : null
     var theme = look ? B().mergeTheme(B().getTheme(themeName), lookOverride(look)) : B().getTheme(themeName)
@@ -85,21 +85,41 @@
     var pad = tpl && tpl.pad ? tpl.pad[themeName] : null
     var ro = { theme: theme, width: width }
     if (pad) { ro.padTop = pad.top; ro.padBottom = pad.bottom; ro.padX = pad.x }
-    return B().renderReceiptToSvg(merged, ro)
+    return { opts: ro, theme: theme }
+  }
+  function fontStacksFor(theme, tpl) {
+    var stacks = []
+    if (theme && theme.typography && theme.typography.fontFamily) stacks.push(theme.typography.fontFamily)
+    var so = (tpl && tpl.receipt && tpl.receipt.styleOverrides) || {}
+    for (var id in so) if (so[id] && so[id].fontFamily) stacks.push(so[id].fontFamily)
+    return stacks
+  }
+  // instant render (no embedded fonts) — for snappy preview
+  function renderSvg(merged, tpl, target) {
+    return B().renderReceiptToSvg(merged, renderOpts(tpl, target).opts)
+  }
+  // faithful render: embed the designed fonts so print/share match the template
+  function renderSvgEmbedded(merged, tpl, target) {
+    var r = renderOpts(tpl, target)
+    var probe = B().renderReceiptToSvg(merged, r.opts)
+    if (!B().buildFontFaceCss) return Promise.resolve(probe)
+    return B().buildFontFaceCss(fontStacksFor(r.theme, tpl), probe)
+      .then(function (css) { if (css) r.opts.fontFaceCss = css; return B().renderReceiptToSvg(merged, r.opts) })
+      .catch(function () { return probe })
   }
 
   /* ---------- printer ---------- */
   function getPrinter() { if (!printer) printer = new (B().BluetoothThermalPrinter)(); return printer }
 
   function doPrint(merged, tpl) {
-    var svg = renderSvg(merged, tpl, 'print')
-    return B().printReceiptSvg(svg, getPrinter(), { dots: 384, bitmap: { dither: 'floyd-steinberg' } })
+    return renderSvgEmbedded(merged, tpl, 'print')
+      .then(function (svg) { return B().printReceiptSvg(svg, getPrinter(), { dots: 384, bitmap: { dither: 'floyd-steinberg' } }) })
       .then(function () { toast('🖨 已送出列印') })
       .catch(function (e) { toast('列印失敗:' + (e && e.message || e)); throw e })
   }
   function doSend(merged, tpl) {
-    var svg = renderSvg(merged, tpl, 'send')
-    return B().shareReceiptSvg(svg, { title: '收據 Receipt', text: '感謝您的購買 ♡', filename: 'receipt.png' })
+    return renderSvgEmbedded(merged, tpl, 'send')
+      .then(function (svg) { return B().shareReceiptSvg(svg, { title: '收據 Receipt', text: '感謝您的購買 ♡', filename: 'receipt.png' }) })
       .then(function (res) { toast(res.shared ? '📲 已分享收據' : '⬇ 已下載收據圖') })
       .catch(function (e) { toast('傳送失敗:' + (e && e.message || e)) })
   }
@@ -158,6 +178,8 @@
     var preview = document.createElement('div'); preview.className = 're-preview'
     try { preview.innerHTML = renderSvg(built.merged, built.tpl, 'preview') } catch (e) { preview.textContent = '(預覽失敗)' }
     s.sheet.appendChild(preview)
+    // upgrade the preview with the designed (embedded) fonts once fetched
+    renderSvgEmbedded(built.merged, built.tpl, 'preview').then(function (svg) { preview.innerHTML = svg }).catch(function () {})
 
     var actions = document.createElement('div'); actions.className = 're-actions'
     actions.innerHTML =

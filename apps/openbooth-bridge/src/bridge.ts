@@ -9,6 +9,7 @@ import { safeValidateReceipt } from '@receipt-engine/core'
 import { applyTemplate, ensureValid, importOpenBoothOrder } from '@receipt-engine/import'
 import {
   BluetoothThermalPrinter,
+  buildFontFaceCss,
   canShareFiles,
   printReceiptSvg,
   receiptSvgToEscpos,
@@ -35,6 +36,7 @@ const ReceiptBridge = {
   shareReceiptSvg,
   svgToPngBlob,
   canShareFiles,
+  buildFontFaceCss,
 }
 
 ;(window as unknown as Record<string, unknown>).ReceiptBridge = ReceiptBridge

@@ -72,6 +72,17 @@ from OpenBooth and reconciles to its figures.
 Optional settings: **🔗 配對 / 連線收據機** (pair the printer once) and
 **結帳後自動列印** (auto-print on checkout).
 
+### Fonts
+
+So the print/share output matches your designed typeface (not a system fallback),
+the glue embeds the fonts the receipt uses into the SVG before rasterizing
+(`ReceiptBridge.buildFontFaceCss`). **Google fonts** (Quicksand, Nunito, Baloo 2,
+Poppins, Fredoka, Space Mono, Noto Sans TC) are fetched online and subsetted to
+the exact glyphs used (tiny, even for CJK) — no files to copy. To also embed the
+bundled **pixel fonts** (Cubic 11, Boutique 9×9), copy `apps/playground/public/fonts/*.ttf`
+into `booth-pos/fonts/`. Anything that can't be fetched (offline, or Sarasa)
+gracefully falls back.
+
 ## Requirements & limits
 
 - **HTTPS** (or `localhost`) is required for both Web Bluetooth and Web Share, and
