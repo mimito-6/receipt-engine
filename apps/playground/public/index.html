@@ -40,9 +40,11 @@
   .stage { display: flex; flex-direction: column; align-items: center; gap: 12px; order: -1; }
   #paper { position: relative; width: 100%; max-width: 360px; }
   #svg-host svg { width: 100%; height: auto; border-radius: 8px; filter: drop-shadow(0 18px 40px rgba(0,0,0,.45)); display: block; }
-  #sticker-overlay { position: absolute; inset: 0; touch-action: none; }
+  #svg-host svg text { cursor: pointer; }
+  /* The overlay passes clicks through to the SVG; only its handles are interactive. */
+  #sticker-overlay { position: absolute; inset: 0; touch-action: none; pointer-events: none; }
   .sticker-handle {
-    position: absolute; transform-origin: center; cursor: grab; touch-action: none;
+    position: absolute; transform-origin: center; cursor: grab; touch-action: none; pointer-events: auto;
     user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent;
     display: flex; align-items: center; justify-content: center; min-width: 34px; min-height: 34px; line-height: 1;
   }
@@ -122,6 +124,34 @@
   .muted-note { font-size: 11px; color: var(--muted); margin-top: 6px; }
   footer { text-align: center; color: #9a9aa6; font-size: 11px; padding: 4px 16px 26px; }
   footer code { background: rgba(255,255,255,.1); color: #cfcfd8; padding: 1px 5px; border-radius: 4px; }
+
+  /* ---- direct-manipulation editor: selection box + contextual inspector ---- */
+  #re-sel-box { position: absolute; pointer-events: none; z-index: 3; border: 2px solid var(--accent);
+    border-radius: 5px; box-shadow: 0 0 0 2px rgba(255,255,255,.65); }
+  #re-sel-box[hidden] { display: none; }
+  .inspector { position: fixed; z-index: 60; width: 264px; background: var(--panel); color: var(--ink);
+    border-radius: 14px; box-shadow: 0 14px 40px rgba(0,0,0,.35); padding: 12px 13px 13px; }
+  .inspector[hidden] { display: none; }
+  .insp-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .insp-title { font-size: 13px; font-weight: 700; }
+  .insp-x { margin-left: auto; border: none; background: #f3f3f5; color: #888; width: 26px; height: 26px;
+    border-radius: 8px; cursor: pointer; font-size: 16px; line-height: 1; }
+  .insp-x:hover { background: var(--accent-soft); color: var(--accent); }
+  .insp-target { font-size: 11px; color: var(--muted); background: #f6f6f8; border-radius: 8px; padding: 4px 8px; margin-bottom: 10px; }
+  .insp-field { display: block; font-size: 11px; color: var(--muted); margin-bottom: 9px; }
+  .insp-field select, .insp-field input[type=color], .insp-field input[type=range] { width: 100%; margin-top: 4px; }
+  .insp-field input[type=color] { height: 32px; border: 1px solid var(--line); border-radius: 8px; padding: 2px; background: #fff; cursor: pointer; }
+  .insp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .insp-field em { font-style: normal; color: var(--ink); }
+  .insp-seg { display: flex; gap: 6px; margin-top: 5px; }
+  .insp-seg button { flex: 1; font: inherit; font-size: 12px; padding: 7px 4px; border: 1.5px solid var(--line);
+    background: #fff; border-radius: 9px; cursor: pointer; color: var(--ink); }
+  .insp-seg button.on { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+  .insp-reset { width: 100%; margin-top: 2px; font: inherit; font-size: 12px; padding: 8px; border: 1px solid var(--line);
+    border-radius: 9px; background: #f6f6f8; cursor: pointer; color: var(--muted); }
+  .insp-reset:hover { border-color: var(--accent); color: var(--accent); }
+  .inspector.as-sheet { left: 0; right: 0; bottom: 0; top: auto; width: auto; border-radius: 16px 16px 0 0;
+    padding-bottom: calc(13px + env(safe-area-inset-bottom)); box-shadow: 0 -10px 30px rgba(0,0,0,.3); }
 </style>
 </head>
 <body>

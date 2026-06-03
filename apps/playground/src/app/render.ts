@@ -12,6 +12,7 @@ import { safeValidateReceipt } from '@receipt-engine/core'
 import { $, clearError, showError } from './dom'
 import { curLook, curPad, curWidth, deepClone, fontStack, state } from './state'
 import { layoutOverlay } from './overlay'
+import { refreshInspector } from './inspector'
 
 /** Build the active theme: both themes go through mergeTheme so 外觀 works for either. */
 export function currentTheme(): ReceiptTheme {
@@ -69,5 +70,6 @@ export function render(): void {
   $('paper').className = state.theme === 'thermal' ? 'thermal' : ''
   applyScale()
   layoutOverlay()
+  refreshInspector()
   ;($('json') as HTMLTextAreaElement).value = JSON.stringify(state.receipt, null, 2)
 }

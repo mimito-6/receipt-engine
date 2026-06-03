@@ -206,6 +206,24 @@ export const examples: Record<string, { receipt: Draft; custom: Look }> = {
   },
 }
 
+/** One-click font choices for the per-element inspector (each = a full stack). */
+export interface FontPreset {
+  id: string
+  label: string
+  stack: string
+}
+export const FONT_PRESETS: FontPreset[] = [
+  { id: 'quicksand', label: '圓潤 Quicksand', stack: fontStack('quicksand', 'noto') },
+  { id: 'nunito', label: '柔和 Nunito', stack: fontStack('nunito', 'noto') },
+  { id: 'baloo', label: '粗胖 Baloo 2', stack: fontStack('baloo', 'noto') },
+  { id: 'poppins', label: '簡約 Poppins', stack: fontStack('poppins', 'noto') },
+  { id: 'fredoka', label: '俏皮 Fredoka', stack: fontStack('fredoka', 'noto') },
+  { id: 'spacemono', label: '等寬 Space Mono', stack: fontStack('spacemono', 'sarasa') },
+  { id: 'cubic', label: '像素 Cubic 11', stack: fontStack('cubic', 'cubic') },
+  { id: 'boutique', label: '像素 Boutique 9x9', stack: fontStack('boutique', 'boutique') },
+  { id: 'boutiqueBold', label: '像素 Boutique 粗', stack: fontStack('boutiqueBold', 'boutiqueBold') },
+]
+
 export function curLook(): Look {
   return state.look[state.theme] as Look
 }

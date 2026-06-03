@@ -29,6 +29,7 @@ import {
   normalize,
 } from './io'
 import { layoutOverlay, setStickerCommit, setStickerSelect } from './overlay'
+import { clearSelection, onCanvasPointerDown, refreshInspector } from './inspector'
 
 // Expose the engine under the historical global so embedders/docs keep working.
 ;(window as unknown as Record<string, unknown>).ReceiptEngine = {
@@ -93,7 +94,13 @@ function wire(): void {
     ;($('json') as HTMLTextAreaElement).value = JSON.stringify(state.receipt, null, 2)
     renderStickerList()
   })
-  setStickerSelect(() => renderStickerList())
+  setStickerSelect(() => {
+    clearSelection() // selecting a sticker closes the text inspector
+    renderStickerList()
+  })
+
+  // canvas: click text to select + open the contextual inspector
+  $('svg-host').addEventListener('pointerdown', onCanvasPointerDown as EventListener)
 
   // theme + example
   $('theme-seg')
@@ -133,6 +140,7 @@ function wire(): void {
     $('v-scale').textContent = this.value + 'px'
     applyScale()
     layoutOverlay()
+    refreshInspector()
   })
 
   // merchant
@@ -324,7 +332,10 @@ function wire(): void {
     showError('把 POS/訂單系統的 JSON 貼到下方「進階:JSON」,按「載入訂單 JSON」即可。之後接系統就走 importOrder()。')
   })
 
-  window.addEventListener('resize', layoutOverlay)
+  window.addEventListener('resize', () => {
+    layoutOverlay()
+    refreshInspector()
+  })
 
   // background image
   $('f-bg').addEventListener('change', function (this: HTMLInputElement) {
