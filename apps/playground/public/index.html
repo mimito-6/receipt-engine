@@ -166,6 +166,18 @@
   .re-stem { position: absolute; left: 50%; top: 0; width: 0; height: 28px; transform: translate(-50%, -100%);
     border-left: 1.5px dashed var(--accent); pointer-events: none; }
   #paper.thermal .re-frame, #paper.thermal .re-h, #paper.thermal .re-stem, #paper.thermal .re-guide { filter: none; }
+
+  /* ---- boundary drag-resize handles (hover to reveal; touch shows faintly) ---- */
+  #edge-overlay { position: absolute; inset: 0; pointer-events: none; z-index: 2; }
+  .re-edge { position: absolute; pointer-events: auto; opacity: 0; transition: opacity .12s; }
+  .re-edge:hover, .re-edge.on { opacity: 1; }
+  @media (hover: none) { .re-edge { opacity: .45; } }
+  .re-edge-r { width: 14px; transform: translateX(-50%); cursor: ew-resize; }
+  .re-edge-r::after { content: ''; position: absolute; left: 50%; top: 0; bottom: 0; width: 3px;
+    transform: translateX(-50%); background: var(--accent); border-radius: 2px; }
+  .re-edge-t, .re-edge-b { height: 14px; transform: translateY(-50%); cursor: ns-resize; }
+  .re-edge-t::after, .re-edge-b::after { content: ''; position: absolute; top: 50%; left: 0; right: 0; height: 3px;
+    transform: translateY(-50%); background: var(--accent); border-radius: 2px; }
 </style>
 </head>
 <body>

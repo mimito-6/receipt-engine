@@ -30,6 +30,7 @@ import {
 } from './io'
 import { layoutOverlay, setStickerCommit, setStickerSelect } from './overlay'
 import { clearSelection, onCanvasPointerDown, refreshInspector } from './inspector'
+import { installEdgeHandles } from './resize'
 
 // Expose the engine under the historical global so embedders/docs keep working.
 ;(window as unknown as Record<string, unknown>).ReceiptEngine = {
@@ -407,5 +408,6 @@ function wire(): void {
 
 // boot — load data first (sets state.receipt), then apply theme UI
 wire()
+installEdgeHandles()
 loadExample('cute')
 setTheme('custom')

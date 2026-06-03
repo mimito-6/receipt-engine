@@ -57,3 +57,16 @@ export function clientToReceipt(cx: number, cy: number): { x: number; y: number 
   const k = scaleFactor()
   return { x: (cx - r.left) * k, y: (cy - r.top) * k }
 }
+/** Receipt-unit point -> px relative to #paper (for overlay handles). */
+export function receiptToPaper(x: number, y: number): { l: number; t: number } {
+  const s = svgEl()
+  if (!s) return { l: 0, t: 0 }
+  const r = rectOf(s)
+  const pr = rectOf($('paper'))
+  const k = scaleFactor()
+  return { l: r.left - pr.left + x / k, t: r.top - pr.top + y / k }
+}
+/** Receipt-unit length -> px. */
+export function receiptLen(len: number): number {
+  return len / scaleFactor()
+}
