@@ -1,0 +1,19 @@
+{
+  "name": "@receipt-engine/openbooth-bridge",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Drop-in bridge that connects OpenBooth (Boothレジ) checkout to receipt-engine: render the configured receipt, then thermal-print (Web Bluetooth) or share to the customer's phone.",
+  "type": "module",
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@receipt-engine/core": "workspace:*",
+    "@receipt-engine/themes": "workspace:*",
+    "@receipt-engine/render-svg": "workspace:*",
+    "@receipt-engine/render-html": "workspace:*",
+    "@receipt-engine/import": "workspace:*",
+    "@receipt-engine/connect": "workspace:*"
+  }
+}

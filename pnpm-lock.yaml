@@ -33,6 +33,27 @@ importers:
         specifier: ^4.1.8
         version: 4.1.8(@types/node@22.19.19)(vite@8.0.15(@types/node@22.19.19)(esbuild@0.27.7)(tsx@4.22.4))
 
+  apps/openbooth-bridge:
+    dependencies:
+      '@receipt-engine/connect':
+        specifier: workspace:*
+        version: link:../../packages/connect
+      '@receipt-engine/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      '@receipt-engine/import':
+        specifier: workspace:*
+        version: link:../../packages/import
+      '@receipt-engine/render-html':
+        specifier: workspace:*
+        version: link:../../packages/render-html
+      '@receipt-engine/render-svg':
+        specifier: workspace:*
+        version: link:../../packages/render-svg
+      '@receipt-engine/themes':
+        specifier: workspace:*
+        version: link:../../packages/themes
+
   apps/playground:
     dependencies:
       '@receipt-engine/core':
