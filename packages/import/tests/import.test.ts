@@ -61,6 +61,18 @@ describe('importOpenBoothOrder', () => {
     expect(doc.event).toMatchObject({ name: '週末市集', boothName: 'Row B · 7' })
   })
 
+  it('carries a booth number from the event', () => {
+    const doc = importOpenBoothOrder(tx, { event: { name: 'CWT', boothNumber: 'A12' } })
+    expect(doc.event).toMatchObject({ name: 'CWT', boothNumber: 'A12' })
+  })
+
+  it('drops empty event fields (no bare "Booth ")', () => {
+    const doc = importOpenBoothOrder(tx, { event: { name: 'CWT', boothNumber: '', location: '' } })
+    expect(doc.event?.name).toBe('CWT')
+    expect(doc.event?.boothNumber).toBeUndefined()
+    expect(doc.event?.location).toBeUndefined()
+  })
+
   it('leaves shop name empty (logo-only) when none is set', () => {
     const doc = importOpenBoothOrder(tx)
     expect(doc.merchant.name).toBeUndefined()

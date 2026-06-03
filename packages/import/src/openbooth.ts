@@ -128,12 +128,13 @@ export function importOpenBoothOrder(
 
   const ev = opts.event
   if (ev && (ev.name || ev.boothName || ev.boothNumber)) {
+    // Drop empty strings → undefined so blank fields don't render (e.g. a bare "Booth ").
     doc.event = {
-      name: ev.name,
-      boothName: ev.boothName,
-      boothNumber: ev.boothNumber,
-      location: ev.location,
-      date: ev.date,
+      name: ev.name || undefined,
+      boothName: ev.boothName || undefined,
+      boothNumber: ev.boothNumber || undefined,
+      location: ev.location || undefined,
+      date: ev.date || undefined,
     }
   }
   if (tx.giftNote) doc.message = { body: tx.giftNote }

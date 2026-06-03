@@ -185,8 +185,7 @@ export function renderEvent(
 ): BlockResult {
   const { theme } = ctx
   const cx = centerX(ctx)
-  const booth =
-    event.boothNumber !== undefined ? `Booth ${event.boothNumber}` : (event.boothName ?? '')
+  const booth = event.boothNumber ? `Booth ${event.boothNumber}` : (event.boothName ?? '')
   const primary = [event.name, booth].filter(Boolean).join('  ·  ')
   const secondary = [event.location, event.date].filter(Boolean).join('  ·  ')
   if (!primary && !secondary) return EMPTY
