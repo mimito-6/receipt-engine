@@ -59,11 +59,24 @@ pnpm test
 
 ## Try it in the browser (playground)
 
-A static, client-side playground lives in [`apps/playground`](apps/playground).
-After `pnpm build`, open `apps/playground/public/index.html` in any browser — fill in
-a form, upload a logo, add stickers, pick colors & fonts, switch between the `custom`
-and `thermal` themes, and download as SVG / HTML / PNG. It runs entirely in the
-browser, so it works on phones too (see [Using it on a phone](#using-it-on-a-phone)).
+A static, client-side **direct-manipulation editor** lives in
+[`apps/playground`](apps/playground). After `pnpm build`, open
+`apps/playground/public/index.html` in any browser and edit the receipt right on
+the canvas:
+
+- **Tap any text** → a contextual inspector to change its content, font, color,
+  size and weight (saved per-element in `styleOverrides`); double-tap to edit text.
+- **Tap a sticker** → a Photoshop-style frame: corner handles scale, a top handle
+  rotates, two-finger pinch on touch; drag to move with alignment snapping.
+- **Drag the card edges** → change width / top / bottom padding.
+- **Drag a section** (or use the 版面順序 ↑/↓ panel) → reorder blocks (`blockOrder`).
+- Upload a logo / background, pick colors & fonts, switch `custom` / `thermal`
+  themes, save/restore a config file, and download as SVG / HTML / **PNG (with the
+  fonts embedded, so the export matches the preview)**.
+
+Everything runs entirely in the browser and is fully touch-friendly, so it works
+on phones too (see [Using it on a phone](#using-it-on-a-phone)). The editor only
+mutates the receipt model — exports stay deterministic and editor-metadata-free.
 
 ## CLI
 
