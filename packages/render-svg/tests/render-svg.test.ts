@@ -124,28 +124,26 @@ describe('renderReceiptToSvg', () => {
     expect(def.indexOf('Mimito Booth')).toBeLessThan(def.indexOf('Thank you!'))
   })
 
-  it('background image scales & pans freely (no forced 1× cover floor)', () => {
-    const cardWidth = 720 - 52 // outerMargin 26 each side (custom)
-    const w = (svg: string): number => parseFloat(svg.match(/<image[^>]*\swidth="([\d.]+)"/)![1])
-    const x = (svg: string): number => parseFloat(svg.match(/<image[^>]*\sx="([-\d.]+)"/)![1])
-    const big = renderReceiptToSvg(
-      { ...baseReceipt, assets: { backgroundImage: PNG, backgroundScale: 2 } },
-      { theme: 'custom', width: 720 },
-    )
-    const small = renderReceiptToSvg(
-      { ...baseReceipt, assets: { backgroundImage: PNG, backgroundScale: 0.4 } },
-      { theme: 'custom', width: 720 },
-    )
-    // scale multiplies the box directly — zoom far past the card…
-    expect(w(big)).toBeCloseTo(cardWidth * 2, 0)
-    // …and shrink well below it (the old Math.max(1) cover floor is gone)
-    expect(w(small)).toBeCloseTo(cardWidth * 0.4, 0)
-    // pan offsets the (no longer cover-locked) image freely
+  it('background image always covers the card when panned (no blank gap)', () => {
+    const cardX = 26 // outerMargin (custom)
+    const cardWidth = 720 - 52
+    const num = (svg: string, attr: string): number =>
+      parseFloat(svg.match(new RegExp(`<image[^>]*\\s${attr}="([-\\d.]+)"`))![1])
+    // scale 1 + a big pan must STILL cover the whole card — the box grows on pan
     const panned = renderReceiptToSvg(
       { ...baseReceipt, assets: { backgroundImage: PNG, backgroundScale: 1, backgroundX: 200 } },
       { theme: 'custom', width: 720 },
     )
-    expect(x(panned)).toBeCloseTo(26 + 200, 0) // cardX + panX, not clamped to cover
+    const x = num(panned, 'x')
+    const w = num(panned, 'width')
+    expect(x).toBeLessThanOrEqual(cardX) // no left gap
+    expect(x + w).toBeGreaterThanOrEqual(cardX + cardWidth) // no right gap
+    // and zoom goes well past the old 3× cap (no upper limit in the engine)
+    const z5 = renderReceiptToSvg(
+      { ...baseReceipt, assets: { backgroundImage: PNG, backgroundScale: 5 } },
+      { theme: 'custom', width: 720 },
+    )
+    expect(num(z5, 'width')).toBeCloseTo(cardWidth * 5, 0)
   })
 
   it('tags elements only in interactive mode', () => {

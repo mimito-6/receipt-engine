@@ -362,15 +362,15 @@ export function renderReceiptToSvg(
   let bgClip = ''
   if (bgSrc && isImageSource(bgSrc)) {
     const op = doc.assets?.backgroundOpacity ?? 1
-    // Free transform: the user scales and pans the image however they like — no
-    // forced "cover" floor, so it can shrink well below the card or zoom far past
-    // it. The box is the card scaled by `scale`, centered then offset; "slice"
-    // keeps the aspect ratio. A tiny floor avoids a degenerate zero-size box.
-    const scale = Math.max(0.05, doc.assets?.backgroundScale ?? 1)
+    // The background always COVERS the card — no blank gaps. `scale` zooms in past
+    // cover with no upper cap (1× = cover, zoom as far as you like); it's floored at
+    // 1 so it can never shrink below cover. The box also grows by the pan offset, so
+    // repositioning slides the visible crop without ever pulling an edge inside.
+    const scale = Math.max(1, doc.assets?.backgroundScale ?? 1)
     const panX = doc.assets?.backgroundX ?? 0
     const panY = doc.assets?.backgroundY ?? 0
-    const bgW = cardWidth * scale
-    const bgH = cardHeight * scale
+    const bgW = cardWidth * scale + 2 * Math.abs(panX)
+    const bgH = cardHeight * scale + 2 * Math.abs(panY)
     const bgX = cardX + (cardWidth - bgW) / 2 + panX
     const bgY = cardTop + (cardHeight - bgH) / 2 + panY
     const filterAttr = monoFilterId ? ` filter="${monoFilterId}"` : ''

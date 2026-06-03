@@ -397,9 +397,9 @@ export const DICT: Record<string, { zh: string; ja: string; en: string }> = {
     "en": "Opacity"
   },
   "field.bgScale": {
-    "zh": "大小 / 縮放(可自由放大縮小)",
-    "ja": "サイズ / 拡大縮小(自由に変更可)",
-    "en": "Size / zoom (scale freely)"
+    "zh": "大小(放大後可移動)",
+    "ja": "サイズ(拡大すると移動できます)",
+    "en": "Size (zoom in to reposition)"
   },
   "field.bgX": {
     "zh": "水平位置",
