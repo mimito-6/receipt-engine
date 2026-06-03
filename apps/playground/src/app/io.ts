@@ -4,7 +4,7 @@
 import { renderReceiptToHtml } from '@receipt-engine/render-html'
 import { renderReceiptToSvg } from '@receipt-engine/render-svg'
 import { getTheme } from '@receipt-engine/themes'
-import { $, dl, showError } from './dom'
+import { dl } from './dom'
 import { currentTheme, renderOpts } from './render'
 import { type Draft, type Look, type Pad, type ThemeName, deepClone, isImg, state } from './state'
 
@@ -77,34 +77,7 @@ export function currentSvg(): string {
   return renderReceiptToSvg(state.receipt as never, renderOpts({ includeXmlDeclaration: true }) as never)
 }
 
-export function downloadPng(): void {
-  const svg = currentSvg()
-  const img = new Image()
-  const url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml;charset=utf-8' }))
-  img.onload = () => {
-    try {
-      const sc = 2
-      const cv = document.createElement('canvas')
-      cv.width = img.naturalWidth * sc
-      cv.height = img.naturalHeight * sc
-      const cx = cv.getContext('2d')!
-      cx.scale(sc, sc)
-      cx.drawImage(img, 0, 0)
-      cv.toBlob((b) => {
-        b ? dl('receipt.png', b) : showError('PNG 轉檔失敗,請改用「下載 SVG」。')
-      }, 'image/png')
-    } catch {
-      showError('無法在瀏覽器轉 PNG(收據含外部網址圖片時),請改用「下載 SVG」或改成上傳圖片。')
-    } finally {
-      URL.revokeObjectURL(url)
-    }
-  }
-  img.onerror = () => {
-    URL.revokeObjectURL(url)
-    showError('PNG 轉檔失敗,請改用「下載 SVG」。')
-  }
-  img.src = url
-}
+// PNG export (with font embedding) lives in ./pngExport.ts.
 
 export function downloadSvg(): void {
   dl('receipt.svg', new Blob([currentSvg()], { type: 'image/svg+xml' }))

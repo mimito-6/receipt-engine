@@ -21,13 +21,13 @@ import {
   buildConfig,
   defaultPad,
   downloadHtml,
-  downloadPng,
   downloadSvg,
   fixLook,
   importOrder,
   normPad,
   normalize,
 } from './io'
+import { downloadPng } from './pngExport'
 import { layoutOverlay, setStickerCommit, setStickerSelect } from './overlay'
 import { clearSelection, refreshInspector } from './inspector'
 import { installEdgeHandles } from './resize'
