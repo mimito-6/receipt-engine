@@ -90,6 +90,28 @@ export function downloadHtml(): void {
 }
 
 // ---------- config file (save / restore the whole design) ----------
+
+/** YYYYMMDD for today (local). */
+function fileStamp(d = new Date()): string {
+  const p = (n: number): string => String(n).padStart(2, '0')
+  return `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}`
+}
+/** Strip filesystem-illegal chars, collapse spaces, cap length. */
+function safeNamePart(s: unknown): string {
+  return String(s ?? '')
+    .trim()
+    .replace(/[\\/:*?"<>|]+/g, '')
+    .replace(/\s+/g, '-')
+    .slice(0, 40)
+}
+/** Config download name: 店名_活動名稱_YYYYMMDD.json (omitting empty parts). */
+export function configFilename(): string {
+  const r: any = state.receipt
+  const parts = [safeNamePart(r?.merchant?.name), safeNamePart(r?.event?.name)].filter(Boolean)
+  const base = parts.length ? parts.join('_') : 'receipt-config'
+  return `${base}_${fileStamp()}.json`
+}
+
 export function buildConfig(): Record<string, unknown> {
   return {
     _type: 'receipt-engine-config',

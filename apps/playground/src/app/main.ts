@@ -19,6 +19,7 @@ import { applyScale, render } from './render'
 import { addSticker, ensure, renderStickerList, syncFormFromState } from './form'
 import {
   buildConfig,
+  configFilename,
   defaultPad,
   downloadHtml,
   downloadSvg,
@@ -401,7 +402,7 @@ function wire(): void {
 
   // config file
   $('cfg-save').addEventListener('click', () => {
-    dl('receipt-config.json', new Blob([JSON.stringify(buildConfig(), null, 2)], { type: 'application/json' }))
+    dl(configFilename(), new Blob([JSON.stringify(buildConfig(), null, 2)], { type: 'application/json' }))
   })
   $('cfg-load').addEventListener('change', function (this: HTMLInputElement) {
     const f = this.files && this.files[0]
