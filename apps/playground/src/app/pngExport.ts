@@ -7,7 +7,7 @@
 import { renderReceiptToSvg } from '@receipt-engine/render-svg'
 import { $, dl, showError, svgEl } from './dom'
 import { curLook, fontStack, state } from './state'
-import { renderOpts } from './render'
+import { exportOpts } from './io'
 
 interface FontSrc {
   family: string
@@ -111,7 +111,7 @@ export async function downloadPng(): Promise<void> {
 
   const svg = renderReceiptToSvg(
     state.receipt as never,
-    renderOpts({ fontFaceCss: css, includeXmlDeclaration: true }) as never,
+    exportOpts({ fontFaceCss: css, includeXmlDeclaration: true }) as never,
   )
   const img = new Image()
   const url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml;charset=utf-8' }))

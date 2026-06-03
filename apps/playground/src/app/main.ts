@@ -43,6 +43,11 @@ import { beginCanvasGesture } from './reorder'
   safeValidateReceipt,
 }
 
+/** #abc -> #aabbcc (the native colour picker needs 6-digit hex). */
+function expandHex(h: string): string {
+  return '#' + h.slice(1).split('').map((c) => c + c).join('')
+}
+
 function setTheme(t: ThemeName): void {
   state.theme = t
   $('theme-seg')
@@ -60,6 +65,7 @@ function loadExample(key: string): void {
   state.look.custom = Object.assign({ stars: false }, deepClone(ex.custom))
   state.look.thermal = deepClone(THERMAL_LOOK)
   state.pad = { custom: defaultPad('custom'), thermal: defaultPad('thermal') }
+  state.mono = { custom: false, thermal: true }
   syncFormFromState()
   render()
 }
@@ -84,6 +90,10 @@ function applyConfig(cfg: any): void {
   state.pad = {
     custom: normPad(cfg.pad && cfg.pad.custom, 'custom'),
     thermal: normPad(cfg.pad && cfg.pad.thermal, 'thermal'),
+  }
+  state.mono = {
+    custom: !!(cfg.mono && cfg.mono.custom),
+    thermal: cfg.mono ? !!cfg.mono.thermal : true,
   }
   if (typeof cfg.scale === 'number') state.scale = cfg.scale
   state.sel = -1
@@ -235,16 +245,34 @@ function wire(): void {
   }
   ;['m-title', 'm-body', 'm-footer'].forEach((id) => $(id).addEventListener('input', msgUpdate))
 
-  // look (colors / fonts / stars)
-  ;['c-primary', 'c-bg', 'c-surface', 'c-text'].forEach((id) => {
-    $(id).addEventListener('input', function (this: HTMLInputElement) {
-      const key = { 'c-primary': 'primary', 'c-bg': 'bg', 'c-surface': 'surface', 'c-text': 'text' }[
-        id
-      ] as keyof ReturnType<typeof curLook>
-      ;(curLook() as any)[key] = this.value
+  // look (colors with hex twin / fonts / stars / mono)
+  const HEX3OR6 = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i
+  const HEX_ANY = /^#([0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i
+  const wireColor = (pickerId: string, hexId: string, key: 'primary' | 'bg' | 'surface' | 'text'): void => {
+    const picker = $(pickerId) as HTMLInputElement
+    const hex = $(hexId) as HTMLInputElement
+    picker.addEventListener('input', () => {
+      ;(curLook() as any)[key] = picker.value
+      hex.value = picker.value
       render()
     })
-  })
+    // paste / type a hex code (or "transparent" for bg / 卡片)
+    hex.addEventListener('input', () => {
+      const v = hex.value.trim().toLowerCase()
+      if (v === 'transparent' || v === '透明') {
+        ;(curLook() as any)[key] = 'transparent'
+        render()
+      } else if (HEX_ANY.test(v)) {
+        ;(curLook() as any)[key] = v
+        if (HEX3OR6.test(v)) picker.value = v.length === 4 ? expandHex(v) : v
+        render()
+      }
+    })
+  }
+  wireColor('c-primary', 'c-primary-hex', 'primary')
+  wireColor('c-bg', 'c-bg-hex', 'bg')
+  wireColor('c-surface', 'c-surface-hex', 'surface')
+  wireColor('c-text', 'c-text-hex', 'text')
   $('f-font-latin').addEventListener('change', function (this: HTMLSelectElement) {
     curLook().latinFont = this.value
     render()
@@ -256,6 +284,13 @@ function wire(): void {
   $('c-stars').addEventListener('change', function (this: HTMLInputElement) {
     curLook().stars = this.checked
     render()
+  })
+  $('c-mono').addEventListener('change', function (this: HTMLInputElement) {
+    state.mono[state.theme] = this.checked
+    render()
+  })
+  $('dl-clean').addEventListener('change', function (this: HTMLInputElement) {
+    state.cleanExport = this.checked
   })
 
   // add rows

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { ReceiptDocument } from '@receipt-engine/core'
+import { getTheme } from '@receipt-engine/themes'
 import { renderReceiptToSvg } from '@receipt-engine/render-svg'
 
 const PNG =
@@ -174,6 +175,26 @@ describe('renderReceiptToSvg', () => {
     expect(svg).toContain('data-re-block="qrLabel"')
     expect(svg).toContain('data-re-block="messageTitle"')
     expect(svg).toContain('data-re-block="messageBody"')
+  })
+
+  it('monochromeImages overrides the theme default', () => {
+    const withLogo: ReceiptDocument = { ...baseReceipt, merchant: { ...baseReceipt.merchant, logo: PNG } }
+    // custom is colour by default — forcing mono adds the grayscale filter
+    expect(renderReceiptToSvg(withLogo, { theme: 'custom', monochromeImages: true })).toContain('filter="url(#re-mono)"')
+    // thermal is mono by default — forcing colour removes it
+    expect(renderReceiptToSvg(withLogo, { theme: 'thermal', monochromeImages: false })).not.toContain('re-mono')
+  })
+
+  it('transparentBackground drops the paper fills + background image', () => {
+    const withBg: ReceiptDocument = { ...baseReceipt, assets: { backgroundImage: PNG } }
+    const bg = getTheme('custom').palette.background
+    const normal = renderReceiptToSvg(withBg, { theme: 'custom' })
+    const clean = renderReceiptToSvg(withBg, { theme: 'custom', transparentBackground: true })
+    expect(normal).toContain('preserveAspectRatio="xMidYMid slice"') // bg image present
+    expect(clean).not.toContain('preserveAspectRatio="xMidYMid slice"') // bg image dropped
+    expect(normal).toContain(`fill="${bg}"`) // opaque page background
+    expect(clean).not.toContain(`fill="${bg}"`)
+    expect(clean).toContain('fill="none"') // card surface transparent
   })
 
   it('expands legacy block keys (header → logo/name/subtitle)', () => {

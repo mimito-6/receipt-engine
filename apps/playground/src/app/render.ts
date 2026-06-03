@@ -10,7 +10,7 @@ import {
 } from '@receipt-engine/themes'
 import { safeValidateReceipt } from '@receipt-engine/core'
 import { $, clearError, showError } from './dom'
-import { curLook, curPad, curWidth, deepClone, fontStack, state } from './state'
+import { curLook, curMono, curPad, curWidth, deepClone, fontStack, state } from './state'
 import { layoutOverlay } from './overlay'
 import { refreshInspector } from './inspector'
 import { positionEdgeHandles } from './resize'
@@ -48,6 +48,7 @@ export function renderOpts(extra: Record<string, unknown> = {}): Record<string, 
     padTop: pad.top,
     padBottom: pad.bottom,
     padX: pad.x,
+    monochromeImages: curMono(),
     ...extra,
   }
 }

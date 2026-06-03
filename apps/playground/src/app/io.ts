@@ -73,8 +73,12 @@ export function normalize(r: Draft): Draft {
 }
 
 // ---------- downloads ----------
+/** Render options for EXPORTS — adds the clean/transparent-background toggle. */
+export function exportOpts(extra: Record<string, unknown> = {}): Record<string, unknown> {
+  return renderOpts({ transparentBackground: state.cleanExport, ...extra })
+}
 export function currentSvg(): string {
-  return renderReceiptToSvg(state.receipt as never, renderOpts({ includeXmlDeclaration: true }) as never)
+  return renderReceiptToSvg(state.receipt as never, exportOpts({ includeXmlDeclaration: true }) as never)
 }
 
 // PNG export (with font embedding) lives in ./pngExport.ts.
@@ -85,7 +89,7 @@ export function downloadSvg(): void {
 export function downloadHtml(): void {
   dl(
     'receipt.html',
-    new Blob([renderReceiptToHtml(state.receipt as never, renderOpts() as never)], { type: 'text/html' }),
+    new Blob([renderReceiptToHtml(state.receipt as never, exportOpts() as never)], { type: 'text/html' }),
   )
 }
 
@@ -119,6 +123,7 @@ export function buildConfig(): Record<string, unknown> {
     theme: state.theme,
     width: state.width,
     pad: state.pad,
+    mono: state.mono,
     scale: state.scale,
     look: state.look,
     receipt: state.receipt,

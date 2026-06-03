@@ -50,6 +50,12 @@ export interface RenderSvgOptions {
   interactive?: boolean
   /** CSS injected as a <style> after <defs> — e.g. @font-face rules to embed fonts. */
   fontFaceCss?: string
+  /** Force all embedded images B&W (true) or full colour (false). Overrides the
+   *  theme default (thermal = mono, custom = colour) when set. */
+  monochromeImages?: boolean
+  /** Omit the page background, card surface fill, perforated edges and background
+   *  image — a clean, transparent receipt for real printing. Content + border stay. */
+  transparentBackground?: boolean
   /** Carried through for PNG rasterization; does not change SVG geometry. */
   pixelRatio?: number
   includeXmlDeclaration?: boolean
@@ -140,7 +146,8 @@ export function renderReceiptToSvg(
   const doc = normalizeReceipt(validateReceipt(receipt))
   const theme = resolveTheme(options.theme)
   const isThermal = theme.mode === 'thermal'
-  const monoImages = theme.decoration?.monochromeImages ?? isThermal
+  const transparent = !!options.transparentBackground
+  const monoImages = options.monochromeImages ?? theme.decoration?.monochromeImages ?? isThermal
   // The value used in `filter="…"`; the <defs> below uses the bare id.
   const monoFilterId = monoImages ? `url(#${MONO_FILTER_ID})` : undefined
 
@@ -281,9 +288,11 @@ export function renderReceiptToSvg(
   const totalHeight = Math.round(cardBottom + outerMargin)
 
   const borderStyle = theme.decoration?.borderStyle ?? 'solid'
-  const background = svgRect(0, 0, width, totalHeight, { fill: theme.palette.background })
+  // Clean/transparent export: drop the page background and the card surface fill
+  // (the "fake paper"), keep the card border so the receipt boundary still reads.
+  const background = transparent ? '' : svgRect(0, 0, width, totalHeight, { fill: theme.palette.background })
   const card = svgRect(cardX, cardTop, cardWidth, cardHeight, {
-    fill: theme.palette.surface,
+    fill: transparent ? undefined : theme.palette.surface,
     rx: theme.radius.card,
     stroke: !isThermal && borderStyle !== 'none' ? theme.palette.border : undefined,
     strokeWidth: !isThermal && borderStyle !== 'none' ? 1.5 : undefined,
@@ -291,7 +300,7 @@ export function renderReceiptToSvg(
   })
 
   let edges = ''
-  if (theme.decoration?.perforatedEdges) {
+  if (!transparent && theme.decoration?.perforatedEdges) {
     edges =
       perforation(cardX, cardWidth, cardTop, true, theme.palette.background) +
       perforation(cardX, cardWidth, cardBottom, false, theme.palette.background)
@@ -320,7 +329,7 @@ export function renderReceiptToSvg(
   }
 
   // Background image (clipped to the card; opacity / scale / offset adjustable).
-  const bgSrc = doc.assets?.backgroundImage
+  const bgSrc = transparent ? undefined : doc.assets?.backgroundImage
   let bgImage = ''
   let bgClip = ''
   if (bgSrc && isImageSource(bgSrc)) {

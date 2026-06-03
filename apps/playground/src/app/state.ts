@@ -37,7 +37,11 @@ export interface State {
   look: { custom: Look | null; thermal: Look | null }
   width: { custom: number; thermal: number }
   pad: { custom: Pad | null; thermal: Pad | null }
+  /** Force all images B&W, per theme (thermal defaults on). */
+  mono: { custom: boolean; thermal: boolean }
   scale: number
+  /** Export with a transparent background (clean PNG for printing). */
+  cleanExport: boolean
   /** Legacy selected-sticker index (kept for the sticker list panel). */
   sel: number
   /** Unified editor selection (Phase 1+). */
@@ -50,7 +54,9 @@ export const state: State = {
   look: { custom: null, thermal: null },
   width: { custom: 720, thermal: 384 },
   pad: { custom: null, thermal: null },
+  mono: { custom: false, thermal: true },
   scale: 340,
+  cleanExport: false,
   sel: -1,
   selection: null,
 }
@@ -232,4 +238,7 @@ export function curPad(): Pad {
 }
 export function curWidth(): number {
   return state.width[state.theme]
+}
+export function curMono(): boolean {
+  return state.mono[state.theme]
 }
