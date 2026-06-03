@@ -18,10 +18,22 @@ renderReceiptToSvg(receipt, {
   padX?: number,                           // left/right padding; default theme page spacing
   interactive?: boolean,                   // tag blocks/text with data-re-block / data-re-id (editor)
   fontFaceCss?: string,                    // injected as <style> after <defs> (embed fonts for PNG)
+  monochromeImages?: boolean,              // force embedded images B&W; overrides the theme default
+  transparentBackground?: boolean,         // drop ONLY the page background; keep the card (clean export)
+  perforatedEdges?: boolean,               // torn / perforated card edges; overrides the theme default
   pixelRatio?: number,                     // carried through to PNG
   includeXmlDeclaration?: boolean,
 }): string
 ```
+
+- **`monochromeImages` / `perforatedEdges`** override the per-theme decoration
+  defaults (`thermal` is mono + torn; `custom` is colour + plain), so any theme can
+  opt in or out per render.
+- **`transparentBackground`** is the "clean export": it removes only the page
+  background behind the card; the card itself — shape, surface colour, border, torn
+  edges and background image — is kept, so a PNG/SVG is just the receipt card on a
+  transparent backdrop, ready to print. (`renderReceiptToHtml` honors the same three
+  options and additionally drops the page chrome when transparent.)
 
 - **Deterministic.** Same input → byte-identical SVG. No `Date.now`, no network.
 - **Dynamic height.** Height grows with content; nothing is clipped.

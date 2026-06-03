@@ -30,9 +30,11 @@ like OpenBooth: pass a receipt JSON, get back PNG / SVG / HTML).
 - 🧱 **Custom blocks** — text, image, divider, QR, between totals and message.
 - 🔢 **Smart totals** — subtotals, discounts, tax, payments and change computed for you.
 - 🔗 **QR codes** — digital receipt, social, coupon, feedback links.
+- 🖨️ **Thermal printing** — ESC/POS raster (GS v 0) over Web Bluetooth, straight from the browser (Android Chrome/Edge).
+- 📲 **Browser PNG & share** — rasterize to PNG client-side (canvas) and share to a phone via Web Share — no server needed.
 - 🧩 **React component** + **CLI** + typed core API.
 - 🛡️ **Safe & deterministic** — every value escaped; no network, no fonts fetched.
-- 📱 **Mobile-ready** — SVG/HTML render anywhere; PNG via a WASM-capable engine.
+- 📱 **Mobile-ready** — SVG / HTML / PNG all render in a phone browser.
 
 ## Packages
 
@@ -42,10 +44,15 @@ like OpenBooth: pass a receipt JSON, get back PNG / SVG / HTML).
 | `@receipt-engine/themes` | Built-in themes + `getTheme` / `mergeTheme`. |
 | `@receipt-engine/render-svg` | Receipt → SVG string (canonical). |
 | `@receipt-engine/render-html` | Receipt → standalone HTML. |
-| `@receipt-engine/render-png` | Receipt → PNG `Buffer` (resvg). |
+| `@receipt-engine/render-png` | Receipt → PNG `Buffer` (resvg, server-side). |
+| `@receipt-engine/bitmap` | 1-bit dithering + bit-packing for thermal printers. |
+| `@receipt-engine/escpos` | ESC/POS commands + raster output (GS v 0). |
+| `@receipt-engine/connect` | Browser delivery: Web Bluetooth thermal print, canvas PNG, Web Share. |
+| `@receipt-engine/import` | POS / order → receipt adapters (incl. OpenBooth) + template overlay. |
 | `@receipt-engine/react` | `<ReceiptCard />`. |
 | `@receipt-engine/cli` | `receipt-engine render …`. |
-| `@receipt-engine/playground` | Static in-browser playground (runs on phones). |
+
+**Apps:** [`apps/playground`](apps/playground) — static in-browser editor (runs on phones) · `apps/openbooth-bridge` — the OpenBooth ⇄ receipt-engine integration bundle.
 
 ## Install (development)
 
@@ -162,13 +169,12 @@ pnpm samples   # writes samples/<example>-<theme>.{svg,png}
 
 A quick mental model of what runs where:
 
-- This project is a **library + CLI** — it runs on a computer or server, not as a
-  phone app you install.
-- But **SVG and HTML rendering is pure front-end JavaScript** — it runs directly in
-  a mobile browser, no server required. That's how the playground works on a phone.
-- Only **PNG rendering** currently needs a computer/server (it uses a native module).
-  v0.2 will add a browser-capable path (`@resvg/resvg-wasm`) so phones can export
-  PNG client-side too.
+- This project is a **library + CLI**, but the rendering paths are **pure front-end
+  JavaScript** — SVG, HTML, and **PNG (via canvas in `@receipt-engine/connect`)** all run
+  directly in a mobile browser, no server required. That's how the playground renders,
+  exports PNG, and even **thermal-prints over Web Bluetooth** on a phone.
+- `@receipt-engine/render-png` is a separate **server-side** PNG path (native module),
+  for batch / Node use — not needed in the browser.
 
 Three practical ways to use it on a phone today:
 
@@ -191,9 +197,9 @@ any computer-only dependency.
 
 ## Roadmap (short)
 
-**v0.2** theme playground, browser-side PNG export · **v0.3** ESC/POS &
-58/80mm thermal · **v0.4** hosted receipt pages, coupon QR, community themes ·
-**v0.5** plugin system. Full list in [`docs/roadmap.md`](docs/roadmap.md).
+**Shipped (v0.1)** in-browser direct-manipulation editor, browser PNG export (canvas),
+ESC/POS thermal print over Web Bluetooth, OpenBooth integration · **next** hosted receipt
+pages, coupon QR, community themes, plugin system. Full list in [`docs/roadmap.md`](docs/roadmap.md).
 
 ## License
 
