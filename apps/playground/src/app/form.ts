@@ -161,7 +161,7 @@ export function renderStickerList(): void {
       (i === state.sel ? t('sticker.list.selected') : t('sticker.list.tapHint')) +
       '</span>' +
       '<button class="x" data-rm="' + i + '">×</button></div>' +
-      '<label class="field">' + t('sticker.size') + ' ' + (s.size || 38) + '</label><input type="range" min="4" max="600" step="2" value="' + (s.size || 38) + '" data-i="' + i + '" data-k="size" />' +
+      '<label class="field">' + t('sticker.size') + ' ' + (s.size || 38) + '</label><input type="range" min="4" max="' + Math.max(600, s.size || 38) + '" step="2" value="' + (s.size || 38) + '" data-i="' + i + '" data-k="size" />' +
       '<label class="field">' + t('sticker.rotation') + ' ' + (s.rotation || 0) + '°</label><input type="range" min="-180" max="180" step="1" value="' + (s.rotation || 0) + '" data-i="' + i + '" data-k="rotation" />'
     box.appendChild(card)
   })

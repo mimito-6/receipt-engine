@@ -307,6 +307,9 @@ export function refreshInspector(): void {
     clearSelection()
     return
   }
+  // Re-translate the "what's selected" chip (render() → refreshInspector runs on a
+  // language switch, so this keeps it in sync like the static [data-i18n] labels).
+  ;($('insp-target') as HTMLElement).textContent = labelFor(id)
   positionUi(el)
 }
 

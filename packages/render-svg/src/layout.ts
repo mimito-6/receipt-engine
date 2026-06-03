@@ -131,12 +131,20 @@ const CURRENCY_SYMBOLS: Record<string, string> = {
   CAD: 'C$',
   SGD: 'S$',
   THB: '฿',
+  MYR: 'RM',
+  PHP: '₱',
+  VND: '₫',
+  IDR: 'Rp',
+  INR: '₹',
+  NZD: 'NZ$',
+  MOP: 'MOP$',
 }
-const ZERO_DECIMAL = new Set(['JPY', 'TWD', 'KRW'])
+const ZERO_DECIMAL = new Set(['JPY', 'TWD', 'KRW', 'VND', 'IDR'])
 
-export function createMoneyFormatter(currency: string): (amount: number) => string {
+/** `symbolOverride` (a merchant-configured symbol) wins over the code→symbol table. */
+export function createMoneyFormatter(currency: string, symbolOverride?: string): (amount: number) => string {
   const code = currency.toUpperCase()
-  const symbol = CURRENCY_SYMBOLS[code]
+  const symbol = (symbolOverride && symbolOverride.trim()) || CURRENCY_SYMBOLS[code]
   const decimals = ZERO_DECIMAL.has(code) ? 0 : 2
   return (amount: number) => {
     const sign = amount < 0 ? '-' : ''
@@ -171,7 +179,7 @@ export function svgText(content: string, x: number, y: number, options: TextOpti
     `y="${n(y)}"`,
     options.family ? `font-family="${escapeXml(options.family)}"` : '',
     `font-size="${n(options.size ?? 15)}"`,
-    options.weight !== undefined ? `font-weight="${options.weight}"` : '',
+    options.weight !== undefined ? `font-weight="${escapeXml(options.weight)}"` : '',
     options.fill ? `fill="${escapeXml(options.fill)}"` : '',
     options.anchor ? `text-anchor="${options.anchor}"` : '',
     options.opacity !== undefined ? `opacity="${options.opacity}"` : '',

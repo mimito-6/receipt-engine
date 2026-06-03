@@ -193,7 +193,7 @@ export function renderReceiptToSvg(
     contentWidth,
     mono: isThermal,
     currency: doc.currency,
-    formatMoney: createMoneyFormatter(doc.currency),
+    formatMoney: createMoneyFormatter(doc.currency, doc.currencySymbol),
     monoFilterId,
     interactive: !!options.interactive,
     styleOverrides: doc.styleOverrides,

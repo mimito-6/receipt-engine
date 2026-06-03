@@ -108,6 +108,7 @@ export function importOpenBoothOrder(
     schemaVersion: '0.1',
     locale: s.locale,
     currency: (s.currencyCode || 'TWD').toUpperCase(),
+    currencySymbol: s.currencySymbol || undefined,
     merchant: { name: s.shopName || undefined },
     transaction: {
       receiptNo: String(tx.id),
@@ -127,7 +128,7 @@ export function importOpenBoothOrder(
   }
 
   const ev = opts.event
-  if (ev && (ev.name || ev.boothName || ev.boothNumber)) {
+  if (ev && (ev.name || ev.boothName || ev.boothNumber || ev.location || ev.date)) {
     // Drop empty strings → undefined so blank fields don't render (e.g. a bare "Booth ").
     doc.event = {
       name: ev.name || undefined,

@@ -118,7 +118,8 @@ describe('applyTemplate', () => {
     })
     expect(merged.merchant.name).toBe('Glow') // POS data wins
     expect(merged.merchant.subtitle).toBe('手作香氛') // template branding kept
-    expect(merged.message).toEqual({ title: 'Thank you!' })
+    // template title kept, but the per-sale giftNote (POS-owned) wins for the body
+    expect(merged.message).toEqual({ title: 'Thank you!', body: '滿額禮:貼紙一張' })
     expect(merged.blockOrder).toEqual(['items', 'header', 'totals'])
     expect(merged.styleOverrides).toEqual({ 'totals.total': { color: '#d6336c' } })
     expect(ensureValid(merged)).toBeTruthy()

@@ -113,6 +113,26 @@ describe('renderReceiptToSvg', () => {
     expect(renderReceiptToSvg(receipt)).not.toContain('#123456')
   })
 
+  it('escapes a malicious styleOverrides weight (no XSS / attribute breakout)', () => {
+    const svg = renderReceiptToSvg({
+      ...receipt,
+      styleOverrides: { 'merchant.name': { weight: '700"><script>alert(1)</script><text x="0' } },
+    })
+    expect(svg).not.toContain('<script>') // payload neutralized
+    expect(svg).toContain('&lt;script&gt;') // escaped instead
+    // a legitimate numeric weight still serializes normally
+    expect(renderReceiptToSvg({ ...receipt, styleOverrides: { 'merchant.name': { weight: 700 } } })).toContain(
+      'font-weight="700"',
+    )
+  })
+
+  it('honors a currencySymbol override (and the code→symbol table)', () => {
+    // override wins even for a code outside the built-in table
+    expect(renderReceiptToSvg({ ...baseReceipt, currency: 'MYR', currencySymbol: 'RM' })).toContain('RM100')
+    // a known code with no override still uses the table
+    expect(renderReceiptToSvg({ ...baseReceipt, currency: 'TWD' })).toContain('NT$100')
+  })
+
   it('honors blockOrder (message before header)', () => {
     const reordered = renderReceiptToSvg({
       ...receipt,

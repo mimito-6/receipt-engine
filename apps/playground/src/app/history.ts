@@ -20,7 +20,9 @@ function snapshot(): string {
     pad: state.pad,
     mono: state.mono,
     edges: state.edges,
-    scale: state.scale,
+    // NOTE: scale (zoom) is intentionally NOT here — it's a viewport setting, not part
+    // of the design, so undo/redo must not snap the user's zoom around. It still
+    // persists via buildConfig. (The s-scale slider deliberately doesn't record history.)
   })
 }
 
@@ -77,7 +79,6 @@ function apply(json: string): void {
   state.pad = s.pad
   state.mono = s.mono
   state.edges = s.edges ?? { custom: false, thermal: true }
-  state.scale = s.scale
   state.sel = -1
   state.selection = null
   applying = true

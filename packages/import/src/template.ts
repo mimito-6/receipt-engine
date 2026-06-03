@@ -26,10 +26,16 @@ function defined<T extends object>(o: T | undefined): Partial<T> {
 export function applyTemplate(doc: ReceiptDocument, template: ReceiptTemplate = {}): ReceiptDocument {
   // Branding from the template (logo/subtitle/icon), but the POS's shop name wins.
   const merchant = { ...(template.merchant ?? {}), ...defined(doc.merchant) }
+  // Message: keep the template's title/footer, but a per-sale note (doc.message.body,
+  // e.g. OpenBooth giftNote) is POS-owned data and must win over the static template.
+  const message =
+    template.message || doc.message
+      ? { ...(template.message ?? {}), ...defined(doc.message) }
+      : undefined
   return {
     ...doc,
     merchant,
-    message: template.message ?? doc.message,
+    message,
     qr: template.qr ?? doc.qr,
     assets: template.assets ?? doc.assets,
     stickers: template.stickers ?? doc.stickers,

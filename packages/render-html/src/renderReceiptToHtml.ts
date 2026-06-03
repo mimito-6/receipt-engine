@@ -14,6 +14,13 @@ export interface RenderHtmlOptions {
   title?: string
   /** CSS color for the page behind the receipt. */
   pageBackground?: string
+  /** Force all embedded images B&W (forwarded to the SVG renderer). */
+  monochromeImages?: boolean
+  /** Drop only the page background (keep the card) — a clean receipt for printing.
+   *  Also removes the HTML page chrome (desk colour, card shadow & radius). */
+  transparentBackground?: boolean
+  /** Torn / perforated card edges (forwarded to the SVG renderer). */
+  perforatedEdges?: boolean
 }
 
 function maxWidthFor(options: RenderHtmlOptions): number {
@@ -26,15 +33,20 @@ function maxWidthFor(options: RenderHtmlOptions): number {
 /** Wrap a receipt's SVG in a standalone, mobile-friendly HTML document. */
 export function renderReceiptToHtml(receipt: ReceiptDocument, options: RenderHtmlOptions = {}): string {
   const doc = validateReceipt(receipt)
+  const clean = !!options.transparentBackground
   const svg = renderReceiptToSvg(doc, {
     theme: options.theme,
     width: options.width,
     padTop: options.padTop,
     padBottom: options.padBottom,
     padX: options.padX,
+    monochromeImages: options.monochromeImages,
+    transparentBackground: options.transparentBackground,
+    perforatedEdges: options.perforatedEdges,
   })
   const title = options.title ?? `${doc.merchant.name || 'Receipt'} · ${doc.transaction.receiptNo}`
-  const pageBackground = options.pageBackground ?? '#e9e9ee'
+  // A clean export drops the page chrome too (no desk colour, no card shadow/radius).
+  const pageBackground = options.pageBackground ?? (clean ? 'transparent' : '#e9e9ee')
   const maxWidth = maxWidthFor(options)
   const lang = doc.locale ?? 'en'
 
@@ -64,9 +76,9 @@ export function renderReceiptToHtml(receipt: ReceiptDocument, options: RenderHtm
   main svg {
     width: 100%;
     height: auto;
-    display: block;
+    display: block;${clean ? '' : `
     border-radius: 12px;
-    filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.12));
+    filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.12));`}
   }
 </style>
 </head>

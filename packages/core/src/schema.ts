@@ -173,6 +173,8 @@ export const ReceiptDocumentSchema = z.object({
   id: z.string().optional(),
   locale: z.string().optional(),
   currency: z.string().min(1),
+  /** Optional display-symbol override (e.g. "RM"); falls back to a code→symbol table. */
+  currencySymbol: z.string().optional(),
   merchant: MerchantSchema,
   event: EventSchema.optional(),
   transaction: TransactionSchema,
