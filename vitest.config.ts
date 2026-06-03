@@ -14,6 +14,7 @@ export default defineConfig({
       '@receipt-engine/render-png': pkg('render-png'),
       '@receipt-engine/react': pkg('react', 'src/index.tsx'),
       '@receipt-engine/import': pkg('import'),
+      '@receipt-engine/escpos': pkg('escpos'),
     },
   },
   test: {
