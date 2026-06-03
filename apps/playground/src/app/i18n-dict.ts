@@ -571,6 +571,11 @@ export const DICT: Record<string, { zh: string; ja: string; en: string }> = {
     "ja": "新作&次の出展情報",
     "en": "New work & next event info"
   },
+  "field.qrBackground": {
+    "zh": "底色(可填透明)",
+    "ja": "背景色(透明も可)",
+    "en": "Backing (or transparent)"
+  },
   "field.messageTitle": {
     "zh": "標題",
     "ja": "見出し",

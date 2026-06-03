@@ -253,6 +253,7 @@ export function syncFormFromState(): void {
   val('q-value', q.value)
   val('q-label', q.label)
   val('q-caption', q.caption)
+  setColor('q-bg', 'q-bg-hex', q.background || '') // empty hex = default white
   val('m-title', msg.title)
   val('m-body', msg.body)
   val('m-footer', msg.footer)

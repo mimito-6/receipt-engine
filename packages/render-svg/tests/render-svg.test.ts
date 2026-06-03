@@ -165,6 +165,14 @@ describe('renderReceiptToSvg', () => {
     expect(at({ backgroundScale: 2 })).toContain('preserveAspectRatio="xMidYMid meet"')
   })
 
+  it('QR backing is white by default and can be set transparent', () => {
+    const def = renderReceiptToSvg({ ...baseReceipt, qr: { value: 'https://x' } })
+    expect(def).toContain('fill="#ffffff"') // default white backing (stays scannable)
+    const trans = renderReceiptToSvg({ ...baseReceipt, qr: { value: 'https://x', background: 'transparent' } })
+    expect(trans).toContain('fill="transparent"')
+    expect(trans).not.toContain('fill="#ffffff"')
+  })
+
   it('rotates the background image around its centre when backgroundRotation is set', () => {
     const rotated = renderReceiptToSvg(
       { ...baseReceipt, assets: { backgroundImage: PNG, backgroundRotation: 30 } },

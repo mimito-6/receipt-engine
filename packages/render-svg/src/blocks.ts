@@ -547,7 +547,7 @@ export function renderQrBlock(
     x: cx - size / 2,
     y: cursor,
     dark: theme.palette.text,
-    light: '#ffffff',
+    light: qr.background ?? '#ffffff',
   })
   cursor += size
 
@@ -746,7 +746,7 @@ export function renderQrImage(ctx: RenderContext, p: Painter, qr: ReceiptQr, y: 
   const { theme } = ctx
   const cx = centerX(ctx)
   const size = theme.mode === 'thermal' ? 120 : 132
-  const markup = renderQrGroup(qr.value, { size, x: cx - size / 2, y, dark: theme.palette.text, light: '#ffffff' })
+  const markup = renderQrGroup(qr.value, { size, x: cx - size / 2, y, dark: theme.palette.text, light: qr.background ?? '#ffffff' })
   return { markup, height: size }
 }
 

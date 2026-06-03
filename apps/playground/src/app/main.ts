@@ -244,6 +244,14 @@ function wire(): void {
   })
 
   // qr
+  // QR backing colour from the hex field: a 3/6-digit hex, "transparent"/"透明", or
+  // undefined (→ the renderer's default white). White keeps it scannable on any card.
+  const qrBg = (): string | undefined => {
+    const v = (($('q-bg-hex') as HTMLInputElement).value || '').trim().toLowerCase()
+    if (v === 'transparent' || v === '透明') return 'transparent'
+    if (/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(v)) return v
+    return undefined
+  }
   const qrUpdate = (): void => {
     const on = ($('q-on') as HTMLInputElement).checked
     const v = ($('q-value') as HTMLInputElement).value
@@ -252,13 +260,21 @@ function wire(): void {
         value: v,
         label: ($('q-label') as HTMLInputElement).value || undefined,
         caption: ($('q-caption') as HTMLInputElement).value || undefined,
+        background: qrBg(),
       }
     } else {
       delete state.receipt.qr
     }
     render()
   }
-  ;['q-on', 'q-value', 'q-label', 'q-caption'].forEach((id) => $(id).addEventListener('input', qrUpdate))
+  ;['q-on', 'q-value', 'q-label', 'q-caption', 'q-bg-hex'].forEach((id) =>
+    $(id).addEventListener('input', qrUpdate),
+  )
+  // QR backing colour picker → sync its hex twin, then rebuild
+  $('q-bg').addEventListener('input', () => {
+    ;($('q-bg-hex') as HTMLInputElement).value = ($('q-bg') as HTMLInputElement).value
+    qrUpdate()
+  })
 
   // message
   const msgUpdate = (): void => {

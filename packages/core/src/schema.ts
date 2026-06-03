@@ -77,6 +77,8 @@ export const QrSchema = z.object({
   value: z.string().min(1),
   label: z.string().optional(),
   caption: z.string().optional(),
+  /** QR backing colour (any CSS colour, or "transparent"). Defaults to white. */
+  background: z.string().optional(),
 })
 
 export const MessageSchema = z.object({
