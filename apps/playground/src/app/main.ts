@@ -29,8 +29,9 @@ import {
   normalize,
 } from './io'
 import { layoutOverlay, setStickerCommit, setStickerSelect } from './overlay'
-import { clearSelection, onCanvasPointerDown, refreshInspector } from './inspector'
+import { clearSelection, refreshInspector } from './inspector'
 import { installEdgeHandles } from './resize'
+import { beginCanvasGesture } from './reorder'
 
 // Expose the engine under the historical global so embedders/docs keep working.
 ;(window as unknown as Record<string, unknown>).ReceiptEngine = {
@@ -100,8 +101,8 @@ function wire(): void {
     renderStickerList()
   })
 
-  // canvas: click text to select + open the contextual inspector
-  $('svg-host').addEventListener('pointerdown', onCanvasPointerDown as EventListener)
+  // canvas: tap text to style it; drag a section to reorder it
+  $('svg-host').addEventListener('pointerdown', beginCanvasGesture as EventListener)
 
   // theme + example
   $('theme-seg')

@@ -178,6 +178,17 @@
   .re-edge-t, .re-edge-b { height: 14px; transform: translateY(-50%); cursor: ns-resize; }
   .re-edge-t::after, .re-edge-b::after { content: ''; position: absolute; top: 50%; left: 0; right: 0; height: 3px;
     transform: translateY(-50%); background: var(--accent); border-radius: 2px; }
+
+  /* ---- block reorder: insertion line + "版面順序" panel ---- */
+  #re-insert-line { position: absolute; z-index: 5; height: 0; pointer-events: none;
+    border-top: 2.5px solid var(--accent); box-shadow: 0 0 6px rgba(214,51,108,.5); border-radius: 2px; }
+  #svg-host svg [data-re-block] { cursor: grab; }
+  .order-row { display: grid; grid-template-columns: 1fr auto auto; gap: 6px; align-items: center; margin-bottom: 6px; }
+  .order-name { font-size: 13px; }
+  .order-btn { border: 1px solid var(--line); background: #fff; color: var(--ink); border-radius: 8px;
+    width: 32px; height: 30px; cursor: pointer; font-size: 14px; }
+  .order-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+  .order-btn:disabled { opacity: .35; cursor: default; }
 </style>
 </head>
 <body>
@@ -287,6 +298,10 @@
       <label class="field">連結 / 內容</label><input type="text" id="q-value" placeholder="https://…" />
       <label class="field">標題</label><input type="text" id="q-label" placeholder="追蹤我們" />
       <label class="field">說明</label><input type="text" id="q-caption" placeholder="新作 & 下次擺攤資訊" />
+    </details>
+
+    <details class="card" id="card-order"><summary>版面順序 <span class="hint">↑↓ 排序,或在收據上直接拖區塊</span></summary>
+      <div id="order-list"></div>
     </details>
 
     <div class="card">

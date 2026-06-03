@@ -254,18 +254,3 @@ function positionUi(el: SVGGraphicsElement): void {
     panel.style.top = top + 'px'
   }
 }
-
-/** Pointer hit-test on the canvas: select text, or clear if the gap is clicked. */
-export function onCanvasPointerDown(e: PointerEvent): void {
-  const t = e.target as Element | null
-  const hit = t?.closest('[data-re-id]') as SVGGraphicsElement | null
-  if (hit) {
-    const id = hit.getAttribute('data-re-id')
-    if (id) {
-      e.preventDefault()
-      selectText(id)
-      return
-    }
-  }
-  clearSelection()
-}
