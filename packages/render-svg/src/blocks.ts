@@ -676,6 +676,162 @@ export function renderMessage(
 }
 
 // ---------------------------------------------------------------------------
+// Granular reorder units — each is an independently placeable BlockResult so the
+// editor can reorder logo / name / subtitle, the three QR parts, and the three
+// message parts. The default order reproduces the classic stacked look.
+// ---------------------------------------------------------------------------
+
+export function renderLogo(ctx: RenderContext, p: Painter, merchant: ReceiptMerchant, y: number): BlockResult {
+  const cx = centerX(ctx)
+  if (merchant.logo && isImageSource(merchant.logo)) {
+    const w = Math.min(160, ctx.contentWidth * 0.5)
+    const h = 76
+    return { markup: p.image(merchant.logo, cx - w / 2, y, w, h), height: h }
+  }
+  if (merchant.icon) {
+    if (isImageSource(merchant.icon)) {
+      const s = 64
+      return { markup: p.image(merchant.icon, cx - s / 2, y, s, s), height: s }
+    }
+    const size = 46
+    return { markup: monoWrap(ctx, p.text(merchant.icon, cx, y + size, { size, anchor: 'middle' })), height: size }
+  }
+  return EMPTY
+}
+
+export function renderMerchantName(ctx: RenderContext, p: Painter, merchant: ReceiptMerchant, y: number): BlockResult {
+  if (!merchant.name || !merchant.name.trim()) return EMPTY
+  const { theme } = ctx
+  const titleSize = theme.typography.titleSize
+  return textLines(
+    p,
+    wrapText(merchant.name, ctx.contentWidth, titleSize, ctx.mono),
+    centerX(ctx),
+    y,
+    titleSize,
+    styleFor(ctx, 'merchant.name', { anchor: 'middle', weight: 700, fill: theme.palette.primary }),
+  )
+}
+
+export function renderMerchantSubtitle(ctx: RenderContext, p: Painter, merchant: ReceiptMerchant, y: number): BlockResult {
+  const { theme } = ctx
+  const cx = centerX(ctx)
+  let cursor = y
+  let markup = ''
+  if (merchant.subtitle) {
+    const sub = textLines(
+      p,
+      wrapText(merchant.subtitle, ctx.contentWidth, theme.typography.bodySize, ctx.mono),
+      cx,
+      cursor,
+      theme.typography.bodySize,
+      styleFor(ctx, 'merchant.subtitle', { anchor: 'middle', fill: theme.palette.secondary }),
+    )
+    markup += sub.markup
+    cursor += sub.height
+  }
+  const tagline = [merchant.website, ...(merchant.socials ?? []).map((s) => s.label)].filter(Boolean).join('  ·  ')
+  if (tagline) {
+    if (markup) cursor += 2
+    const line = textLines(p, [tagline], cx, cursor, theme.typography.smallSize, {
+      anchor: 'middle',
+      fill: theme.palette.mutedText,
+    })
+    markup += line.markup
+    cursor += line.height
+  }
+  return markup ? { markup, height: cursor - y } : EMPTY
+}
+
+export function renderQrImage(ctx: RenderContext, p: Painter, qr: ReceiptQr, y: number): BlockResult {
+  const { theme } = ctx
+  const cx = centerX(ctx)
+  const size = theme.mode === 'thermal' ? 120 : 132
+  const markup = renderQrGroup(qr.value, { size, x: cx - size / 2, y, dark: theme.palette.text, light: '#ffffff' })
+  return { markup, height: size }
+}
+
+export function renderQrLabel(ctx: RenderContext, p: Painter, qr: ReceiptQr, y: number): BlockResult {
+  if (!qr.label) return EMPTY
+  const { theme } = ctx
+  return textLines(
+    p,
+    wrapText(qr.label, ctx.contentWidth, theme.typography.bodySize, ctx.mono),
+    centerX(ctx),
+    y,
+    theme.typography.bodySize,
+    styleFor(ctx, 'qr.label', { anchor: 'middle', weight: 600, fill: theme.palette.primary }),
+  )
+}
+
+export function renderQrCaption(ctx: RenderContext, p: Painter, qr: ReceiptQr, y: number): BlockResult {
+  if (!qr.caption) return EMPTY
+  const { theme } = ctx
+  return textLines(
+    p,
+    wrapText(qr.caption, ctx.contentWidth, theme.typography.smallSize, ctx.mono),
+    centerX(ctx),
+    y,
+    theme.typography.smallSize,
+    styleFor(ctx, 'qr.caption', { anchor: 'middle', fill: theme.palette.mutedText }),
+  )
+}
+
+function msgPart(
+  ctx: RenderContext,
+  p: Painter,
+  id: string,
+  text: string | undefined,
+  size: number,
+  opts: TextOptions,
+  y: number,
+): BlockResult {
+  if (!text) return EMPTY
+  return textLines(
+    p,
+    wrapText(text, ctx.contentWidth, size, ctx.mono),
+    centerX(ctx),
+    y,
+    size,
+    styleFor(ctx, id, { anchor: 'middle', ...opts }),
+  )
+}
+export function renderMessageTitle(ctx: RenderContext, p: Painter, message: ReceiptMessage, y: number): BlockResult {
+  return msgPart(ctx, p, 'message.title', message.title, ctx.theme.typography.bodySize + 3, { weight: 700, fill: ctx.theme.palette.primary }, y)
+}
+export function renderMessageBody(ctx: RenderContext, p: Painter, message: ReceiptMessage, y: number): BlockResult {
+  return msgPart(ctx, p, 'message.body', message.body, ctx.theme.typography.bodySize, { fill: ctx.theme.palette.text }, y)
+}
+export function renderMessageFooter(ctx: RenderContext, p: Painter, message: ReceiptMessage, y: number): BlockResult {
+  return msgPart(ctx, p, 'message.footer', message.footer, ctx.theme.typography.smallSize, { fill: ctx.theme.palette.mutedText }, y)
+}
+
+/** The receipt "body": transaction + items + discounts + totals + payments, as one unit. */
+export interface BodyParts {
+  transaction: ReceiptTransaction
+  items: NormalizedReceiptItem[]
+  discounts?: ReceiptDiscount[]
+  totals: NormalizedReceiptTotals
+  payments?: ReceiptPayment[]
+}
+export function renderBody(ctx: RenderContext, p: Painter, parts: BodyParts, y: number): BlockResult {
+  const section = ctx.theme.spacing.section
+  let cursor = y
+  let markup = ''
+  const place = (b: BlockResult): void => {
+    if (b.height <= 0) return
+    markup += b.markup
+    cursor += b.height + section
+  }
+  place(renderTransactionMeta(ctx, p, parts.transaction, cursor))
+  place(renderItems(ctx, p, parts.items, cursor))
+  if (parts.discounts && parts.discounts.length > 0) place(renderDiscounts(ctx, p, parts.discounts, cursor))
+  place(renderTotals(ctx, p, parts.totals, cursor))
+  if (parts.payments && parts.payments.length > 0) place(renderPayments(ctx, p, parts.payments, parts.totals, cursor))
+  return { markup, height: Math.max(0, cursor - y - section) }
+}
+
+// ---------------------------------------------------------------------------
 // Footer image
 // ---------------------------------------------------------------------------
 

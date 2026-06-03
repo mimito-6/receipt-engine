@@ -10,18 +10,20 @@ import {
   type ReceiptThemeName,
 } from '@receipt-engine/themes'
 import {
+  renderBody,
   renderCustomBlock,
-  renderDiscounts,
   renderEvent,
   renderFooterImage,
-  renderHeader,
-  renderItems,
-  renderMessage,
-  renderPayments,
-  renderQrBlock,
+  renderLogo,
+  renderMerchantName,
+  renderMerchantSubtitle,
+  renderMessageBody,
+  renderMessageFooter,
+  renderMessageTitle,
+  renderQrCaption,
+  renderQrImage,
+  renderQrLabel,
   renderStickers,
-  renderTotals,
-  renderTransactionMeta,
   type StickerGeom,
 } from './blocks'
 import { isImageSource } from './assets'
@@ -54,18 +56,33 @@ export interface RenderSvgOptions {
 }
 
 const DEFAULT_BLOCK_ORDER: BlockKey[] = [
-  'header',
+  'logo',
+  'name',
+  'subtitle',
   'event',
-  'transaction',
-  'items',
-  'discounts',
-  'totals',
-  'payments',
-  'qr',
+  'body',
   'customBlocks',
-  'message',
+  'qrImage',
+  'qrLabel',
+  'qrCaption',
+  'messageTitle',
+  'messageBody',
+  'messageFooter',
   'footerImage',
 ]
+
+// Expand legacy (coarse) block keys from older saved configs into the new
+// fine-grained units, so previously-saved blockOrder values still work.
+const LEGACY_BLOCK_ALIASES: Record<string, BlockKey[]> = {
+  header: ['logo', 'name', 'subtitle'],
+  transaction: ['body'],
+  items: ['body'],
+  discounts: ['body'],
+  totals: ['body'],
+  payments: ['body'],
+  qr: ['qrImage', 'qrLabel', 'qrCaption'],
+  message: ['messageTitle', 'messageBody', 'messageFooter'],
+}
 
 const DEFAULT_CARD_WIDTH = 720
 const THERMAL_WIDTH = 384
@@ -176,41 +193,57 @@ export function renderReceiptToSvg(
 
   const placeKey = (key: BlockKey): void => {
     switch (key) {
-      case 'header':
-        placeOne(renderHeader(ctx, p, doc.merchant, y), 'header')
+      case 'logo':
+        placeOne(renderLogo(ctx, p, doc.merchant, y), 'logo')
+        break
+      case 'name':
+        placeOne(renderMerchantName(ctx, p, doc.merchant, y), 'name')
+        break
+      case 'subtitle':
+        placeOne(renderMerchantSubtitle(ctx, p, doc.merchant, y), 'subtitle')
         break
       case 'event':
         if (doc.event) placeOne(renderEvent(ctx, p, doc.event, y), 'event')
         break
-      case 'transaction':
-        placeOne(renderTransactionMeta(ctx, p, doc.transaction, y), 'transaction')
+      case 'body':
+        placeOne(
+          renderBody(
+            ctx,
+            p,
+            {
+              transaction: doc.transaction,
+              items: doc.items,
+              discounts: doc.discounts,
+              totals: doc.totals,
+              payments: doc.payments,
+            },
+            y,
+          ),
+          'body',
+        )
         break
-      case 'items':
-        placeOne(renderItems(ctx, p, doc.items, y), 'items')
+      case 'qrImage':
+        if (doc.qr) placeOne(renderQrImage(ctx, p, doc.qr, y), 'qrImage')
         break
-      case 'discounts':
-        if (doc.discounts && doc.discounts.length > 0) {
-          placeOne(renderDiscounts(ctx, p, doc.discounts, y), 'discounts')
-        }
+      case 'qrLabel':
+        if (doc.qr) placeOne(renderQrLabel(ctx, p, doc.qr, y), 'qrLabel')
         break
-      case 'totals':
-        placeOne(renderTotals(ctx, p, doc.totals, y), 'totals')
-        break
-      case 'payments':
-        if (doc.payments && doc.payments.length > 0) {
-          placeOne(renderPayments(ctx, p, doc.payments, doc.totals, y), 'payments')
-        }
-        break
-      case 'qr':
-        if (doc.qr) placeOne(renderQrBlock(ctx, p, doc.qr, y), 'qr')
+      case 'qrCaption':
+        if (doc.qr) placeOne(renderQrCaption(ctx, p, doc.qr, y), 'qrCaption')
         break
       case 'customBlocks':
         ;(doc.customBlocks ?? []).forEach((b, i) =>
           placeOne(renderCustomBlock(ctx, p, b, y), `customBlocks.${i}`),
         )
         break
-      case 'message':
-        if (doc.message) placeOne(renderMessage(ctx, p, doc.message, y), 'message')
+      case 'messageTitle':
+        if (doc.message) placeOne(renderMessageTitle(ctx, p, doc.message, y), 'messageTitle')
+        break
+      case 'messageBody':
+        if (doc.message) placeOne(renderMessageBody(ctx, p, doc.message, y), 'messageBody')
+        break
+      case 'messageFooter':
+        if (doc.message) placeOne(renderMessageFooter(ctx, p, doc.message, y), 'messageFooter')
         break
       case 'footerImage':
         if (doc.assets?.footerImage) {
@@ -220,9 +253,17 @@ export function renderReceiptToSvg(
     }
   }
 
-  // Honor a custom block order, but always include every section (missing keys
-  // are appended in default order so a partial blockOrder can't drop content).
-  const requested = doc.blockOrder && doc.blockOrder.length > 0 ? doc.blockOrder : DEFAULT_BLOCK_ORDER
+  // Honor a custom block order, but always include every unit (missing keys are
+  // appended in default order so a partial blockOrder can't drop content).
+  // Legacy coarse keys (header / items / qr / message …) expand to the new units.
+  const requestedRaw =
+    doc.blockOrder && doc.blockOrder.length > 0 ? doc.blockOrder : DEFAULT_BLOCK_ORDER
+  const requested: BlockKey[] = []
+  for (const k of requestedRaw) {
+    const expanded = LEGACY_BLOCK_ALIASES[k]
+    if (expanded) requested.push(...expanded)
+    else requested.push(k)
+  }
   const seen = new Set<BlockKey>()
   const order: BlockKey[] = []
   for (const k of requested) {

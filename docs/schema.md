@@ -43,11 +43,15 @@ output (SVG / HTML / PNG), so they travel with the receipt.
 
 ## Block order
 
-`blockOrder` is an array of section keys controlling top-to-bottom order:
-`'header' | 'event' | 'transaction' | 'items' | 'discounts' | 'totals' |
-'payments' | 'qr' | 'customBlocks' | 'message' | 'footerImage'`. Any omitted keys
-are appended in the default order, so a partial list can reorder without dropping
-content.
+`blockOrder` is an array of layout-unit keys controlling top-to-bottom order.
+The units are fine-grained so each can be reordered independently:
+`'logo' | 'name' | 'subtitle' | 'event' | 'body' | 'customBlocks' | 'qrImage' |
+'qrLabel' | 'qrCaption' | 'messageTitle' | 'messageBody' | 'messageFooter' |
+'footerImage'`. `body` groups transaction + items + discounts + totals + payments.
+Any omitted keys are appended in the default order, so a partial list reorders
+without dropping content. Legacy coarse keys (`header`, `transaction`, `items`,
+`discounts`, `totals`, `payments`, `qr`, `message`) from older saved configs are
+still accepted and expanded to the units above.
 
 ## Merchant
 

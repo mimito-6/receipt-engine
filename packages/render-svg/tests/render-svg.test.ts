@@ -147,8 +147,40 @@ describe('renderReceiptToSvg', () => {
 
   it('tags elements only in interactive mode', () => {
     const interactive = renderReceiptToSvg(receipt, { interactive: true })
-    expect(interactive).toContain('data-re-block="items"')
+    expect(interactive).toContain('data-re-block="body"')
     expect(interactive).toContain('data-re-id="merchant.name"')
     expect(renderReceiptToSvg(receipt)).not.toContain('data-re-')
+  })
+
+  it('reorders fine-grained units (subtitle above name)', () => {
+    const doc: ReceiptDocument = {
+      ...receipt,
+      merchant: { name: 'ShopName', subtitle: 'TagLine' },
+      blockOrder: ['subtitle', 'name'],
+    }
+    const svg = renderReceiptToSvg(doc)
+    expect(svg.indexOf('TagLine')).toBeLessThan(svg.indexOf('ShopName'))
+    // default keeps the name above the subtitle
+    const def = renderReceiptToSvg({ ...doc, blockOrder: undefined })
+    expect(def.indexOf('ShopName')).toBeLessThan(def.indexOf('TagLine'))
+  })
+
+  it('groups transaction/items/totals/payments into one body unit + splits qr/message', () => {
+    const svg = renderReceiptToSvg(receipt, { interactive: true })
+    expect((svg.match(/data-re-block="body"/g) || []).length).toBe(1)
+    expect(svg).not.toContain('data-re-block="items"')
+    expect(svg).not.toContain('data-re-block="totals"')
+    expect(svg).toContain('data-re-block="qrImage"')
+    expect(svg).toContain('data-re-block="qrLabel"')
+    expect(svg).toContain('data-re-block="messageTitle"')
+    expect(svg).toContain('data-re-block="messageBody"')
+  })
+
+  it('expands legacy block keys (header → logo/name/subtitle)', () => {
+    // an old saved config still renders without dropping content
+    const svg = renderReceiptToSvg({ ...receipt, blockOrder: ['message', 'header', 'qr', 'items'] })
+    expect(svg).toContain('Mimito Booth')
+    expect(svg).toContain('Thank you!')
+    expect(svg.indexOf('Thank you!')).toBeLessThan(svg.indexOf('Mimito Booth'))
   })
 })

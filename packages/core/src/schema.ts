@@ -148,19 +148,25 @@ export const TextStyleSchema = z.object({
   align: z.enum(['left', 'center', 'right']).optional(),
 })
 
-export const BlockKeySchema = z.enum([
-  'header',
+// Reorderable layout units (fine-grained). Legacy section keys (header, items,
+// transaction, discounts, totals, payments, message) are still accepted and
+// expanded/mapped by the renderer, so older saved configs keep working.
+export const BLOCK_KEYS = [
+  'logo',
+  'name',
+  'subtitle',
   'event',
-  'transaction',
-  'items',
-  'discounts',
-  'totals',
-  'payments',
-  'qr',
+  'body', // transaction + items + discounts + totals + payments (grouped)
   'customBlocks',
-  'message',
+  'qrImage',
+  'qrLabel',
+  'qrCaption',
+  'messageTitle',
+  'messageBody',
+  'messageFooter',
   'footerImage',
-])
+] as const
+export const BlockKeySchema = z.string()
 
 export const ReceiptDocumentSchema = z.object({
   schemaVersion: z.literal(SCHEMA_VERSION),
@@ -183,7 +189,7 @@ export const ReceiptDocumentSchema = z.object({
   /** Per-element style overrides, keyed by element id (e.g. "items.0.name", "totals.total"). */
   styleOverrides: z.record(z.string(), TextStyleSchema).optional(),
   /** Override the top-to-bottom order of the major sections. */
-  blockOrder: z.array(BlockKeySchema).optional(),
+  blockOrder: z.array(z.string()).optional(),
 })
 
 export type ReceiptSocialLink = z.infer<typeof SocialLinkSchema>

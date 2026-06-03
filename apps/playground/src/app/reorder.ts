@@ -11,16 +11,18 @@ import { clearSelection, selectText } from './inspector'
 const THRESHOLD = 7 // px of movement before a press becomes a block drag
 
 const LABELS: Record<string, string> = {
-  header: '店頭(店名 / Logo)',
+  logo: 'LOGO / 圖示',
+  name: '店名',
+  subtitle: '標語',
   event: '攤位 / 活動',
-  transaction: '交易資訊',
-  items: '品項',
-  discounts: '折扣',
-  totals: '金額合計',
-  payments: '付款',
-  qr: 'QR 條碼',
+  body: '品項・折扣・金額・付款',
   customBlocks: '自訂區塊',
-  message: '結尾訊息',
+  qrImage: 'QR 條碼',
+  qrLabel: 'QR 標題',
+  qrCaption: 'QR 說明',
+  messageTitle: '結尾·標題',
+  messageBody: '結尾·內文',
+  messageFooter: '結尾·頁尾',
   footerImage: '頁尾圖',
 }
 
@@ -187,7 +189,9 @@ export function beginCanvasGesture(e: PointerEvent): void {
     }
     ev.preventDefault()
     moveDragFrame(ev.clientY - startY)
-    positionLine(ev.clientY, blockRects())
+    // Compute the insertion point among the OTHER blocks (excluding the one being
+    // dragged) so the line shows exactly where it will land — no off-by-one.
+    positionLine(ev.clientY, blockRects().filter((r) => r.key !== blockKey))
   }
   const up = (ev: PointerEvent): void => {
     host.removeEventListener('pointermove', move)
@@ -199,18 +203,14 @@ export function beginCanvasGesture(e: PointerEvent): void {
       /* ignore */
     }
     if (started && blockKey) {
-      const rects = blockRects()
-      const order = rects.map((r) => r.key)
-      const from = order.indexOf(blockKey)
-      const to = insertionIndex(ev.clientY, rects)
+      const others = blockRects().filter((r) => r.key !== blockKey)
+      const idx = insertionIndex(ev.clientY, others)
       hideLine()
       hideDragFrame()
       dimBlock(blockKey, false)
-      if (from >= 0) {
-        order.splice(from, 1)
-        order.splice(to > from ? to - 1 : to, 0, blockKey)
-        applyOrder(order)
-      }
+      const order = domOrder().filter((k) => k !== blockKey)
+      order.splice(idx, 0, blockKey)
+      applyOrder(order)
     } else {
       // a tap: style the text, or deselect on a gap
       if (textId) selectText(textId)

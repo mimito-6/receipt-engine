@@ -54,6 +54,7 @@ export {
   StickerSchema,
   TextStyleSchema,
   BlockKeySchema,
+  BLOCK_KEYS,
   SocialLinkSchema,
 } from './schema'
 export type {
