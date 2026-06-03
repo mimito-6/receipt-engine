@@ -8,6 +8,7 @@ import { renderReceiptToSvg } from '@receipt-engine/render-svg'
 import { $, dl, showError, svgEl } from './dom'
 import { curLook, fontStack, state } from './state'
 import { exportOpts } from './io'
+import { t } from './i18n'
 
 interface FontSrc {
   family: string
@@ -98,7 +99,7 @@ export async function buildFontFaceCss(): Promise<string> {
 export async function downloadPng(): Promise<void> {
   const btn = $('dl-png') as HTMLButtonElement
   const label = btn.textContent
-  btn.textContent = '處理字體中…'
+  btn.textContent = t('btn.downloadPng.busy')
   btn.disabled = true
   let css = ''
   try {
@@ -125,17 +126,17 @@ export async function downloadPng(): Promise<void> {
       cx.scale(sc, sc)
       cx.drawImage(img, 0, 0)
       cv.toBlob((b) => {
-        b ? dl('receipt.png', b) : showError('PNG 轉檔失敗,請改用「下載 SVG」。')
+        b ? dl('receipt.png', b) : showError(t('error.pngFailed'))
       }, 'image/png')
     } catch {
-      showError('無法在瀏覽器轉 PNG(收據含外部網址圖片時),請改用「下載 SVG」或改成上傳圖片。')
+      showError(t('error.pngExternalImage'))
     } finally {
       URL.revokeObjectURL(url)
     }
   }
   img.onerror = () => {
     URL.revokeObjectURL(url)
-    showError('PNG 轉檔失敗,請改用「下載 SVG」。')
+    showError(t('error.pngFailed'))
   }
   img.src = url
 }

@@ -7,6 +7,7 @@ import { render } from './render'
 import { FONT_PRESETS, state } from './state'
 import { renderStickerList } from './form'
 import { clearFrame } from './overlay'
+import { applyI18n, t } from './i18n'
 
 const PAD = 4 // selection box padding (screen px)
 
@@ -108,24 +109,25 @@ function build(): void {
   panel.className = 'inspector'
   panel.hidden = true
   panel.innerHTML =
-    '<div class="insp-head"><span class="insp-title">文字樣式</span>' +
-    '<button class="insp-x" id="insp-close" title="關閉">×</button></div>' +
+    '<div class="insp-head"><span class="insp-title" data-i18n="inspector.title">文字樣式</span>' +
+    '<button class="insp-x" id="insp-close" data-i18n-title="inspector.close.title" title="關閉">×</button></div>' +
     '<div class="insp-target" id="insp-target"></div>' +
-    '<label class="insp-field" id="insp-text-wrap">文字內容<input type="text" id="insp-text" autocomplete="off" /></label>' +
-    '<label class="insp-field">字體' +
-    '<select id="insp-font"><option value="">(沿用整體)</option>' +
-    FONT_PRESETS.map((f) => `<option value="${f.id}">${f.label}</option>`).join('') +
+    '<label class="insp-field" id="insp-text-wrap"><span data-i18n="inspector.field.text">文字內容</span><input type="text" id="insp-text" autocomplete="off" /></label>' +
+    '<label class="insp-field"><span data-i18n="inspector.field.font">字體</span>' +
+    '<select id="insp-font"><option value="" data-i18n="inspector.font.inherit">(沿用整體)</option>' +
+    FONT_PRESETS.map((f) => `<option value="${f.id}" data-i18n="inspector.font.${f.id}">${f.label}</option>`).join('') +
     '</select></label>' +
-    '<label class="insp-field">顏色<input type="color" id="insp-color" /></label>' +
-    '<label class="insp-field">大小' +
+    '<label class="insp-field"><span data-i18n="inspector.field.color">顏色</span><input type="color" id="insp-color" /></label>' +
+    '<label class="insp-field"><span data-i18n="inspector.field.size">大小</span>' +
     '<span class="insp-size-row"><input type="range" id="insp-size" min="6" max="96" step="1" />' +
     '<input type="number" id="insp-size-num" min="6" max="300" step="1" inputmode="numeric" /></span></label>' +
-    '<div class="insp-field">粗細<div class="insp-seg" id="insp-weight">' +
-    '<button type="button" data-w="400">一般</button>' +
-    '<button type="button" data-w="600">中</button>' +
-    '<button type="button" data-w="700">粗</button></div></div>' +
-    '<button type="button" class="insp-reset" id="insp-reset">↺ 還原此元素樣式</button>'
+    '<div class="insp-field"><span data-i18n="inspector.field.weight">粗細</span><div class="insp-seg" id="insp-weight">' +
+    '<button type="button" data-w="400" data-i18n="inspector.weight.regular">一般</button>' +
+    '<button type="button" data-w="600" data-i18n="inspector.weight.medium">中</button>' +
+    '<button type="button" data-w="700" data-i18n="inspector.weight.bold">粗</button></div></div>' +
+    '<button type="button" class="insp-reset" id="insp-reset" data-i18n="inspector.reset">↺ 還原此元素樣式</button>'
   document.body.appendChild(panel)
+  applyI18n() // translate the just-built panel to the current language
 
   // wiring
   const fontSel = $('insp-font') as HTMLSelectElement
@@ -205,22 +207,22 @@ function findEl(id: string): SVGGraphicsElement | null {
 /** Friendly label for what's selected. */
 function labelFor(id: string): string {
   const map: Record<string, string> = {
-    'merchant.name': '店名',
-    'merchant.subtitle': '標語',
-    'totals.subtotal': '小計',
-    'totals.discount': '折扣',
-    'totals.tax': '稅',
-    'totals.service': '服務費',
-    'totals.total': '總計',
-    'qr.label': 'QR 標題',
-    'qr.caption': 'QR 說明',
-    'message.title': '訊息標題',
-    'message.body': '訊息內文',
-    'message.footer': '訊息頁尾',
+    'merchant.name': 'label.merchant.name',
+    'merchant.subtitle': 'label.merchant.subtitle',
+    'totals.subtotal': 'label.totals.subtotal',
+    'totals.discount': 'label.totals.discount',
+    'totals.tax': 'label.totals.tax',
+    'totals.service': 'label.totals.service',
+    'totals.total': 'label.totals.total',
+    'qr.label': 'label.qr.label',
+    'qr.caption': 'label.qr.caption',
+    'message.title': 'label.message.title',
+    'message.body': 'label.message.body',
+    'message.footer': 'label.message.footer',
   }
-  if (map[id]) return map[id]
+  if (map[id]) return t(map[id])
   const im = id.match(/^items\.(\d+)\.(name|price)$/)
-  if (im) return `品項 ${Number(im[1]) + 1} · ${im[2] === 'name' ? '名稱' : '價格'}`
+  if (im) return t(im[2] === 'name' ? 'label.item.namePart' : 'label.item.pricePart', { n: Number(im[1]) + 1 })
   return id
 }
 

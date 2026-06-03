@@ -34,6 +34,7 @@ import { clearSelection, onCanvasDblClick, refreshInspector } from './inspector'
 import { installEdgeHandles } from './resize'
 import { beginCanvasGesture } from './reorder'
 import { redo, resetHistory, undo } from './history'
+import { applyI18n, setLang, t, type Lang } from './i18n'
 
 // Expose the engine under the historical global so embedders/docs keep working.
 ;(window as unknown as Record<string, unknown>).ReceiptEngine = {
@@ -75,12 +76,12 @@ function loadExample(key: string): void {
 
 function applyConfig(cfg: any): void {
   if (!cfg || !cfg.receipt) {
-    showError('這不是有效的設定檔(缺 receipt)。')
+    showError(t('error.notConfigFile'))
     return
   }
   const c = safeValidateReceipt(cfg.receipt)
   if (!c.success) {
-    showError('設定檔內的收據不合格:\n\n' + (c.error?.format() ?? ''))
+    showError(t('error.configReceiptInvalid') + (c.error?.format() ?? ''))
     return
   }
   state.receipt = normalize(c.data as never)
@@ -206,7 +207,7 @@ function wire(): void {
         state.receipt.merchant.logo = uri
         state.receipt.merchant.icon = undefined
         ;($('f-icon') as HTMLInputElement).value = ''
-        $('logo-status').textContent = '✓ 已設定商標圖片'
+        $('logo-status').textContent = t('status.logoSet')
         render()
       })
   })
@@ -317,13 +318,13 @@ function wire(): void {
 
   // add rows
   $('add-item').addEventListener('click', () => {
-    state.receipt.items.push({ name: '新品項', quantity: 1, unitPrice: 100 })
+    state.receipt.items.push({ name: t('data.defaultItemName.add'), quantity: 1, unitPrice: 100 })
     syncFormFromState()
     render()
   })
   $('add-discount').addEventListener('click', () => {
     if (!state.receipt.discounts) state.receipt.discounts = []
-    state.receipt.discounts.push({ label: '折扣', amount: 10 })
+    state.receipt.discounts.push({ label: t('data.defaultDiscountLabel'), amount: 10 })
     syncFormFromState()
     render()
   })
@@ -357,12 +358,12 @@ function wire(): void {
     try {
       p = JSON.parse(($('json') as HTMLTextAreaElement).value)
     } catch (e) {
-      showError('JSON 格式有誤:\n' + (e as Error).message)
+      showError(t('error.jsonInvalid') + (e as Error).message)
       return
     }
     const c = safeValidateReceipt(p)
     if (!c.success) {
-      showError('這份 JSON 不是有效的收據:\n\n' + (c.error?.format() ?? ''))
+      showError(t('error.notReceiptJson') + (c.error?.format() ?? ''))
       return
     }
     state.receipt = normalize(c.data as never)
@@ -376,13 +377,13 @@ function wire(): void {
     try {
       ext = JSON.parse(($('json') as HTMLTextAreaElement).value)
     } catch (e) {
-      showError('JSON 格式有誤:\n' + (e as Error).message)
+      showError(t('error.jsonInvalid') + (e as Error).message)
       return
     }
     const doc = importOrder(ext)
     const c = safeValidateReceipt(doc as never)
     if (!c.success) {
-      showError('訂單轉成收據後不合格(請檢查欄位):\n\n' + (c.error?.format() ?? ''))
+      showError(t('error.orderToReceiptInvalid') + (c.error?.format() ?? ''))
       return
     }
     state.receipt = normalize(c.data as never)
@@ -401,7 +402,7 @@ function wire(): void {
       node = d.parentElement
     }
     $('json').focus()
-    showError('把 POS/訂單系統的 JSON 貼到下方「進階:JSON」,按「載入訂單 JSON」即可。之後接系統就走 importOrder()。')
+    showError(t('toast.importItemsHint'))
   })
 
   window.addEventListener('resize', () => {
@@ -469,7 +470,7 @@ function wire(): void {
       try {
         applyConfig(JSON.parse(String(fr.result)))
       } catch (e) {
-        showError('設定檔讀取失敗:\n' + (e as Error).message)
+        showError(t('error.configReadFailed') + (e as Error).message)
       }
     }
     fr.readAsText(f)
@@ -482,3 +483,14 @@ wire()
 installEdgeHandles()
 loadExample('cute')
 setTheme('custom')
+
+// language switcher: persist + translate the static chrome, then rebuild the
+// dynamically-generated UI (form rows, sticker list, order panel) so its t() strings refresh.
+document.querySelectorAll<HTMLButtonElement>('.lang button[data-lang]').forEach((b) => {
+  b.addEventListener('click', () => {
+    setLang(b.dataset.lang as Lang)
+    syncFormFromState()
+    render()
+  })
+})
+applyI18n()

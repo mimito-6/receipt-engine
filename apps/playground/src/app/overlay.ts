@@ -5,6 +5,7 @@
 import { $, clientToReceipt, rectOf, scaleFactor, svgEl } from './dom'
 import { clamp, isImg, state } from './state'
 import { snapSticker, type Guide } from './snapping'
+import { t } from './i18n'
 
 const MIN_SIZE = 14
 const MAX_SIZE = 260
@@ -125,8 +126,8 @@ function showFrameFor(sk: any): void {
   frame.className = 're-frame'
   frame.innerHTML =
     '<div class="re-stem"></div>' +
-    '<div class="re-h re-rot" data-role="rot" title="旋轉"></div>' +
-    '<div class="re-h re-del" data-role="del" title="刪除貼紙">×</div>' +
+    '<div class="re-h re-rot" data-role="rot" title="' + t('sticker.frame.rotate.title') + '"></div>' +
+    '<div class="re-h re-del" data-role="del" title="' + t('sticker.frame.delete.title') + '">×</div>' +
     '<div class="re-h re-c tl" data-role="scale"></div>' +
     '<div class="re-h re-c tr" data-role="scale"></div>' +
     '<div class="re-h re-c bl" data-role="scale"></div>' +

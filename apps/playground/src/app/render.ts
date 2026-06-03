@@ -16,6 +16,7 @@ import { refreshInspector } from './inspector'
 import { positionEdgeHandles } from './resize'
 import { renderOrderPanel } from './reorder'
 import { scheduleHistory } from './history'
+import { t } from './i18n'
 
 /** Build the active theme: both themes go through mergeTheme so 外觀 works for either. */
 export function currentTheme(): ReceiptTheme {
@@ -57,7 +58,7 @@ export function renderOpts(extra: Record<string, unknown> = {}): Record<string, 
 export function render(): void {
   const check = safeValidateReceipt(state.receipt)
   if (!check.success) {
-    showError('資料還沒填完整:\n\n' + (check.error?.format() ?? ''))
+    showError(t('error.receiptIncomplete') + (check.error?.format() ?? ''))
     layoutOverlay()
     return
   }

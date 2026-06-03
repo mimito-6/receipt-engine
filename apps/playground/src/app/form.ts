@@ -4,6 +4,7 @@ import { $ } from './dom'
 import { render } from './render'
 import { layoutOverlay } from './overlay'
 import { type Draft, curLook, curMono, curPad, curWidth, esc, isImg, state } from './state'
+import { t } from './i18n'
 
 export function ensure(k: string): any {
   if (!state.receipt[k]) state.receipt[k] = {}
@@ -19,7 +20,7 @@ export function renderItems(): void {
     const row = document.createElement('div')
     row.className = 'item'
     row.innerHTML =
-      '<input type="text" value="' + esc(it.name) + '" placeholder="名稱" data-i="' + i + '" data-k="name" />' +
+      '<input type="text" value="' + esc(it.name) + '" placeholder="' + esc(t('placeholder.itemName')) + '" data-i="' + i + '" data-k="name" />' +
       '<input type="number" value="' + it.quantity + '" min="1" data-i="' + i + '" data-k="quantity" />' +
       '<input type="number" value="' + it.unitPrice + '" min="0" step="0.01" data-i="' + i + '" data-k="unitPrice" />' +
       (canDel ? '<button class="x" data-rm="' + i + '">×</button>' : '<span></span>')
@@ -28,11 +29,11 @@ export function renderItems(): void {
     det.className = 'row2'
     det.style.display = 'none'
     det.innerHTML =
-      '<input type="text" value="' + esc(it.variant || '') + '" placeholder="款式/變體" data-i="' + i + '" data-k="variant" />' +
-      '<input type="text" value="' + esc((it.tags || []).join(', ')) + '" placeholder="標籤(逗號分隔)" data-i="' + i + '" data-k="tags" />'
+      '<input type="text" value="' + esc(it.variant || '') + '" placeholder="' + esc(t('placeholder.itemVariant')) + '" data-i="' + i + '" data-k="variant" />' +
+      '<input type="text" value="' + esc((it.tags || []).join(', ')) + '" placeholder="' + esc(t('placeholder.itemTags')) + '" data-i="' + i + '" data-k="tags" />'
     const toggle = document.createElement('div')
     toggle.className = 'det'
-    toggle.textContent = '⋯ 款式 / 標籤'
+    toggle.textContent = t('item.detailToggle')
     toggle.onclick = () => {
       det.style.display = det.style.display === 'none' ? 'grid' : 'none'
     }
@@ -48,8 +49,8 @@ export function renderItems(): void {
       if (k === 'name' || k === 'variant') {
         it[k] = inp.value || undefined
       } else if (k === 'tags') {
-        const t = inp.value.split(',').map((s) => s.trim()).filter(Boolean)
-        it.tags = t.length ? t : undefined
+        const tags = inp.value.split(',').map((s) => s.trim()).filter(Boolean)
+        it.tags = tags.length ? tags : undefined
       } else {
         if (inp.value === '') return
         const num = Number(inp.value)
@@ -75,7 +76,7 @@ export function renderDiscounts(): void {
     const row = document.createElement('div')
     row.className = 'drow'
     row.innerHTML =
-      '<input type="text" value="' + esc(d.label) + '" placeholder="折扣名稱" data-i="' + i + '" data-k="label" />' +
+      '<input type="text" value="' + esc(d.label) + '" placeholder="' + esc(t('placeholder.discountLabel')) + '" data-i="' + i + '" data-k="label" />' +
       '<input type="number" value="' + d.amount + '" min="0" step="0.01" data-i="' + i + '" data-k="amount" />' +
       '<button class="x" data-rm="' + i + '">×</button>'
     box.appendChild(row)
@@ -113,7 +114,7 @@ export function renderPayments(): void {
     const row = document.createElement('div')
     row.className = 'prow'
     row.innerHTML =
-      '<input type="text" value="' + esc(p.method) + '" placeholder="付款方式" data-i="' + i + '" data-k="method" />' +
+      '<input type="text" value="' + esc(p.method) + '" placeholder="' + esc(t('placeholder.paymentMethod')) + '" data-i="' + i + '" data-k="method" />' +
       '<input type="number" value="' + p.amount + '" min="0" step="0.01" data-i="' + i + '" data-k="amount" />' +
       '<button class="x" data-rm="' + i + '">×</button>'
     box.appendChild(row)
@@ -157,11 +158,11 @@ export function renderStickerList(): void {
       '<div class="stk-head">' +
       glyph +
       '<span class="grow">' +
-      (i === state.sel ? '已選取 · 在收據上可拖' : '點收據上的貼紙可選取') +
+      (i === state.sel ? t('sticker.list.selected') : t('sticker.list.tapHint')) +
       '</span>' +
       '<button class="x" data-rm="' + i + '">×</button></div>' +
-      '<label class="field">大小 ' + (s.size || 38) + '</label><input type="range" min="14" max="120" step="2" value="' + (s.size || 38) + '" data-i="' + i + '" data-k="size" />' +
-      '<label class="field">旋轉 ' + (s.rotation || 0) + '°</label><input type="range" min="-180" max="180" step="1" value="' + (s.rotation || 0) + '" data-i="' + i + '" data-k="rotation" />'
+      '<label class="field">' + t('sticker.size') + ' ' + (s.size || 38) + '</label><input type="range" min="14" max="120" step="2" value="' + (s.size || 38) + '" data-i="' + i + '" data-k="size" />' +
+      '<label class="field">' + t('sticker.rotation') + ' ' + (s.rotation || 0) + '°</label><input type="range" min="-180" max="180" step="1" value="' + (s.rotation || 0) + '" data-i="' + i + '" data-k="rotation" />'
     box.appendChild(card)
   })
   box.querySelectorAll('input[type=range]').forEach((inp) => {
@@ -172,7 +173,9 @@ export function renderStickerList(): void {
       const lab = (inp as HTMLElement).previousElementSibling
       if (lab) {
         lab.textContent =
-          k === 'size' ? '大小 ' + (inp as HTMLInputElement).value : '旋轉 ' + (inp as HTMLInputElement).value + '°'
+          k === 'size'
+            ? t('sticker.size') + ' ' + (inp as HTMLInputElement).value
+            : t('sticker.rotation') + ' ' + (inp as HTMLInputElement).value + '°'
       }
       layoutOverlay()
       ;($('json') as HTMLTextAreaElement).value = JSON.stringify(state.receipt, null, 2)
@@ -236,7 +239,7 @@ export function syncFormFromState(): void {
   val('f-name', m.name)
   val('f-subtitle', m.subtitle)
   val('f-icon', m.icon && !isImg(m.icon) ? m.icon : '')
-  $('logo-status').textContent = m.logo ? '✓ 已設定商標圖片(清空 emoji 欄改回文字圖示)' : ''
+  $('logo-status').textContent = m.logo ? t('status.logoSetSync') : ''
   val('e-name', ev.name)
   val('e-booth', ev.boothNumber || ev.boothName)
   val('e-location', ev.location)
@@ -273,7 +276,7 @@ export function syncFormFromState(): void {
   ;($('s-scale') as HTMLInputElement).value = String(state.scale)
   $('v-scale').textContent = state.scale + 'px'
   const a: any = r.assets || {}
-  $('bg-status').textContent = a.backgroundImage ? '✓ 已設定底圖' : '(尚未設定底圖)'
+  $('bg-status').textContent = a.backgroundImage ? t('status.bgSet') : t('status.bgNone')
   const bop = a.backgroundOpacity != null ? a.backgroundOpacity : 0.3
   ;($('s-bgop') as HTMLInputElement).value = String(Math.round(bop * 100))
   $('v-bgop').textContent = Math.round(bop * 100) + '%'

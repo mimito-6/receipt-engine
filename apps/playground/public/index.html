@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="color-scheme" content="light dark" />
-<title>receipt-engine 試玩場</title>
+<title>receipt-engine · 生成你的收據模板</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <!-- Latin display fonts + a matched CJK web font (Noto Sans TC) so Chinese & Latin look unified -->
@@ -16,20 +16,43 @@
   @font-face { font-family: 'Boutique Bitmap 9x9'; src: url('fonts/BoutiqueBitmap9x9.ttf') format('truetype'); font-display: swap; }
   @font-face { font-family: 'Boutique Bitmap 9x9 Bold'; src: url('fonts/BoutiqueBitmap9x9_Bold.ttf') format('truetype'); font-display: swap; }
   :root {
-    --desk: #2c2c30; --desk-2: #232327; --panel: #fff; --ink: #1f2430;
-    --muted: #6b7280; --line: #e7e7ec; --accent: #d6336c; --accent-soft: #ffe3ef; --radius: 14px;
+    --desk: #29292f; --desk-2: #1c1c21; --panel: #fff; --ink: #1f2430;
+    --muted: #6b7280; --line: #e7e7ec; --accent: #d6336c; --accent-2: #f06595; --accent-soft: #ffe3ef;
+    --accent-ring: rgba(214,51,108,.26); --radius: 14px;
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; }
   body {
-    background: linear-gradient(180deg, var(--desk), var(--desk-2));
+    background:
+      radial-gradient(1100px 520px at 50% -8%, rgba(240,101,149,.18), transparent 62%),
+      linear-gradient(180deg, var(--desk), var(--desk-2));
+    background-attachment: fixed;
     color: var(--ink);
     font-family: 'Quicksand','Noto Sans TC', system-ui, -apple-system, 'Segoe UI', 'PingFang TC', 'Microsoft JhengHei', sans-serif;
     min-height: 100vh; padding: env(safe-area-inset-top) 0 0;
   }
-  header { text-align: center; color: #fff; padding: 20px 16px 4px; }
-  header h1 { margin: 0; font-size: 21px; font-weight: 700; }
-  header p { margin: 5px 0 0; color: #c9c9d2; font-size: 13px; }
+  header { max-width: 1080px; margin: 0 auto; color: #fff; padding: 22px 18px 6px;
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  .brand-block { min-width: 0; }
+  .brand { display: flex; align-items: center; gap: 11px; }
+  .brand .mark { position: relative; width: 25px; height: 33px; flex: none;
+    background: linear-gradient(180deg, #fff, #eef0f4); box-shadow: 0 3px 10px rgba(0,0,0,.3);
+    border-radius: 4px 4px 0 0;
+    clip-path: polygon(0 0,100% 0,100% 100%,86% 90%,72% 100%,58% 90%,44% 100%,30% 90%,16% 100%,0 90%); }
+  .brand .mark::before { content: ''; position: absolute; left: 5px; right: 5px; top: 8px; height: 2px; border-radius: 2px;
+    background: var(--accent); box-shadow: 0 5px 0 var(--accent), 0 10px 0 rgba(31,36,48,.22); }
+  header h1 { margin: 0; font-family: 'Space Mono', ui-monospace, monospace; font-size: 22px; font-weight: 700; letter-spacing: -.01em; }
+  header p { margin: 7px 0 0; color: #c9c9d2; font-size: 13px; line-height: 1.5; }
+  .lang { display: flex; gap: 3px; background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.14);
+    border-radius: 999px; padding: 3px; flex: none; }
+  .lang button { font: inherit; font-size: 12px; font-weight: 600; color: #c9c9d2; background: transparent;
+    border: none; border-radius: 999px; padding: 5px 11px; cursor: pointer; white-space: nowrap; transition: color .12s, background .12s; }
+  .lang button:hover { color: #fff; }
+  .lang button.on { background: #fff; color: var(--accent); }
+  @media (max-width: 560px) {
+    header { padding: 16px 16px 4px; gap: 12px; }
+    .brand-block { flex: 1 1 100%; }
+  }
 
   .layout { max-width: 1080px; margin: 0 auto; padding: 16px 14px 56px; display: grid; gap: 16px; grid-template-columns: 1fr; }
   @media (min-width: 900px) {
@@ -56,6 +79,9 @@
   .dl button { font: inherit; font-size: 13px; font-weight: 600; color: #fff; background: rgba(255,255,255,.12);
     border: 1px solid rgba(255,255,255,.22); border-radius: 999px; padding: 8px 16px; cursor: pointer; }
   .dl button:hover { background: rgba(255,255,255,.22); }
+  .dl button:first-child { background: linear-gradient(180deg, var(--accent-2), var(--accent));
+    border-color: transparent; box-shadow: 0 6px 18px rgba(214,51,108,.42); }
+  .dl button:first-child:hover { background: linear-gradient(180deg, var(--accent-2), var(--accent)); filter: brightness(1.06); }
   .err { display: none; color: #ffd2cf; background: rgba(180,35,24,.35); border: 1px solid rgba(255,120,110,.5);
     border-radius: 10px; padding: 8px 12px; font-size: 12px; white-space: pre-wrap; max-width: 360px; }
   .canvas-hint { color: #b9b9c4; font-size: 11px; text-align: center; max-width: 360px; line-height: 1.6; }
@@ -69,22 +95,27 @@
   .controls { display: grid; gap: 20px; }
   .group { display: grid; gap: 12px; }
   .group-title { color: #d7d7df; font-size: 12px; font-weight: 800; letter-spacing: .06em;
-    margin: 0 4px -2px; display: flex; align-items: center; gap: 10px; }
-  .group-title::after { content: ''; flex: 1; height: 1px; background: rgba(255,255,255,.16); }
+    margin: 0 4px -2px; display: flex; align-items: center; gap: 8px; }
+  .group-title .ico { font-size: 13px; letter-spacing: 0; filter: saturate(1.1); }
+  .group-title::after { content: ''; flex: 1; height: 1px;
+    background: linear-gradient(90deg, rgba(255,255,255,.22), rgba(255,255,255,0)); }
   .sub-label { font-size: 11px; color: var(--muted); font-weight: 700; margin: 14px 0 4px;
     display: flex; align-items: center; gap: 8px; }
   .sub-label::after { content: ''; flex: 1; height: 1px; background: var(--line); }
   details.sub { border: 1px solid var(--line); border-radius: 10px; padding: 9px 11px; margin-top: 12px; background: #fafafb; }
   details.sub > summary { font-size: 12px; font-weight: 600; color: var(--muted); cursor: pointer; list-style: none; display: flex; align-items: center; gap: 6px; }
   details.sub > summary::-webkit-details-marker { display: none; }
-  details.sub > summary::after { content: '▸'; color: var(--muted); margin-left: auto; transition: transform .15s; }
+  details.sub > summary::after { content: '›'; font-size: 15px; color: var(--muted); margin-left: auto; transition: transform .18s; }
   details.sub[open] > summary::after { transform: rotate(90deg); }
   details.sub > *:not(summary) { margin-top: 8px; }
-  .card { background: var(--panel); border-radius: var(--radius); padding: 13px 14px 15px; box-shadow: 0 6px 20px rgba(0,0,0,.18); }
+  .card { background: var(--panel); border-radius: var(--radius); padding: 13px 14px 15px; box-shadow: 0 6px 20px rgba(0,0,0,.18);
+    transition: box-shadow .16s, transform .16s; }
+  .card:hover { box-shadow: 0 10px 28px rgba(0,0,0,.22); }
+  details.card[open] { box-shadow: 0 10px 28px rgba(0,0,0,.22); }
   .card > h2 { margin: 0 0 9px; font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
   .card > h2 .hint { font-weight: 500; color: var(--muted); font-size: 11px; }
   details.card > summary { font-size: 13px; font-weight: 700; cursor: pointer; list-style: none; display: flex; align-items: center; gap: 6px; }
-  details.card > summary::after { content: '▸'; color: var(--muted); margin-left: auto; transition: transform .15s; }
+  details.card > summary::after { content: '›'; font-size: 17px; color: var(--muted); margin-left: auto; transition: transform .18s; }
   details.card[open] > summary::after { transform: rotate(90deg); }
   details.card > summary .hint { font-weight: 500; color: var(--muted); font-size: 11px; }
   details.card > *:not(summary) { margin-top: 10px; }
@@ -95,7 +126,7 @@
     width: 100%; font: inherit; font-size: 14px; color: var(--ink); border: 1px solid var(--line);
     border-radius: 9px; padding: 8px 10px; background: #fcfcfd;
   }
-  input:focus, textarea:focus, select:focus { outline: 2px solid var(--accent-soft); border-color: var(--accent); }
+  input:focus, textarea:focus, select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-ring); }
   textarea { font-family: ui-monospace, Consolas, monospace; font-size: 12px; min-height: 130px; resize: vertical; }
   input[type=range] { width: 100%; accent-color: var(--accent); }
 
@@ -148,6 +179,9 @@
   .upload input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
   .thumb { display: inline-block; vertical-align: middle; width: 30px; height: 30px; object-fit: contain; border: 1px solid var(--line); border-radius: 6px; background: #fff; margin-right: 6px; }
   .muted-note { font-size: 11px; color: var(--muted); margin-top: 6px; }
+  .muted-note.autofill { color: var(--accent); background: var(--accent-soft); border-radius: 8px;
+    padding: 6px 9px; font-weight: 600; display: flex; gap: 6px; align-items: baseline; }
+  .muted-note.autofill::before { content: '↪'; font-weight: 700; }
   footer { text-align: center; color: #9a9aa6; font-size: 11px; padding: 4px 16px 26px; }
   footer code { background: rgba(255,255,255,.1); color: #cfcfd8; padding: 1px 5px; border-radius: 4px; }
 
@@ -249,8 +283,15 @@
 </head>
 <body>
 <header>
-  <h1>🧾 receipt-engine 試玩場</h1>
-  <p>直接在收據上操作:點文字改字、拖貼紙、拖邊界改尺寸、拖區塊排序。全程在你的瀏覽器裡跑,手機也行。</p>
+  <div class="brand-block">
+    <div class="brand"><span class="mark" aria-hidden="true"></span><h1 data-i18n="brand.title">receipt-engine</h1></div>
+    <p data-i18n="brand.tagline">生成你的收據模板 · 純瀏覽器、免上傳</p>
+  </div>
+  <div class="lang" role="group" aria-label="Language">
+    <button data-lang="zh" class="on">繁中</button>
+    <button data-lang="ja">日本語</button>
+    <button data-lang="en">EN</button>
+  </div>
 </header>
 
 <div class="layout">
@@ -259,173 +300,178 @@
 
     <!-- ===== Group 1 · 外觀與版面(長相) ===== -->
     <section class="group">
-      <div class="group-title">🎨 外觀與版面</div>
+      <div class="group-title"><span class="ico" aria-hidden="true">🎨</span><span data-i18n="group.appearance">外觀與版面</span></div>
 
-      <details class="card" open><summary>風格與顏色字體 <span class="hint">主題 / 範例 / 顏色 / 字體</span></summary>
+      <details class="card" open><summary><span data-i18n="panel.style.title">風格與顏色字體</span> <span class="hint" data-i18n="panel.style.hint">主題 / 範例 / 顏色 / 字體</span></summary>
         <div class="seg" id="theme-seg">
-          <button data-theme="custom" class="on"><span class="big">🎨 自訂</span><span class="sub">彩色,可改色/字/貼紙</span></button>
-          <button data-theme="thermal"><span class="big">🧾 收據機</span><span class="sub">黑白等寬,圖自動轉灰</span></button>
+          <button data-theme="custom" class="on"><span class="big" data-i18n="theme.custom.title">🎨 自訂</span><span class="sub" data-i18n="theme.custom.sub">彩色,可改色/字/貼紙</span></button>
+          <button data-theme="thermal"><span class="big" data-i18n="theme.thermal.title">🧾 收據機</span><span class="sub" data-i18n="theme.thermal.sub">黑白等寬,圖自動轉灰</span></button>
         </div>
         <div class="row2" style="margin-top:10px">
-          <div><label class="field">從範例開始</label>
-            <select id="example"><option value="cute">同人攤位</option><option value="coffee">咖啡店</option><option value="market">手作市集</option></select></div>
-          <div><label class="field">幣別</label>
+          <div><label class="field" data-i18n="field.startFromSample">從範例開始</label>
+            <select id="example"><option value="cute" data-i18n="example.cute">同人攤位</option><option value="coffee" data-i18n="example.coffee">咖啡店</option><option value="market" data-i18n="example.market">手作市集</option></select></div>
+          <div><label class="field" data-i18n="field.currency">幣別</label>
             <select id="f-currency"><option>TWD</option><option>USD</option><option>JPY</option><option>EUR</option><option>CNY</option><option>HKD</option><option>KRW</option><option>THB</option><option>SGD</option></select></div>
         </div>
-        <div class="sub-label">細部調整(顏色 / 字體 / 星星)</div>
+        <div class="sub-label" data-i18n="subLabel.fineTune">細部調整(顏色 / 字體 / 星星)</div>
         <div class="colors">
-          <label>主色<span class="crow"><input type="color" id="c-primary" /><input type="text" class="hex" id="c-primary-hex" placeholder="#色碼" spellcheck="false" /></span></label>
-          <label>背景<span class="crow"><input type="color" id="c-bg" /><input type="text" class="hex" id="c-bg-hex" placeholder="#色碼 / 透明" spellcheck="false" /></span></label>
-          <label>卡片<span class="crow"><input type="color" id="c-surface" /><input type="text" class="hex" id="c-surface-hex" placeholder="#色碼 / 透明" spellcheck="false" /></span></label>
-          <label>文字<span class="crow"><input type="color" id="c-text" /><input type="text" class="hex" id="c-text-hex" placeholder="#色碼" spellcheck="false" /></span></label>
+          <label><span data-i18n="color.primary">主色</span><span class="crow"><input type="color" id="c-primary" /><input type="text" class="hex" id="c-primary-hex" placeholder="#色碼" data-i18n-ph="color.hexPlaceholder" spellcheck="false" /></span></label>
+          <label><span data-i18n="color.bg">背景</span><span class="crow"><input type="color" id="c-bg" /><input type="text" class="hex" id="c-bg-hex" placeholder="#色碼 / 透明" data-i18n-ph="color.hexPlaceholder" spellcheck="false" /></span></label>
+          <label><span data-i18n="color.surface">卡片</span><span class="crow"><input type="color" id="c-surface" /><input type="text" class="hex" id="c-surface-hex" placeholder="#色碼 / 透明" data-i18n-ph="color.hexPlaceholder" spellcheck="false" /></span></label>
+          <label><span data-i18n="color.text">文字</span><span class="crow"><input type="color" id="c-text" /><input type="text" class="hex" id="c-text-hex" placeholder="#色碼" data-i18n-ph="color.hexPlaceholder" spellcheck="false" /></span></label>
         </div>
-        <label class="field" style="margin-top:10px">英文字體</label>
+        <label class="field" style="margin-top:10px" data-i18n="field.latinFont">英文字體</label>
         <select id="f-font-latin">
-          <option value="quicksand">圓潤 Quicksand</option>
-          <option value="nunito">柔和 Nunito</option>
-          <option value="baloo">粗胖 Baloo 2</option>
-          <option value="poppins">簡約 Poppins</option>
-          <option value="fredoka">俏皮 Fredoka</option>
-          <option value="spacemono">等寬 Space Mono</option>
-          <option value="cubic">像素 Cubic 11</option>
-          <option value="boutique">像素 Boutique 9x9</option>
-          <option value="boutiqueBold">像素 Boutique 9x9 粗</option>
+          <option value="quicksand" data-i18n="font.latin.quicksand">圓潤 Quicksand</option>
+          <option value="nunito" data-i18n="font.latin.nunito">柔和 Nunito</option>
+          <option value="baloo" data-i18n="font.latin.baloo">粗胖 Baloo 2</option>
+          <option value="poppins" data-i18n="font.latin.poppins">簡約 Poppins</option>
+          <option value="fredoka" data-i18n="font.latin.fredoka">俏皮 Fredoka</option>
+          <option value="spacemono" data-i18n="font.latin.spacemono">等寬 Space Mono</option>
+          <option value="cubic" data-i18n="font.latin.cubic">像素 Cubic 11</option>
+          <option value="boutique" data-i18n="font.latin.boutique">像素 Boutique 9x9</option>
+          <option value="boutiqueBold" data-i18n="font.latin.boutiqueBold">像素 Boutique 9x9 粗</option>
         </select>
-        <label class="field" style="margin-top:8px">中文字體</label>
+        <label class="field" style="margin-top:8px" data-i18n="field.cjkFont">中文字體</label>
         <select id="f-font-cjk">
-          <option value="noto">思源黑體 Noto Sans TC</option>
-          <option value="cubic">像素 Cubic 11(粒方)</option>
-          <option value="boutique">像素 Boutique 9x9</option>
-          <option value="boutiqueBold">像素 Boutique 9x9 粗</option>
-          <option value="sarasa">等寬 Sarasa Mono</option>
-          <option value="system">系統內建</option>
+          <option value="noto" data-i18n="font.cjk.noto">思源黑體 Noto Sans TC</option>
+          <option value="cubic" data-i18n="font.cjk.cubic">像素 Cubic 11(粒方)</option>
+          <option value="boutique" data-i18n="font.cjk.boutique">像素 Boutique 9x9</option>
+          <option value="boutiqueBold" data-i18n="font.cjk.boutiqueBold">像素 Boutique 9x9 粗</option>
+          <option value="sarasa" data-i18n="font.cjk.sarasa">等寬 Sarasa Mono</option>
+          <option value="system" data-i18n="font.cjk.system">系統內建</option>
         </select>
-        <label class="check"><input type="checkbox" id="c-stars" /> 角落星星裝飾(裝飾用,非貼紙)</label>
-        <label class="check"><input type="checkbox" id="c-mono" /> 所有圖片轉黑白 <span class="hint">logo / 貼紙 / 底圖,適合收據機</span></label>
+        <label class="check"><input type="checkbox" id="c-stars" /> <span data-i18n="check.cornerStars">角落星星裝飾(裝飾用,非貼紙)</span></label>
+        <label class="check"><input type="checkbox" id="c-mono" /> <span data-i18n="look.mono">所有圖片轉黑白</span> <span class="hint" data-i18n="look.monoHint">logo / 貼紙 / 底圖,適合收據機</span></label>
       </details>
 
-      <details class="card"><summary>尺寸 <span class="hint">寬度・留白・預覽大小</span></summary>
-        <label class="field">收據寬度 <span id="v-width" class="hint"></span></label>
+      <details class="card"><summary><span data-i18n="panel.size.title">尺寸</span> <span class="hint" data-i18n="panel.size.hint">寬度・留白・預覽大小</span></summary>
+        <label class="field"><span data-i18n="field.width">收據寬度</span> <span id="v-width" class="hint"></span></label>
         <input type="range" id="s-width" min="280" max="900" step="10" />
-        <label class="field" style="margin-top:8px">頂部留白 <span id="v-padtop" class="hint"></span></label>
+        <label class="field" style="margin-top:8px"><span data-i18n="field.padTop">頂部留白</span> <span id="v-padtop" class="hint"></span></label>
         <input type="range" id="s-padtop" min="0" max="320" step="4" />
-        <label class="field" style="margin-top:8px">底部留白 <span id="v-padbottom" class="hint"></span></label>
+        <label class="field" style="margin-top:8px"><span data-i18n="field.padBottom">底部留白</span> <span id="v-padbottom" class="hint"></span></label>
         <input type="range" id="s-padbottom" min="0" max="320" step="4" />
-        <label class="field" style="margin-top:8px">左右留白 <span id="v-padx" class="hint"></span></label>
+        <label class="field" style="margin-top:8px"><span data-i18n="field.padX">左右留白</span> <span id="v-padx" class="hint"></span></label>
         <input type="range" id="s-padx" min="8" max="140" step="2" />
-        <label class="field" style="margin-top:8px">預覽大小 <span id="v-scale" class="hint"></span></label>
+        <label class="field" style="margin-top:8px"><span data-i18n="field.previewSize">預覽大小</span> <span id="v-scale" class="hint"></span></label>
         <input type="range" id="s-scale" min="220" max="520" step="10" />
       </details>
 
-      <details class="card" id="card-bg"><summary>商標 / 背景 <span class="hint">LOGO・底圖</span></summary>
-        <label class="field">商標 / 圖示 <span class="hint">店名留空時當招牌</span></label>
+      <details class="card" id="card-bg"><summary><span data-i18n="panel.brandBg.title">商標 / 背景</span> <span class="hint" data-i18n="panel.brandBg.hint">LOGO・底圖</span></summary>
+        <label class="field"><span data-i18n="field.logo">商標 / 圖示</span> <span class="hint" data-i18n="field.logo.hint">店名留空時當招牌</span></label>
         <div class="row2">
-          <button class="btn ghost upload">上傳商標<input type="file" id="f-logo" accept="image/*" /></button>
-          <input type="text" id="f-icon" placeholder="或貼 emoji 🎀" />
+          <button class="btn ghost upload"><span data-i18n="btn.uploadLogo">上傳商標</span><input type="file" id="f-logo" accept="image/*" /></button>
+          <input type="text" id="f-icon" placeholder="或貼 emoji 🎀" data-i18n-ph="placeholder.icon" />
         </div>
         <div id="logo-status" class="muted-note"></div>
-        <div class="sub-label">底圖 / 背景(透明度・大小・位置)</div>
+        <div class="sub-label" data-i18n="subLabel.background">底圖 / 背景(透明度・大小・位置)</div>
         <div class="row2">
-          <button class="btn ghost upload">上傳底圖<input type="file" id="f-bg" accept="image/*" /></button>
-          <button class="btn sm" id="bg-remove">移除底圖</button>
+          <button class="btn ghost upload"><span data-i18n="btn.uploadBg">上傳底圖</span><input type="file" id="f-bg" accept="image/*" /></button>
+          <button class="btn sm" id="bg-remove" data-i18n="btn.removeBg">移除底圖</button>
         </div>
         <div id="bg-status" class="muted-note"></div>
-        <label class="field">透明度 <span id="v-bgop" class="hint"></span></label>
+        <label class="field"><span data-i18n="field.opacity">透明度</span> <span id="v-bgop" class="hint"></span></label>
         <input type="range" id="s-bgop" min="0" max="100" step="1" />
-        <label class="field">大小(放大才能左右/上下移動) <span id="v-bgsc" class="hint"></span></label>
+        <label class="field"><span data-i18n="field.bgScale">大小(放大才能左右/上下移動)</span> <span id="v-bgsc" class="hint"></span></label>
         <input type="range" id="s-bgsc" min="100" max="300" step="5" />
-        <label class="field">水平位置 <span id="v-bgx" class="hint"></span></label>
+        <label class="field"><span data-i18n="field.bgX">水平位置</span> <span id="v-bgx" class="hint"></span></label>
         <input type="range" id="s-bgx" min="-300" max="300" step="5" />
-        <label class="field">垂直位置 <span id="v-bgy" class="hint"></span></label>
+        <label class="field"><span data-i18n="field.bgY">垂直位置</span> <span id="v-bgy" class="hint"></span></label>
         <input type="range" id="s-bgy" min="-300" max="300" step="5" />
       </details>
 
-      <details class="card"><summary>貼紙 <span class="hint">加上去後,直接在收據上拖</span></summary>
+      <details class="card"><summary><span data-i18n="panel.stickers.title">貼紙</span> <span class="hint" data-i18n="panel.stickers.hint">加上去後,直接在收據上拖</span></summary>
         <div class="emoji-pick" id="emoji-pick"></div>
-        <button class="btn sm ghost upload" style="margin-top:8px">上傳貼紙圖<input type="file" id="f-sticker" accept="image/*" /></button>
+        <button class="btn sm ghost upload" style="margin-top:8px"><span data-i18n="btn.uploadSticker">上傳貼紙圖</span><input type="file" id="f-sticker" accept="image/*" /></button>
         <div id="sticker-list"></div>
       </details>
 
-      <details class="card" id="card-order"><summary>版面順序 <span class="hint">↑↓ 排序,或在收據上直接拖區塊</span></summary>
+      <details class="card" id="card-order"><summary><span data-i18n="panel.order.title">版面順序</span> <span class="hint" data-i18n="panel.order.hint">↑↓ 排序,或在收據上直接拖區塊</span></summary>
         <div id="order-list"></div>
       </details>
     </section>
 
     <!-- ===== Group 2 · 收據內容(寫什麼) ===== -->
     <section class="group">
-      <div class="group-title">🧾 收據內容</div>
+      <div class="group-title"><span class="ico" aria-hidden="true">🧾</span><span data-i18n="group.content">收據內容</span></div>
 
-      <details class="card"><summary>店名 / 標語 <span class="hint">商標在「商標 / 背景」</span></summary>
-        <label class="field">店名 <span class="hint">留空 → 用 LOGO 當招牌</span></label>
-        <input type="text" id="f-name" placeholder="你的店名(可留空)" />
-        <label class="field">標語(副標)</label>
-        <input type="text" id="f-subtitle" placeholder="例如:手作 × 插畫" />
+      <details class="card"><summary><span data-i18n="panel.shopName.title">店名 / 標語</span> <span class="hint" data-i18n="panel.shopName.hint">商標在「商標 / 背景」</span></summary>
+        <label class="field"><span data-i18n="field.shopName">店名</span> <span class="hint" data-i18n="field.shopName.hint">留空 → 用 LOGO 當招牌</span></label>
+        <input type="text" id="f-name" placeholder="你的店名(可留空)" data-i18n-ph="placeholder.shopName" />
+        <label class="field" data-i18n="field.subtitle">標語(副標)</label>
+        <input type="text" id="f-subtitle" placeholder="例如:手作 × 插畫" data-i18n-ph="placeholder.subtitle" />
       </details>
 
-      <details class="card" id="card-event"><summary>攤位 / 活動 <span class="hint">CWT・FF・市集…</span></summary>
-        <label class="field">活動名稱</label><input type="text" id="e-name" placeholder="例如:Artist Alley" />
+      <details class="card" id="card-event"><summary><span data-i18n="panel.event.title">攤位 / 活動</span> <span class="hint" data-i18n="panel.event.hint">CWT・FF・市集…</span></summary>
+        <div class="muted-note autofill" data-i18n="field.autofill">可留空,OpenBooth 結帳時會自動帶入</div>
+        <label class="field" data-i18n="field.eventName">活動名稱</label><input type="text" id="e-name" placeholder="例如:Artist Alley" data-i18n-ph="placeholder.eventName" />
         <div class="row2">
-          <div><label class="field">攤位編號</label><input type="text" id="e-booth" placeholder="A12" /></div>
-          <div><label class="field">地點</label><input type="text" id="e-location" placeholder="Taipei" /></div>
+          <div><label class="field" data-i18n="field.boothNumber">攤位編號</label><input type="text" id="e-booth" placeholder="A12" /></div>
+          <div><label class="field" data-i18n="field.location">地點</label><input type="text" id="e-location" placeholder="Taipei" /></div>
         </div>
-        <label class="field">日期</label><input type="text" id="e-date" placeholder="2026-06-01" />
+        <label class="field" data-i18n="field.date">日期</label><input type="text" id="e-date" placeholder="2026-06-01" />
       </details>
 
-      <details class="card" id="card-tx"><summary>交易資訊 <span class="hint">單號・時間・收銀</span></summary>
-        <label class="field">收據編號</label><input type="text" id="t-no" placeholder="AA-A12-018" />
-        <label class="field">開立時間</label><input type="datetime-local" id="t-at" />
-        <label class="field">收銀員(選填)</label><input type="text" id="t-cashier" placeholder="Mimi" />
+      <details class="card" id="card-tx"><summary><span data-i18n="panel.tx.title">交易資訊</span> <span class="hint" data-i18n="panel.tx.hint">單號・時間・收銀</span></summary>
+        <div class="muted-note autofill" data-i18n="field.autofill">可留空,OpenBooth 結帳時會自動帶入</div>
+        <label class="field" data-i18n="field.receiptNo">收據編號</label><input type="text" id="t-no" placeholder="AA-A12-018" />
+        <label class="field" data-i18n="field.issuedAt">開立時間</label><input type="datetime-local" id="t-at" />
+        <label class="field" data-i18n="field.cashier">收銀員(選填)</label><input type="text" id="t-cashier" placeholder="Mimi" />
       </details>
 
-      <details class="card"><summary>品項 <span class="hint">名稱 / 數量 / 單價</span></summary>
+      <details class="card"><summary><span data-i18n="panel.items.title">品項</span> <span class="hint" data-i18n="panel.items.hint">名稱 / 數量 / 單價</span></summary>
+        <div class="muted-note autofill" data-i18n="field.autofill">可留空,OpenBooth 結帳時會自動帶入</div>
         <div id="items"></div>
         <div class="row2">
-          <button class="btn sm" id="add-item">+ 新增品項</button>
-          <button class="btn sm ghost" id="import-items" title="貼上 POS / 訂單系統的 JSON">⇩ 從訂單匯入</button>
+          <button class="btn sm" id="add-item" data-i18n="btn.addItem">+ 新增品項</button>
+          <button class="btn sm ghost" id="import-items" title="貼上 POS / 訂單系統的 JSON" data-i18n-title="btn.importItems.title" data-i18n="btn.importItems">⇩ 從訂單匯入</button>
         </div>
       </details>
 
-      <details class="card" id="card-discounts"><summary>折扣 <span class="hint">選填,可多筆</span></summary>
+      <details class="card" id="card-discounts"><summary><span data-i18n="panel.discounts.title">折扣</span> <span class="hint" data-i18n="panel.discounts.hint">選填,可多筆</span></summary>
+        <div class="muted-note autofill" data-i18n="field.autofill">可留空,OpenBooth 結帳時會自動帶入</div>
         <div id="discounts"></div>
-        <button class="btn sm" id="add-discount">+ 新增折扣</button>
+        <button class="btn sm" id="add-discount" data-i18n="btn.addDiscount">+ 新增折扣</button>
       </details>
 
-      <details class="card" id="card-payments"><summary>付款 <span class="hint">選填,可多筆</span></summary>
+      <details class="card" id="card-payments"><summary><span data-i18n="panel.payments.title">付款</span> <span class="hint" data-i18n="panel.payments.hint">選填,可多筆</span></summary>
+        <div class="muted-note autofill" data-i18n="field.autofill">可留空,OpenBooth 結帳時會自動帶入</div>
         <div id="payments"></div>
-        <button class="btn sm" id="add-payment">+ 新增付款</button>
+        <button class="btn sm" id="add-payment" data-i18n="btn.addPayment">+ 新增付款</button>
       </details>
 
-      <details class="card" id="card-qr"><summary>QR 條碼 <span class="hint">社群 / 回饋 / 優惠</span></summary>
-        <label class="check"><input type="checkbox" id="q-on" /> 顯示 QR</label>
-        <label class="field">連結 / 內容</label><input type="text" id="q-value" placeholder="https://…" />
-        <label class="field">標題</label><input type="text" id="q-label" placeholder="追蹤我們" />
-        <label class="field">說明</label><input type="text" id="q-caption" placeholder="新作 & 下次擺攤資訊" />
+      <details class="card" id="card-qr"><summary><span data-i18n="panel.qr.title">QR 條碼</span> <span class="hint" data-i18n="panel.qr.hint">社群 / 回饋 / 優惠</span></summary>
+        <label class="check"><input type="checkbox" id="q-on" /> <span data-i18n="check.showQr">顯示 QR</span></label>
+        <label class="field" data-i18n="field.qrValue">連結 / 內容</label><input type="text" id="q-value" placeholder="https://…" />
+        <label class="field" data-i18n="field.qrLabel">標題</label><input type="text" id="q-label" placeholder="追蹤我們" data-i18n-ph="placeholder.qrLabel" />
+        <label class="field" data-i18n="field.qrCaption">說明</label><input type="text" id="q-caption" placeholder="新作 & 下次擺攤資訊" data-i18n-ph="placeholder.qrCaption" />
       </details>
 
-      <details class="card"><summary>結尾訊息 <span class="hint">標題 / 內文 / 頁尾</span></summary>
-        <label class="field">標題</label><input type="text" id="m-title" placeholder="Thank you! ♡" />
-        <label class="field">內文</label><input type="text" id="m-body" placeholder="一句感謝的話" />
-        <label class="field">頁尾</label><input type="text" id="m-footer" placeholder="See you next event!" />
+      <details class="card"><summary><span data-i18n="panel.message.title">結尾訊息</span> <span class="hint" data-i18n="panel.message.hint">標題 / 內文 / 頁尾</span></summary>
+        <label class="field" data-i18n="field.messageTitle">標題</label><input type="text" id="m-title" placeholder="Thank you! ♡" data-i18n-ph="placeholder.messageTitle" />
+        <label class="field" data-i18n="field.messageBody">內文</label><input type="text" id="m-body" placeholder="一句感謝的話" data-i18n-ph="placeholder.messageBody" />
+        <label class="field" data-i18n="field.messageFooter">頁尾</label><input type="text" id="m-footer" placeholder="See you next event!" data-i18n-ph="placeholder.messageFooter" />
       </details>
     </section>
 
     <!-- ===== Group 3 · 存檔 / 匯入 ===== -->
     <section class="group">
-      <div class="group-title">💾 存檔 / 匯入</div>
+      <div class="group-title"><span class="ico" aria-hidden="true">💾</span><span data-i18n="group.saveImport">存檔 / 匯入</span></div>
 
-      <details class="card"><summary>存檔 / 匯入 <span class="hint">設定檔 · 進階 JSON</span></summary>
+      <details class="card"><summary><span data-i18n="panel.saveImport.title">存檔 / 匯入</span> <span class="hint" data-i18n="panel.saveImport.hint">設定檔 · 進階 JSON</span></summary>
         <div class="row2">
-          <button class="btn" id="cfg-save">⬇ 下載設定檔</button>
-          <button class="btn ghost upload">⬆ 載入設定檔<input type="file" id="cfg-load" accept="application/json,.json" /></button>
+          <button class="btn" id="cfg-save" data-i18n="btn.saveConfig">⬇ 下載設定檔</button>
+          <button class="btn ghost upload"><span data-i18n="btn.loadConfig">⬆ 載入設定檔</span><input type="file" id="cfg-load" accept="application/json,.json" /></button>
         </div>
-        <div class="muted-note">含收據內容、主題、中英字體、顏色、上下/左右留白、底圖、貼紙——載回 100% 還原。</div>
-        <details class="sub" id="card-json"><summary>進階:JSON(收據 / 訂單)</summary>
+        <div class="muted-note" data-i18n="note.configContents">含收據內容、主題、中英字體、顏色、上下/左右留白、底圖、貼紙——載回 100% 還原。</div>
+        <details class="sub" id="card-json"><summary data-i18n="panel.json.title">進階:JSON(收據 / 訂單)</summary>
           <textarea id="json" spellcheck="false"></textarea>
           <div class="row2" style="margin-top:6px">
-            <button class="btn sm" id="load-receipt">載入收據 JSON</button>
-            <button class="btn sm ghost" id="load-order">載入訂單 JSON</button>
+            <button class="btn sm" id="load-receipt" data-i18n="btn.loadReceiptJson">載入收據 JSON</button>
+            <button class="btn sm ghost" id="load-order" data-i18n="btn.loadOrderJson">載入訂單 JSON</button>
           </div>
-          <div class="muted-note">「訂單 JSON」會經由 <code>importOrder()</code> 轉成收據——之後接 POS / 電商系統就走這條。</div>
+          <div class="muted-note" data-i18n="note.orderJson">「訂單 JSON」會經由 importOrder() 轉成收據——之後接 POS / 電商系統就走這條。</div>
         </details>
       </details>
     </section>
@@ -435,21 +481,21 @@
   <div class="stage">
     <div class="err" id="err"></div>
     <div class="canvas-tools">
-      <button id="undo" title="上一步 (Ctrl+Z)" disabled>↶ 上一步</button>
-      <button id="redo" title="下一步 (Ctrl+Y)" disabled>↷ 下一步</button>
+      <button id="undo" data-i18n-title="nav.undo" title="上一步" disabled><span aria-hidden="true">↶</span> <span data-i18n="nav.undo">上一步</span></button>
+      <button id="redo" data-i18n-title="nav.redo" title="下一步" disabled><span aria-hidden="true">↷</span> <span data-i18n="nav.redo">下一步</span></button>
     </div>
     <div id="paper"><div id="svg-host"></div><div id="sticker-overlay"></div></div>
-    <div class="canvas-hint">點文字改內容/字體 · 拖貼紙縮放旋轉 · 拖邊界改尺寸 · 拖區塊排順序</div>
-    <label class="dl-clean"><input type="checkbox" id="dl-clean" /> 乾淨背景(透明 PNG,適合印製)</label>
+    <div class="canvas-hint" data-i18n="canvas.hint">點文字改內容/字體 · 拖貼紙縮放旋轉 · 拖邊界改尺寸 · 拖區塊排順序</div>
+    <label class="dl-clean"><input type="checkbox" id="dl-clean" /> <span data-i18n="export.clean">乾淨背景(透明 PNG)</span> <span class="hint" data-i18n="export.cleanHint">輸出去背 PNG,不含卡片/頁面底色,適合實際印製</span></label>
     <div class="dl">
-      <button id="dl-png">下載 PNG</button>
-      <button id="dl-svg">下載 SVG</button>
-      <button id="dl-html">下載 HTML</button>
+      <button id="dl-png" data-i18n="btn.downloadPng">下載 PNG</button>
+      <button id="dl-svg" data-i18n="btn.downloadSvg">下載 SVG</button>
+      <button id="dl-html" data-i18n="btn.downloadHtml">下載 HTML</button>
     </div>
   </div>
 </div>
 
-<footer>純前端 · 不上傳任何資料 · 由 <code>@receipt-engine/render-svg</code> 在瀏覽器內渲染</footer>
+<footer data-i18n="footer.text">純前端 · 不上傳任何資料 · 由 @receipt-engine/render-svg 在瀏覽器內渲染</footer>
 
 <!-- Editor app (bundles the engine). Built from src/app/main.ts -> public/playground.global.js -->
 <script src="./playground.global.js"></script>

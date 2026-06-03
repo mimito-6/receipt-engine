@@ -7,6 +7,7 @@ import { getTheme } from '@receipt-engine/themes'
 import { dl } from './dom'
 import { currentTheme, renderOpts } from './render'
 import { type Draft, type Look, type Pad, type ThemeName, deepClone, isImg, state } from './state'
+import { t } from './i18n'
 
 export function defaultPad(theme: ThemeName): Pad {
   const p = getTheme(theme).spacing.page || 30
@@ -61,7 +62,7 @@ export function importOrder(ext: any): Draft {
 /** Fill in editor-required fields so a freshly loaded receipt is editable. */
 export function normalize(r: Draft): Draft {
   if (!r.transaction) r.transaction = { receiptNo: 'R-001', issuedAt: '2026-06-01T12:00' }
-  if (!r.items || !r.items.length) r.items = [{ name: '品項', quantity: 1, unitPrice: 100 }]
+  if (!r.items || !r.items.length) r.items = [{ name: t('data.defaultItemName.normalize'), quantity: 1, unitPrice: 100 }]
   ;(r.stickers || []).forEach((s: any) => {
     s.anchor = 'free'
     if (s.x == null) s.x = Math.round(720 * 0.5)

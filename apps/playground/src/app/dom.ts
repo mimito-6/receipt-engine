@@ -1,5 +1,6 @@
 // Thin DOM helpers shared across editor modules: element lookup, error banner,
 // file reading, blob download, and SVG↔receipt coordinate conversion.
+import { t } from './i18n'
 
 export function $<T extends HTMLElement = HTMLElement>(id: string): T {
   return document.getElementById(id) as T
@@ -17,7 +18,7 @@ export function clearError(): void {
 /** Read a File as a data URL; warns (non-blocking) when it's large. */
 export function readFile(file: File | undefined, cb: (dataUrl: string) => void): void {
   if (file && file.size > 2 * 1024 * 1024) {
-    showError('圖片有點大(>2MB),JSON 會變肥,建議換小一點。')
+    showError(t('error.imageTooLarge'))
   }
   if (!file) return
   const fr = new FileReader()

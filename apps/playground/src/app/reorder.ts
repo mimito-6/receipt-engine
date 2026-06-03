@@ -7,23 +7,25 @@ import { $, rectOf } from './dom'
 import { state } from './state'
 import { render } from './render'
 import { clearSelection, selectText } from './inspector'
+import { t } from './i18n'
 
 const THRESHOLD = 7 // px of movement before a press becomes a block drag
 
+// element key → i18n key (translated at render time so language switches refresh the panel)
 const LABELS: Record<string, string> = {
-  logo: 'LOGO / 圖示',
-  name: '店名',
-  subtitle: '標語',
-  event: '攤位 / 活動',
-  body: '品項・折扣・金額・付款',
-  customBlocks: '自訂區塊',
-  qrImage: 'QR 條碼',
-  qrLabel: 'QR 標題',
-  qrCaption: 'QR 說明',
-  messageTitle: '結尾·標題',
-  messageBody: '結尾·內文',
-  messageFooter: '結尾·頁尾',
-  footerImage: '頁尾圖',
+  logo: 'order.logo',
+  name: 'order.name',
+  subtitle: 'order.subtitle',
+  event: 'order.event',
+  body: 'order.body',
+  customBlocks: 'order.customBlocks',
+  qrImage: 'order.qrImage',
+  qrLabel: 'order.qrLabel',
+  qrCaption: 'order.qrCaption',
+  messageTitle: 'order.messageTitle',
+  messageBody: 'order.messageBody',
+  messageFooter: 'order.messageFooter',
+  footerImage: 'order.footerImage',
 }
 
 interface BlockRect {
@@ -244,7 +246,7 @@ export function renderOrderPanel(): void {
     const row = document.createElement('div')
     row.className = 'order-row'
     row.innerHTML =
-      '<span class="order-name">' + (LABELS[key] || key) + '</span>' +
+      '<span class="order-name">' + (LABELS[key] ? t(LABELS[key]) : key) + '</span>' +
       '<button class="order-btn" data-dir="up"' + (i === 0 ? ' disabled' : '') + '>↑</button>' +
       '<button class="order-btn" data-dir="down"' + (i === order.length - 1 ? ' disabled' : '') + '>↓</button>'
     const [upBtn, downBtn] = row.querySelectorAll('button')

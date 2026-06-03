@@ -5,6 +5,7 @@
 import { $, receiptLen, receiptToPaper, scaleFactor, svgEl } from './dom'
 import { clamp, curPad, state } from './state'
 import { render } from './render'
+import { t } from './i18n'
 
 let host: HTMLDivElement | null = null
 let rightH: HTMLDivElement
@@ -122,13 +123,16 @@ export function installEdgeHandles(): void {
   host.id = 'edge-overlay'
   rightH = document.createElement('div')
   rightH.className = 're-edge re-edge-r'
-  rightH.title = '拖曳調整寬度'
+  rightH.title = t('edge.width.title')
+  rightH.setAttribute('data-i18n-title', 'edge.width.title')
   topH = document.createElement('div')
   topH.className = 're-edge re-edge-t'
-  topH.title = '拖曳調整頂部留白'
+  topH.title = t('edge.padTop.title')
+  topH.setAttribute('data-i18n-title', 'edge.padTop.title')
   botH = document.createElement('div')
   botH.className = 're-edge re-edge-b'
-  botH.title = '拖曳調整底部留白'
+  botH.title = t('edge.padBottom.title')
+  botH.setAttribute('data-i18n-title', 'edge.padBottom.title')
   host.append(rightH, topH, botH)
   $('paper').appendChild(host)
   dragWidth(rightH)
