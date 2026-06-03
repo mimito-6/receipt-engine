@@ -116,11 +116,10 @@ function build(): void {
     '<select id="insp-font"><option value="">(沿用整體)</option>' +
     FONT_PRESETS.map((f) => `<option value="${f.id}">${f.label}</option>`).join('') +
     '</select></label>' +
-    '<div class="insp-grid">' +
     '<label class="insp-field">顏色<input type="color" id="insp-color" /></label>' +
-    '<label class="insp-field">大小 <em id="insp-size-val"></em>' +
-    '<input type="range" id="insp-size" min="8" max="64" step="1" /></label>' +
-    '</div>' +
+    '<label class="insp-field">大小' +
+    '<span class="insp-size-row"><input type="range" id="insp-size" min="6" max="96" step="1" />' +
+    '<input type="number" id="insp-size-num" min="6" max="300" step="1" inputmode="numeric" /></span></label>' +
     '<div class="insp-field">粗細<div class="insp-seg" id="insp-weight">' +
     '<button type="button" data-w="400">一般</button>' +
     '<button type="button" data-w="600">中</button>' +
@@ -132,6 +131,7 @@ function build(): void {
   const fontSel = $('insp-font') as HTMLSelectElement
   const colorInp = $('insp-color') as HTMLInputElement
   const sizeInp = $('insp-size') as HTMLInputElement
+  const sizeNum = $('insp-size-num') as HTMLInputElement
   const textInp = $('insp-text') as HTMLInputElement
   ;($('insp-close') as HTMLButtonElement).onclick = () => clearSelection()
   textInp.oninput = () => {
@@ -153,10 +153,21 @@ function build(): void {
     const id = currentId()
     if (id) setOverride(id, { color: colorInp.value })
   }
-  sizeInp.oninput = () => {
+  const applySize = (v: number): void => {
     const id = currentId()
-    ;($('insp-size-val') as HTMLElement).textContent = sizeInp.value + 'px'
-    if (id) setOverride(id, { size: Number(sizeInp.value) })
+    if (!id || !Number.isFinite(v)) return
+    const size = Math.max(6, Math.min(300, Math.round(v)))
+    setOverride(id, { size })
+  }
+  sizeInp.oninput = () => {
+    sizeNum.value = sizeInp.value
+    applySize(Number(sizeInp.value))
+  }
+  sizeNum.oninput = () => {
+    if (sizeNum.value === '') return
+    const v = Number(sizeNum.value)
+    if (v >= 6 && v <= 96) sizeInp.value = String(v)
+    applySize(v)
   }
   $('insp-weight')
     .querySelectorAll('button')
@@ -244,8 +255,8 @@ function syncControls(id: string, el: SVGGraphicsElement): void {
   const preset = o.fontFamily ? FONT_PRESETS.find((f) => f.stack === o.fontFamily) : null
   fontSel.value = preset ? preset.id : ''
   const size = o.size != null ? o.size : Math.round(parseFloat(cs.fontSize) || 15)
-  ;($('insp-size') as HTMLInputElement).value = String(size)
-  ;($('insp-size-val') as HTMLElement).textContent = size + 'px'
+  ;($('insp-size') as HTMLInputElement).value = String(Math.min(96, Math.max(6, size)))
+  ;($('insp-size-num') as HTMLInputElement).value = String(size)
   const color = o.color || rgbToHex(el.getAttribute('fill') || cs.fill || '#000')
   ;($('insp-color') as HTMLInputElement).value = rgbToHex(color)
   let w = o.weight
@@ -317,6 +328,11 @@ function positionUi(el: SVGGraphicsElement): void {
   box.style.top = rect.top - paper.top - PAD + 'px'
   box.style.width = rect.width + PAD * 2 + 'px'
   box.style.height = rect.height + PAD * 2 + 'px'
+
+  // While the user is interacting with a control inside the panel (e.g. dragging
+  // the size slider, which re-renders the element), DON'T move the panel — that
+  // made it jump out from under the cursor. The selection box still tracks.
+  if (panel.contains(document.activeElement)) return
 
   const sheet = window.innerWidth < 900
   panel.classList.toggle('as-sheet', sheet)

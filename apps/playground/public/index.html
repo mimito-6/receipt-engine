@@ -158,6 +158,11 @@
   #insp-text { width: 100%; margin-top: 4px; font: inherit; font-size: 14px; color: var(--ink);
     border: 1px solid var(--line); border-radius: 8px; padding: 7px 9px; background: #fcfcfd; }
   #insp-text:focus { outline: 2px solid var(--accent-soft); border-color: var(--accent); }
+  .insp-size-row { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
+  .insp-size-row input[type=range] { flex: 1; margin-top: 0; }
+  .insp-size-row input[type=number] { width: 58px; font: inherit; font-size: 13px; color: var(--ink);
+    border: 1px solid var(--line); border-radius: 8px; padding: 6px 6px; background: #fcfcfd; text-align: center; }
+  .insp-size-row input[type=number]:focus { outline: 2px solid var(--accent-soft); border-color: var(--accent); }
   .insp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .insp-field em { font-style: normal; color: var(--ink); }
   .insp-seg { display: flex; gap: 6px; margin-top: 5px; }
@@ -299,7 +304,14 @@
         <input type="range" id="s-scale" min="220" max="520" step="10" />
       </details>
 
-      <details class="card" id="card-bg"><summary>底圖 / 背景 <span class="hint">透明度・大小・位置</span></summary>
+      <details class="card" id="card-bg"><summary>商標 / 背景 <span class="hint">LOGO・底圖</span></summary>
+        <label class="field">商標 / 圖示 <span class="hint">店名留空時當招牌</span></label>
+        <div class="row2">
+          <button class="btn ghost upload">上傳商標<input type="file" id="f-logo" accept="image/*" /></button>
+          <input type="text" id="f-icon" placeholder="或貼 emoji 🎀" />
+        </div>
+        <div id="logo-status" class="muted-note"></div>
+        <div class="sub-label">底圖 / 背景(透明度・大小・位置)</div>
         <div class="row2">
           <button class="btn ghost upload">上傳底圖<input type="file" id="f-bg" accept="image/*" /></button>
           <button class="btn sm" id="bg-remove">移除底圖</button>
@@ -330,17 +342,11 @@
     <section class="group">
       <div class="group-title">🧾 收據內容</div>
 
-      <details class="card"><summary>店家 <span class="hint">店名 / 標語 / 商標</span></summary>
+      <details class="card"><summary>店名 / 標語 <span class="hint">商標在「商標 / 背景」</span></summary>
         <label class="field">店名 <span class="hint">留空 → 用 LOGO 當招牌</span></label>
         <input type="text" id="f-name" placeholder="你的店名(可留空)" />
         <label class="field">標語(副標)</label>
         <input type="text" id="f-subtitle" placeholder="例如:手作 × 插畫" />
-        <label class="field">商標 / 圖示</label>
-        <div class="row2">
-          <button class="btn ghost upload">上傳圖片<input type="file" id="f-logo" accept="image/*" /></button>
-          <input type="text" id="f-icon" placeholder="或貼 emoji 🎀" />
-        </div>
-        <div id="logo-status" class="muted-note"></div>
       </details>
 
       <details class="card" id="card-event"><summary>攤位 / 活動 <span class="hint">CWT・FF・市集…</span></summary>
