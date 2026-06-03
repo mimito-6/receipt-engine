@@ -362,15 +362,18 @@ export function renderReceiptToSvg(
   let bgClip = ''
   if (bgSrc && isImageSource(bgSrc)) {
     const op = doc.assets?.backgroundOpacity ?? 1
-    // The background always COVERS the card — no blank gaps. `scale` zooms in past
-    // cover with no upper cap (1× = cover, zoom as far as you like); it's floored at
-    // 1 so it can never shrink below cover. The box also grows by the pan offset, so
-    // repositioning slides the visible crop without ever pulling an edge inside.
-    const scale = Math.max(1, doc.assets?.backgroundScale ?? 1)
+    // Free zoom both ways (floor 0.05, no upper cap):
+    //  • scale >= 1 (cover / zoomed-in): grow the box by the pan offset so panning
+    //    the visible crop never pulls an edge inside — no accidental blank gap.
+    //  • scale < 1 (shrunk): the image is an intentionally-small element; keep it that
+    //    size and let the user place it freely (card surface showing around it is the
+    //    point of shrinking).
+    const scale = Math.max(0.05, doc.assets?.backgroundScale ?? 1)
     const panX = doc.assets?.backgroundX ?? 0
     const panY = doc.assets?.backgroundY ?? 0
-    const bgW = cardWidth * scale + 2 * Math.abs(panX)
-    const bgH = cardHeight * scale + 2 * Math.abs(panY)
+    const cover = scale >= 1
+    const bgW = cardWidth * scale + (cover ? 2 * Math.abs(panX) : 0)
+    const bgH = cardHeight * scale + (cover ? 2 * Math.abs(panY) : 0)
     const bgX = cardX + (cardWidth - bgW) / 2 + panX
     const bgY = cardTop + (cardHeight - bgH) / 2 + panY
     const filterAttr = monoFilterId ? ` filter="${monoFilterId}"` : ''

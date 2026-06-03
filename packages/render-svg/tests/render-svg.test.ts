@@ -144,26 +144,24 @@ describe('renderReceiptToSvg', () => {
     expect(def.indexOf('Mimito Booth')).toBeLessThan(def.indexOf('Thank you!'))
   })
 
-  it('background image always covers the card when panned (no blank gap)', () => {
+  it('background zooms freely both ways: covers when panned at ≥1×, shrinks below 1×', () => {
     const cardX = 26 // outerMargin (custom)
     const cardWidth = 720 - 52
     const num = (svg: string, attr: string): number =>
       parseFloat(svg.match(new RegExp(`<image[^>]*\\s${attr}="([-\\d.]+)"`))![1])
-    // scale 1 + a big pan must STILL cover the whole card — the box grows on pan
-    const panned = renderReceiptToSvg(
-      { ...baseReceipt, assets: { backgroundImage: PNG, backgroundScale: 1, backgroundX: 200 } },
-      { theme: 'custom', width: 720 },
-    )
-    const x = num(panned, 'x')
-    const w = num(panned, 'width')
-    expect(x).toBeLessThanOrEqual(cardX) // no left gap
-    expect(x + w).toBeGreaterThanOrEqual(cardX + cardWidth) // no right gap
-    // and zoom goes well past the old 3× cap (no upper limit in the engine)
-    const z5 = renderReceiptToSvg(
-      { ...baseReceipt, assets: { backgroundImage: PNG, backgroundScale: 5 } },
-      { theme: 'custom', width: 720 },
-    )
-    expect(num(z5, 'width')).toBeCloseTo(cardWidth * 5, 0)
+    const at = (assets: Record<string, unknown>): string =>
+      renderReceiptToSvg(
+        { ...baseReceipt, assets: { backgroundImage: PNG, ...assets } },
+        { theme: 'custom', width: 720 },
+      )
+    // scale 1 + a big pan must STILL cover the card — the box grows on pan (no gap)
+    const panned = at({ backgroundScale: 1, backgroundX: 200 })
+    expect(num(panned, 'x')).toBeLessThanOrEqual(cardX)
+    expect(num(panned, 'x') + num(panned, 'width')).toBeGreaterThanOrEqual(cardX + cardWidth)
+    // scale < 1 shrinks below cover — a small image, NOT grown to cover (gaps are intended)
+    expect(num(at({ backgroundScale: 0.5 }), 'width')).toBeCloseTo(cardWidth * 0.5, 0)
+    // zoom goes well past the old 3× cap (no upper limit)
+    expect(num(at({ backgroundScale: 5 }), 'width')).toBeCloseTo(cardWidth * 5, 0)
   })
 
   it('tags elements only in interactive mode', () => {
