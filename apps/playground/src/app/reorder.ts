@@ -126,6 +126,34 @@ function positionLine(clientY: number, rects: BlockRect[]): void {
   line.style.top = y - paper.top + 'px'
 }
 
+// A floating frame around the block being dragged — follows the pointer so it's
+// obvious what's moving.
+let dragFrame: HTMLDivElement | null = null
+function showDragFrame(key: string): void {
+  hideDragFrame()
+  const b = blockRects().find((r) => r.key === key)
+  if (!b) return
+  const paper = rectOf($('paper'))
+  const svg = $('svg-host').querySelector('svg')
+  const sr = svg ? rectOf(svg) : paper
+  dragFrame = document.createElement('div')
+  dragFrame.className = 're-drag-frame'
+  dragFrame.style.left = sr.left - paper.left + 'px'
+  dragFrame.style.width = sr.width + 'px'
+  dragFrame.style.top = b.top - paper.top + 'px'
+  dragFrame.style.height = b.bottom - b.top + 'px'
+  $('paper').appendChild(dragFrame)
+}
+function moveDragFrame(dy: number): void {
+  if (dragFrame) dragFrame.style.transform = `translateY(${dy}px)`
+}
+function hideDragFrame(): void {
+  if (dragFrame) {
+    dragFrame.remove()
+    dragFrame = null
+  }
+}
+
 export function beginCanvasGesture(e: PointerEvent): void {
   const t = e.target as Element | null
   const textId = (t?.closest('[data-re-id]') as Element | null)?.getAttribute('data-re-id') || null
@@ -143,15 +171,22 @@ export function beginCanvasGesture(e: PointerEvent): void {
   }
   const move = (ev: PointerEvent): void => {
     if (!started) {
-      if (blockKey && Math.hypot(ev.clientX - startX, ev.clientY - startY) > THRESHOLD) {
+      const dx = ev.clientX - startX
+      const dy = ev.clientY - startY
+      // Only a deliberate, mostly-vertical drag starts a reorder — so a normal
+      // click (or a small horizontal wobble) still reliably selects the text.
+      if (blockKey && Math.abs(dy) > THRESHOLD && Math.abs(dy) > Math.abs(dx)) {
         started = true
         ev.preventDefault()
         dimBlock(blockKey, true)
+        showDragFrame(blockKey)
         clearSelection()
       } else {
         return
       }
     }
+    ev.preventDefault()
+    moveDragFrame(ev.clientY - startY)
     positionLine(ev.clientY, blockRects())
   }
   const up = (ev: PointerEvent): void => {
@@ -169,6 +204,7 @@ export function beginCanvasGesture(e: PointerEvent): void {
       const from = order.indexOf(blockKey)
       const to = insertionIndex(ev.clientY, rects)
       hideLine()
+      hideDragFrame()
       dimBlock(blockKey, false)
       if (from >= 0) {
         order.splice(from, 1)

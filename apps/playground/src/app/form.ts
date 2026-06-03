@@ -269,9 +269,7 @@ export function syncFormFromState(): void {
   $('v-bgx').textContent = ($('s-bgx') as HTMLInputElement).value + 'px'
   ;($('s-bgy') as HTMLInputElement).value = String(a.backgroundY != null ? a.backgroundY : 0)
   $('v-bgy').textContent = ($('s-bgy') as HTMLInputElement).value + 'px'
-  if (ev.name || ev.boothNumber) ($('card-event') as HTMLDetailsElement).open = true
-  if ((r.discounts || []).length) ($('card-discounts') as HTMLDetailsElement).open = true
-  if ((r.payments || []).length) ($('card-payments') as HTMLDetailsElement).open = true
+  // panels stay collapsed by default — the user expands what they need
   renderItems()
   renderDiscounts()
   renderPayments()

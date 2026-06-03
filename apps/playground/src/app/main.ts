@@ -28,7 +28,7 @@ import {
   normalize,
 } from './io'
 import { downloadPng } from './pngExport'
-import { layoutOverlay, setStickerCommit, setStickerSelect } from './overlay'
+import { layoutOverlay, setStickerCommit, setStickerDelete, setStickerSelect } from './overlay'
 import { clearSelection, onCanvasDblClick, refreshInspector } from './inspector'
 import { installEdgeHandles } from './resize'
 import { beginCanvasGesture } from './reorder'
@@ -99,6 +99,10 @@ function wire(): void {
   setStickerSelect(() => {
     clearSelection() // selecting a sticker closes the text inspector
     renderStickerList()
+  })
+  setStickerDelete(() => {
+    renderStickerList()
+    render()
   })
 
   // canvas: tap text to style it; drag a section to reorder it; double-tap to edit text

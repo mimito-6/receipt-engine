@@ -21,6 +21,10 @@ let onSelect: () => void = () => {}
 export function setStickerSelect(fn: () => void): void {
   onSelect = fn
 }
+let onDelete: () => void = () => {}
+export function setStickerDelete(fn: () => void): void {
+  onDelete = fn
+}
 
 let frame: HTMLDivElement | null = null
 
@@ -121,7 +125,8 @@ function showFrameFor(sk: any): void {
   frame.className = 're-frame'
   frame.innerHTML =
     '<div class="re-stem"></div>' +
-    '<div class="re-h re-rot" data-role="rot"></div>' +
+    '<div class="re-h re-rot" data-role="rot" title="旋轉"></div>' +
+    '<div class="re-h re-del" data-role="del" title="刪除貼紙">×</div>' +
     '<div class="re-h re-c tl" data-role="scale"></div>' +
     '<div class="re-h re-c tr" data-role="scale"></div>' +
     '<div class="re-h re-c bl" data-role="scale"></div>' +
@@ -129,8 +134,26 @@ function showFrameFor(sk: any): void {
   ov.appendChild(frame)
   positionFrame(sk)
 
+  // delete button — removes the selected sticker
+  const del = frame.querySelector<HTMLElement>('.re-del')
+  if (del) {
+    del.addEventListener('pointerdown', (e) => e.stopPropagation())
+    del.addEventListener('click', (e) => {
+      e.stopPropagation()
+      const arr: any[] = (state.receipt as any).stickers
+      if (arr && state.sel >= 0 && state.sel < arr.length) {
+        arr.splice(state.sel, 1)
+        if (!arr.length) delete (state.receipt as any).stickers
+      }
+      state.sel = -1
+      state.selection = null
+      clearFrame()
+      onDelete()
+    })
+  }
+
   const center = (): { cx: number; cy: number } => ({ cx: sk.x || 0, cy: sk.y || 0 })
-  frame.querySelectorAll<HTMLElement>('.re-h').forEach((h) => {
+  frame.querySelectorAll<HTMLElement>('.re-h:not(.re-del)').forEach((h) => {
     h.addEventListener('pointerdown', (e: PointerEvent) => {
       if (e.isPrimary === false) return
       e.preventDefault()

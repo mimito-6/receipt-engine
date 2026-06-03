@@ -167,6 +167,10 @@
   .re-c.bl { left: 0; bottom: 0; transform: translate(-50%, 50%); cursor: nesw-resize; }
   .re-c.br { right: 0; bottom: 0; transform: translate(50%, 50%); cursor: nwse-resize; }
   .re-rot { left: 50%; top: 0; transform: translate(-50%, -28px); cursor: grab; background: var(--accent); }
+  .re-del { left: 100%; top: 0; transform: translate(-40%, -60%); cursor: pointer; background: #fff;
+    color: var(--accent); font-size: 14px; font-weight: 700; line-height: 1; display: flex;
+    align-items: center; justify-content: center; }
+  .re-del:hover { background: var(--accent); color: #fff; }
   .re-stem { position: absolute; left: 50%; top: 0; width: 0; height: 28px; transform: translate(-50%, -100%);
     border-left: 1.5px dashed var(--accent); pointer-events: none; }
   #paper.thermal .re-frame, #paper.thermal .re-h, #paper.thermal .re-stem, #paper.thermal .re-guide { filter: none; }
@@ -191,9 +195,17 @@
   .re-edge-t::after, .re-edge-b::after { content: ''; position: absolute; top: 50%; left: 0; right: 0; height: 3px;
     transform: translateY(-50%); background: var(--accent); border-radius: 2px; }
 
-  /* ---- block reorder: insertion line + "版面順序" panel ---- */
-  #re-insert-line { position: absolute; z-index: 5; height: 0; pointer-events: none;
-    border-top: 2.5px solid var(--accent); box-shadow: 0 0 6px rgba(214,51,108,.5); border-radius: 2px; }
+  /* No native text selection on the canvas (so dragging doesn't highlight/dupe text). */
+  #svg-host, #svg-host svg, #sticker-overlay, #re-sel-box, .re-frame {
+    user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; }
+
+  /* ---- block reorder: drag frame + insertion line + "版面順序" panel ---- */
+  #re-insert-line { position: absolute; z-index: 6; height: 0; pointer-events: none;
+    border-top: 3px solid var(--accent); box-shadow: 0 0 8px rgba(214,51,108,.6); border-radius: 2px; }
+  #re-insert-line::before { content: ''; position: absolute; left: -5px; top: -5px; width: 8px; height: 8px;
+    border-radius: 50%; background: var(--accent); }
+  .re-drag-frame { position: absolute; z-index: 5; pointer-events: none; border: 2px solid var(--accent);
+    border-radius: 8px; background: rgba(214,51,108,.1); box-shadow: 0 8px 22px rgba(0,0,0,.28); }
   #svg-host svg [data-re-block] { cursor: grab; }
   .order-row { display: grid; grid-template-columns: 1fr auto auto; gap: 6px; align-items: center; margin-bottom: 6px; }
   .order-name { font-size: 13px; }
@@ -213,8 +225,7 @@
   <!-- ===================== CONTROLS ===================== -->
   <div class="controls">
 
-    <div class="card">
-      <h2>樣式</h2>
+    <details class="card"><summary>樣式 <span class="hint">主題 / 範例 / 幣別</span></summary>
       <div class="seg" id="theme-seg">
         <button data-theme="custom" class="on"><span class="big">🎨 自訂</span><span class="sub">彩色,可改色/字/貼紙</span></button>
         <button data-theme="thermal"><span class="big">🧾 收據機</span><span class="sub">黑白等寬,圖自動轉灰</span></button>
@@ -225,10 +236,9 @@
         <div><label class="field">幣別</label>
           <select id="f-currency"><option>TWD</option><option>USD</option><option>JPY</option><option>EUR</option><option>CNY</option><option>HKD</option><option>KRW</option><option>THB</option><option>SGD</option></select></div>
       </div>
-    </div>
+    </details>
 
-    <div class="card">
-      <h2>尺寸 <span class="hint">拖滑桿即時變</span></h2>
+    <details class="card"><summary>尺寸 <span class="hint">寬度・留白・預覽大小</span></summary>
       <label class="field">收據寬度 <span id="v-width" class="hint"></span></label>
       <input type="range" id="s-width" min="280" max="900" step="10" />
       <label class="field" style="margin-top:8px">頂部留白 <span id="v-padtop" class="hint"></span></label>
@@ -239,10 +249,9 @@
       <input type="range" id="s-padx" min="8" max="140" step="2" />
       <label class="field" style="margin-top:8px">預覽大小 <span id="v-scale" class="hint"></span></label>
       <input type="range" id="s-scale" min="220" max="520" step="10" />
-    </div>
+    </details>
 
-    <div class="card">
-      <h2>店家</h2>
+    <details class="card"><summary>店家 <span class="hint">店名 / 標語 / 商標</span></summary>
       <label class="field">店名 <span class="hint">留空 → 用 LOGO 當招牌</span></label>
       <input type="text" id="f-name" placeholder="你的店名(可留空)" />
       <label class="field">標語(副標)</label>
@@ -253,7 +262,7 @@
         <input type="text" id="f-icon" placeholder="或貼 emoji 🎀" />
       </div>
       <div id="logo-status" class="muted-note"></div>
-    </div>
+    </details>
 
     <details class="card" id="card-bg"><summary>底圖 / 背景 <span class="hint">透明度・大小・位置</span></summary>
       <div class="row2">
@@ -286,14 +295,13 @@
       <label class="field">收銀員(選填)</label><input type="text" id="t-cashier" placeholder="Mimi" />
     </details>
 
-    <div class="card">
-      <h2>品項 <span class="hint">名稱 / 數量 / 單價</span></h2>
+    <details class="card"><summary>品項 <span class="hint">名稱 / 數量 / 單價</span></summary>
       <div id="items"></div>
       <div class="row2">
         <button class="btn sm" id="add-item">+ 新增品項</button>
         <button class="btn sm ghost" id="import-items" title="貼上 POS / 訂單系統的 JSON">⇩ 從訂單匯入</button>
       </div>
-    </div>
+    </details>
 
     <details class="card" id="card-discounts"><summary>折扣 <span class="hint">選填,可多筆</span></summary>
       <div id="discounts"></div>
@@ -316,22 +324,19 @@
       <div id="order-list"></div>
     </details>
 
-    <div class="card">
-      <h2>結尾訊息</h2>
+    <details class="card"><summary>結尾訊息 <span class="hint">標題 / 內文 / 頁尾</span></summary>
       <label class="field">標題</label><input type="text" id="m-title" placeholder="Thank you! ♡" />
       <label class="field">內文</label><input type="text" id="m-body" placeholder="一句感謝的話" />
       <label class="field">頁尾</label><input type="text" id="m-footer" placeholder="See you next event!" />
-    </div>
+    </details>
 
-    <div class="card">
-      <h2>貼紙 <span class="hint">加上去後,直接在收據上拖</span></h2>
+    <details class="card"><summary>貼紙 <span class="hint">加上去後,直接在收據上拖</span></summary>
       <div class="emoji-pick" id="emoji-pick"></div>
       <button class="btn sm ghost upload" style="margin-top:8px">上傳貼紙圖<input type="file" id="f-sticker" accept="image/*" /></button>
       <div id="sticker-list"></div>
-    </div>
+    </details>
 
-    <div class="card" id="card-look">
-      <h2>外觀 <span class="hint">顏色 / 字體 / 星星 · 兩種風格都能改</span></h2>
+    <details class="card" id="card-look"><summary>外觀 <span class="hint">顏色 / 字體 / 星星 · 兩種風格都能改</span></summary>
       <div class="colors">
         <label>主色<input type="color" id="c-primary" /></label>
         <label>背景<input type="color" id="c-bg" /></label>
@@ -362,14 +367,13 @@
       <label class="check"><input type="checkbox" id="c-stars" /> 角落星星裝飾(裝飾用,非貼紙)</label>
     </div>
 
-    <div class="card">
-      <h2>設定檔 <span class="hint">存檔 / 還原整個設計</span></h2>
+    <details class="card"><summary>設定檔 <span class="hint">存檔 / 還原整個設計</span></summary>
       <div class="row2">
         <button class="btn" id="cfg-save">⬇ 下載設定檔</button>
         <button class="btn ghost upload">⬆ 載入設定檔<input type="file" id="cfg-load" accept="application/json,.json" /></button>
       </div>
       <div class="muted-note">含收據內容、主題、中英字體、顏色、上下/左右留白、底圖、貼紙——載回 100% 還原。</div>
-    </div>
+    </details>
 
     <details class="card"><summary>進階:JSON <span class="hint">收據 or 訂單</span></summary>
       <textarea id="json" spellcheck="false"></textarea>
