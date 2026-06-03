@@ -58,6 +58,7 @@
   .dl button:hover { background: rgba(255,255,255,.22); }
   .err { display: none; color: #ffd2cf; background: rgba(180,35,24,.35); border: 1px solid rgba(255,120,110,.5);
     border-radius: 10px; padding: 8px 12px; font-size: 12px; white-space: pre-wrap; max-width: 360px; }
+  .canvas-hint { color: #b9b9c4; font-size: 11px; text-align: center; max-width: 360px; line-height: 1.6; }
 
   .controls { display: grid; gap: 12px; }
   .card { background: var(--panel); border-radius: var(--radius); padding: 13px 14px 15px; box-shadow: 0 6px 20px rgba(0,0,0,.18); }
@@ -169,6 +170,14 @@
   .re-stem { position: absolute; left: 50%; top: 0; width: 0; height: 28px; transform: translate(-50%, -100%);
     border-left: 1.5px dashed var(--accent); pointer-events: none; }
   #paper.thermal .re-frame, #paper.thermal .re-h, #paper.thermal .re-stem, #paper.thermal .re-guide { filter: none; }
+  /* Bigger, comfier touch targets on phones/tablets (coarse pointers). */
+  @media (pointer: coarse) {
+    .re-h { width: 22px; height: 22px; }
+    .re-rot { transform: translate(-50%, -34px); }
+    .re-stem { height: 34px; }
+    .re-edge-r { width: 22px; }
+    .re-edge-t, .re-edge-b { height: 22px; }
+  }
 
   /* ---- boundary drag-resize handles (hover to reveal; touch shows faintly) ---- */
   #edge-overlay { position: absolute; inset: 0; pointer-events: none; z-index: 2; }
@@ -197,7 +206,7 @@
 <body>
 <header>
   <h1>🧾 receipt-engine 試玩場</h1>
-  <p>每個欄位都能改、貼紙直接在收據上拖、滑桿調尺寸。全程在你的瀏覽器裡跑,手機也行。</p>
+  <p>直接在收據上操作:點文字改字、拖貼紙、拖邊界改尺寸、拖區塊排序。全程在你的瀏覽器裡跑,手機也行。</p>
 </header>
 
 <div class="layout">
@@ -376,6 +385,7 @@
   <div class="stage">
     <div class="err" id="err"></div>
     <div id="paper"><div id="svg-host"></div><div id="sticker-overlay"></div></div>
+    <div class="canvas-hint">點文字改內容/字體 · 拖貼紙縮放旋轉 · 拖邊界改尺寸 · 拖區塊排順序</div>
     <div class="dl">
       <button id="dl-png">下載 PNG</button>
       <button id="dl-svg">下載 SVG</button>
