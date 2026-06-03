@@ -203,6 +203,8 @@ export function addSticker(content: string): void {
     rotation: 0,
   })
   state.sel = r.stickers.length - 1
+  // select the new sticker so its transform frame (scale / rotate / ×) shows
+  state.selection = { kind: 'sticker', index: state.sel }
   renderStickerList()
   render()
 }

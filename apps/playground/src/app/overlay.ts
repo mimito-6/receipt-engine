@@ -240,7 +240,12 @@ function attachPointer(el: HandleEl, sk: any, i: number): void {
 
   el.addEventListener('pointerdown', (e: PointerEvent) => {
     e.preventDefault()
-    if (state.sel !== i) select(i)
+    // Always (re)select on press so the transform frame is guaranteed to show —
+    // even if this sticker is already state.sel but its frame isn't built yet
+    // (e.g. just added). showFrameFor rebuilds idempotently.
+    const framed =
+      state.selection?.kind === 'sticker' && state.selection.index === i && !!frame
+    if (!framed) select(i)
     try {
       el.setPointerCapture(e.pointerId)
     } catch {
