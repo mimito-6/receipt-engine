@@ -13,6 +13,7 @@ export default defineConfig({
       '@receipt-engine/render-html': pkg('render-html'),
       '@receipt-engine/render-png': pkg('render-png'),
       '@receipt-engine/react': pkg('react', 'src/index.tsx'),
+      '@receipt-engine/import': pkg('import'),
     },
   },
   test: {

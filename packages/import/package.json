@@ -1,0 +1,29 @@
+{
+  "name": "@receipt-engine/import",
+  "version": "0.1.0",
+  "description": "Map external POS / order JSON (incl. OpenBooth) into a validated receipt-engine ReceiptDocument.",
+  "license": "MIT",
+  "author": "mimito",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format esm,cjs --dts --clean",
+    "typecheck": "tsc --noEmit",
+    "clean": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\""
+  },
+  "dependencies": {
+    "@receipt-engine/core": "workspace:*"
+  }
+}
