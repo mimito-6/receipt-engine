@@ -380,9 +380,12 @@ export function renderReceiptToSvg(
     bgClip =
       `<clipPath id="re-bg"><rect x="${n(cardX)}" y="${n(cardTop)}" width="${n(cardWidth)}" ` +
       `height="${n(cardHeight)}" rx="${n(theme.radius.card)}"/></clipPath>`
+    // Cover (>=1): "slice" fills the card and crops the overflow. Shrunk (<1): "meet"
+    // shows the WHOLE image at its own aspect ratio (no crop to the card rectangle).
+    const fit = cover ? 'xMidYMid slice' : 'xMidYMid meet'
     bgImage =
       `<g clip-path="url(#re-bg)"><image href="${escapeXml(bgSrc)}" x="${n(bgX)}" y="${n(bgY)}" ` +
-      `width="${n(bgW)}" height="${n(bgH)}" preserveAspectRatio="xMidYMid slice" opacity="${op}"${filterAttr} /></g>`
+      `width="${n(bgW)}" height="${n(bgH)}" preserveAspectRatio="${fit}" opacity="${op}"${filterAttr} /></g>`
   }
 
   const defsInner = (monoImages ? monoFilter(MONO_FILTER_ID) : '') + bgClip

@@ -162,6 +162,9 @@ describe('renderReceiptToSvg', () => {
     expect(num(at({ backgroundScale: 0.5 }), 'width')).toBeCloseTo(cardWidth * 0.5, 0)
     // zoom goes well past the old 3× cap (no upper limit)
     expect(num(at({ backgroundScale: 5 }), 'width')).toBeCloseTo(cardWidth * 5, 0)
+    // shrunk shows the WHOLE image (contain), cover crops to fill (slice)
+    expect(at({ backgroundScale: 0.5 })).toContain('preserveAspectRatio="xMidYMid meet"')
+    expect(at({ backgroundScale: 1 })).toContain('preserveAspectRatio="xMidYMid slice"')
   })
 
   it('tags elements only in interactive mode', () => {
