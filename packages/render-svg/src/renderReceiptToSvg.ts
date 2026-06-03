@@ -53,9 +53,9 @@ export interface RenderSvgOptions {
   /** Force all embedded images B&W (true) or full colour (false). Overrides the
    *  theme default (thermal = mono, custom = colour) when set. */
   monochromeImages?: boolean
-  /** Omit the page background, card surface fill and background image — a clean,
-   *  transparent receipt for real printing. The card border / torn edges stay so the
-   *  receipt boundary still reads. */
+  /** Omit ONLY the page background (the desk behind the card). The card itself —
+   *  its shape, surface colour, border, torn edges and background image — is kept,
+   *  so a clean PNG is just the receipt card on a transparent backdrop, ready to print. */
   transparentBackground?: boolean
   /** Draw torn / perforated sawtooth top & bottom edges (the thermal-receipt look).
    *  Overrides the theme default. Rendered as the card silhouette, so it survives a
@@ -305,32 +305,30 @@ export function renderReceiptToSvg(
   // "Receipt-machine" torn edges: a selectable layout. Defaults to the theme
   // (thermal = on, custom = off) but the caller can force it either way.
   const showEdges = options.perforatedEdges ?? theme.decoration?.perforatedEdges ?? false
-  // Clean/transparent export: drop the page background and the card surface fill
-  // (the "fake paper"); keep a visible boundary so the receipt still reads.
+  // Clean/transparent export drops ONLY the page background (the desk behind the
+  // card). The card — shape, surface colour, border, torn edges, bg image — stays,
+  // so a clean PNG is the receipt card floating on transparency.
   const background = transparent ? '' : svgRect(0, 0, width, totalHeight, { fill: theme.palette.background })
+  const cardStroke = !isThermal && borderStyle !== 'none' ? theme.palette.border : undefined
 
   let card: string
   if (showEdges) {
-    // Torn silhouette. Opaque: notches expose the page bg (matches the classic
-    // thermal look — no full outline). Transparent: stroke the outline so the torn
-    // shape still reads on a clean PNG.
-    const edgeColor = theme.palette.border ?? theme.palette.text
-    const stroke = transparent ? edgeColor : !isThermal && borderStyle !== 'none' ? theme.palette.border : undefined
-    const dashed = transparent ? borderStyle === 'dashed' : !isThermal && borderStyle === 'dashed'
+    // Torn silhouette: notches expose whatever is behind the card (the page bg, or
+    // transparency on a clean export). The card keeps its surface fill either way.
     card =
       `<path d="${tornCardPath(cardX, cardWidth, cardTop, cardHeight)}" ` +
-      `fill="${transparent ? 'none' : escapeXml(theme.palette.surface)}"` +
-      (stroke
-        ? ` stroke="${escapeXml(stroke)}" stroke-width="1.5" stroke-linejoin="round"` +
-          (dashed ? ' stroke-dasharray="5 6"' : '')
+      `fill="${escapeXml(theme.palette.surface)}"` +
+      (cardStroke
+        ? ` stroke="${escapeXml(cardStroke)}" stroke-width="1.5" stroke-linejoin="round"` +
+          (borderStyle === 'dashed' ? ' stroke-dasharray="5 6"' : '')
         : '') +
       ' />'
   } else {
     card = svgRect(cardX, cardTop, cardWidth, cardHeight, {
-      fill: transparent ? undefined : theme.palette.surface,
+      fill: theme.palette.surface,
       rx: theme.radius.card,
-      stroke: !isThermal && borderStyle !== 'none' ? theme.palette.border : undefined,
-      strokeWidth: !isThermal && borderStyle !== 'none' ? 1.5 : undefined,
+      stroke: cardStroke,
+      strokeWidth: cardStroke ? 1.5 : undefined,
       dash: !isThermal && borderStyle === 'dashed' ? '5 6' : undefined,
     })
   }
@@ -358,19 +356,21 @@ export function renderReceiptToSvg(
   }
 
   // Background image (clipped to the card; opacity / scale / offset adjustable).
-  const bgSrc = transparent ? undefined : doc.assets?.backgroundImage
+  // Kept on a clean export too — it's part of the card, not the page background.
+  const bgSrc = doc.assets?.backgroundImage
   let bgImage = ''
   let bgClip = ''
   if (bgSrc && isImageSource(bgSrc)) {
     const op = doc.assets?.backgroundOpacity ?? 1
-    // The background always covers the whole card — no blank gaps. Scale is
-    // floored at 1 (cover), and the image box grows by the pan offset so moving
-    // it can never pull an edge inside the card.
-    const scale = Math.max(1, doc.assets?.backgroundScale ?? 1)
+    // Free transform: the user scales and pans the image however they like — no
+    // forced "cover" floor, so it can shrink well below the card or zoom far past
+    // it. The box is the card scaled by `scale`, centered then offset; "slice"
+    // keeps the aspect ratio. A tiny floor avoids a degenerate zero-size box.
+    const scale = Math.max(0.05, doc.assets?.backgroundScale ?? 1)
     const panX = doc.assets?.backgroundX ?? 0
     const panY = doc.assets?.backgroundY ?? 0
-    const bgW = cardWidth * scale + 2 * Math.abs(panX)
-    const bgH = cardHeight * scale + 2 * Math.abs(panY)
+    const bgW = cardWidth * scale
+    const bgH = cardHeight * scale
     const bgX = cardX + (cardWidth - bgW) / 2 + panX
     const bgY = cardTop + (cardHeight - bgH) / 2 + panY
     const filterAttr = monoFilterId ? ` filter="${monoFilterId}"` : ''

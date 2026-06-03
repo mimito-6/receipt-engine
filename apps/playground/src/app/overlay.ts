@@ -7,8 +7,8 @@ import { clamp, isImg, state } from './state'
 import { snapSticker, type Guide } from './snapping'
 import { t } from './i18n'
 
-const MIN_SIZE = 14
-const MAX_SIZE = 260
+const MIN_SIZE = 4
+const MAX_SIZE = 4000 // effectively unlimited — let the user scale stickers freely
 
 interface HandleEl extends HTMLDivElement {
   _img?: boolean

@@ -397,9 +397,9 @@ export const DICT: Record<string, { zh: string; ja: string; en: string }> = {
     "en": "Opacity"
   },
   "field.bgScale": {
-    "zh": "大小(放大才能左右/上下移動)",
-    "ja": "サイズ(拡大すると上下左右に動かせます)",
-    "en": "Size (zoom in to move it around)"
+    "zh": "大小 / 縮放(可自由放大縮小)",
+    "ja": "サイズ / 拡大縮小(自由に変更可)",
+    "en": "Size / zoom (scale freely)"
   },
   "field.bgX": {
     "zh": "水平位置",
@@ -1057,14 +1057,14 @@ export const DICT: Record<string, { zh: string; ja: string; en: string }> = {
     "en": "Turns the logo, stickers & background B&W — great for thermal receipt printers"
   },
   "export.clean": {
-    "zh": "乾淨背景(透明 PNG)",
-    "ja": "背景なし(透過PNG)",
-    "en": "Clean background (transparent PNG)"
+    "zh": "去背景 PNG(保留卡片)",
+    "ja": "背景なしPNG(カードは残す)",
+    "en": "Cut-out PNG (keep the card)"
   },
   "export.cleanHint": {
-    "zh": "輸出去背 PNG,不含卡片/頁面底色,適合實際印製",
-    "ja": "カードやページの下地を含まない透過PNGで書き出し。実際の印刷向け",
-    "en": "Exports a transparent PNG without the card/page background — best for real printing"
+    "zh": "只去掉卡片後面的頁面底色,保留卡片的形狀與顏色,適合印製",
+    "ja": "カード背後のページ下地だけを除き、カードの形と色は残します。印刷向け",
+    "en": "Removes only the page background behind the card; keeps the card's shape & colour — best for printing"
   },
   "color.hexPlaceholder": {
     "zh": "#色碼",

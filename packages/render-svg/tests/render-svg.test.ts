@@ -124,26 +124,28 @@ describe('renderReceiptToSvg', () => {
     expect(def.indexOf('Mimito Booth')).toBeLessThan(def.indexOf('Thank you!'))
   })
 
-  it('background image always covers the card, even when panned', () => {
-    const withBg: ReceiptDocument = {
-      ...baseReceipt,
-      assets: { backgroundImage: PNG, backgroundX: 200, backgroundY: -150, backgroundScale: 1 },
-    }
-    const svg = renderReceiptToSvg(withBg, { theme: 'custom', width: 720 })
-    const m = svg.match(
-      /<image href="[^"]*" x="([-\d.]+)" y="([-\d.]+)" width="([\d.]+)" height="([\d.]+)" preserveAspectRatio="xMidYMid slice"/,
+  it('background image scales & pans freely (no forced 1× cover floor)', () => {
+    const cardWidth = 720 - 52 // outerMargin 26 each side (custom)
+    const w = (svg: string): number => parseFloat(svg.match(/<image[^>]*\swidth="([\d.]+)"/)![1])
+    const x = (svg: string): number => parseFloat(svg.match(/<image[^>]*\sx="([-\d.]+)"/)![1])
+    const big = renderReceiptToSvg(
+      { ...baseReceipt, assets: { backgroundImage: PNG, backgroundScale: 2 } },
+      { theme: 'custom', width: 720 },
     )
-    expect(m).toBeTruthy()
-    const x = parseFloat(m![1])
-    const y = parseFloat(m![2])
-    const w = parseFloat(m![3])
-    const cardX = 26 // outerMargin (custom)
-    const cardWidth = 720 - 52
-    // covers the full card horizontally despite the pan — no blank gap exposed
-    expect(x).toBeLessThanOrEqual(cardX)
-    expect(x + w).toBeGreaterThanOrEqual(cardX + cardWidth)
-    // panned up → the image top is above the card top (so the top can't gap)
-    expect(y).toBeLessThanOrEqual(26)
+    const small = renderReceiptToSvg(
+      { ...baseReceipt, assets: { backgroundImage: PNG, backgroundScale: 0.4 } },
+      { theme: 'custom', width: 720 },
+    )
+    // scale multiplies the box directly — zoom far past the card…
+    expect(w(big)).toBeCloseTo(cardWidth * 2, 0)
+    // …and shrink well below it (the old Math.max(1) cover floor is gone)
+    expect(w(small)).toBeCloseTo(cardWidth * 0.4, 0)
+    // pan offsets the (no longer cover-locked) image freely
+    const panned = renderReceiptToSvg(
+      { ...baseReceipt, assets: { backgroundImage: PNG, backgroundScale: 1, backgroundX: 200 } },
+      { theme: 'custom', width: 720 },
+    )
+    expect(x(panned)).toBeCloseTo(26 + 200, 0) // cardX + panX, not clamped to cover
   })
 
   it('tags elements only in interactive mode', () => {
@@ -185,16 +187,18 @@ describe('renderReceiptToSvg', () => {
     expect(renderReceiptToSvg(withLogo, { theme: 'thermal', monochromeImages: false })).not.toContain('re-mono')
   })
 
-  it('transparentBackground drops the paper fills + background image', () => {
+  it('transparentBackground drops ONLY the page background, keeps the card', () => {
     const withBg: ReceiptDocument = { ...baseReceipt, assets: { backgroundImage: PNG } }
     const bg = getTheme('custom').palette.background
+    const surface = getTheme('custom').palette.surface
     const normal = renderReceiptToSvg(withBg, { theme: 'custom' })
     const clean = renderReceiptToSvg(withBg, { theme: 'custom', transparentBackground: true })
-    expect(normal).toContain('preserveAspectRatio="xMidYMid slice"') // bg image present
-    expect(clean).not.toContain('preserveAspectRatio="xMidYMid slice"') // bg image dropped
-    expect(normal).toContain(`fill="${bg}"`) // opaque page background
+    // page background (the desk) is removed on a clean export…
+    expect(normal).toContain(`fill="${bg}"`)
     expect(clean).not.toContain(`fill="${bg}"`)
-    expect(clean).toContain('fill="none"') // card surface transparent
+    // …but the card itself is kept: its surface fill + its background image stay
+    expect(clean).toContain(`fill="${surface}"`)
+    expect(clean).toContain('preserveAspectRatio="xMidYMid slice"') // card bg image kept
   })
 
   it('perforatedEdges overrides the theme + renders a torn silhouette', () => {
@@ -211,11 +215,17 @@ describe('renderReceiptToSvg', () => {
     )
   })
 
-  it('torn edges survive a transparent/clean export (outline preserved)', () => {
-    // thermal has perforatedEdges by default; a clean export keeps the torn outline
+  it('torn edges survive a clean export: torn card kept, page background dropped', () => {
+    const surface = getTheme('thermal').palette.surface
+    const bg = getTheme('thermal').palette.background
+    // thermal has perforatedEdges by default
     const clean = renderReceiptToSvg(baseReceipt, { theme: 'thermal', transparentBackground: true })
-    expect(clean).toContain('stroke-linejoin="round"') // torn silhouette path
-    expect(clean).toContain('fill="none"') // no paper fill — just the torn outline
+    expect(clean).not.toContain(`fill="${bg}"`) // page background (the desk) dropped
+    expect(clean).toContain(`fill="${surface}"`) // torn card keeps its surface colour
+    // edges off → a plain rect card instead of the torn silhouette path
+    expect(renderReceiptToSvg(baseReceipt, { theme: 'thermal' })).not.toBe(
+      renderReceiptToSvg(baseReceipt, { theme: 'thermal', perforatedEdges: false }),
+    )
   })
 
   it('expands legacy block keys (header → logo/name/subtitle)', () => {
