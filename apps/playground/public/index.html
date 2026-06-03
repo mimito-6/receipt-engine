@@ -167,8 +167,9 @@
   .re-c.bl { left: 0; bottom: 0; transform: translate(-50%, 50%); cursor: nesw-resize; }
   .re-c.br { right: 0; bottom: 0; transform: translate(50%, 50%); cursor: nwse-resize; }
   .re-rot { left: 50%; top: 0; transform: translate(-50%, -28px); cursor: grab; background: var(--accent); }
-  .re-del { left: 100%; top: 0; transform: translate(-40%, -60%); cursor: pointer; background: #fff;
-    color: var(--accent); font-size: 14px; font-weight: 700; line-height: 1; display: flex;
+  /* delete sits clearly outside the top-right corner (away from the scale handle) */
+  .re-del { right: 0; top: 0; transform: translate(50%, -50%) translate(20px, -20px); cursor: pointer;
+    background: #fff; color: var(--accent); font-size: 14px; font-weight: 700; line-height: 1; display: flex;
     align-items: center; justify-content: center; }
   .re-del:hover { background: var(--accent); color: #fff; }
   .re-stem { position: absolute; left: 50%; top: 0; width: 0; height: 28px; transform: translate(-50%, -100%);
@@ -177,8 +178,9 @@
   /* Bigger, comfier touch targets on phones/tablets (coarse pointers). */
   @media (pointer: coarse) {
     .re-h { width: 22px; height: 22px; }
-    .re-rot { transform: translate(-50%, -34px); }
-    .re-stem { height: 34px; }
+    .re-rot { transform: translate(-50%, -36px); }
+    .re-stem { height: 36px; }
+    .re-del { transform: translate(50%, -50%) translate(28px, -28px); }
     .re-edge-r { width: 22px; }
     .re-edge-t, .re-edge-b { height: 22px; }
   }
