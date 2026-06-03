@@ -13,6 +13,16 @@ const EXTRA: Record<string, { zh: string; ja: string; en: string }> = {
     ja: 'ブラウザだけでレシートのテンプレートを作成',
     en: 'Generate your receipt template — all in your browser',
   },
+  'look.edges': {
+    zh: '收據機邊框(鋸齒撕邊)',
+    ja: 'レシート風のフチ(ギザギザ切り取り)',
+    en: 'Receipt-machine edges (torn / perforated)',
+  },
+  'look.edgesHint': {
+    zh: '鋸齒撕邊版型,乾淨匯出也保留',
+    ja: 'ギザギザのレシート型。背景なしの書き出しでも残ります',
+    en: 'Torn-edge layout — kept even in a clean/transparent export',
+  },
 }
 const TABLE: Record<string, { zh: string; ja: string; en: string }> = { ...DICT, ...EXTRA }
 

@@ -68,6 +68,7 @@ function loadExample(key: string): void {
   state.look.thermal = deepClone(THERMAL_LOOK)
   state.pad = { custom: defaultPad('custom'), thermal: defaultPad('thermal') }
   state.mono = { custom: false, thermal: true }
+  state.edges = { custom: false, thermal: true }
   state.cleanExport = false
   syncFormFromState()
   render()
@@ -98,6 +99,10 @@ function applyConfig(cfg: any): void {
   state.mono = {
     custom: !!(cfg.mono && cfg.mono.custom),
     thermal: cfg.mono ? !!cfg.mono.thermal : true,
+  }
+  state.edges = {
+    custom: !!(cfg.edges && cfg.edges.custom),
+    thermal: cfg.edges ? !!cfg.edges.thermal : true,
   }
   if (typeof cfg.scale === 'number') state.scale = cfg.scale
   state.sel = -1
@@ -310,6 +315,10 @@ function wire(): void {
   })
   $('c-mono').addEventListener('change', function (this: HTMLInputElement) {
     state.mono[state.theme] = this.checked
+    render()
+  })
+  $('c-edges').addEventListener('change', function (this: HTMLInputElement) {
+    state.edges[state.theme] = this.checked
     render()
   })
   $('dl-clean').addEventListener('change', function (this: HTMLInputElement) {

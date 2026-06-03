@@ -53,9 +53,15 @@ export interface RenderSvgOptions {
   /** Force all embedded images B&W (true) or full colour (false). Overrides the
    *  theme default (thermal = mono, custom = colour) when set. */
   monochromeImages?: boolean
-  /** Omit the page background, card surface fill, perforated edges and background
-   *  image — a clean, transparent receipt for real printing. Content + border stay. */
+  /** Omit the page background, card surface fill and background image — a clean,
+   *  transparent receipt for real printing. The card border / torn edges stay so the
+   *  receipt boundary still reads. */
   transparentBackground?: boolean
+  /** Draw torn / perforated sawtooth top & bottom edges (the thermal-receipt look).
+   *  Overrides the theme default. Rendered as the card silhouette, so it survives a
+   *  transparent/clean export (becomes a torn outline) — a selectable "receipt-machine"
+   *  layout for any theme. */
+  perforatedEdges?: boolean
   /** Carried through for PNG rasterization; does not change SVG geometry. */
   pixelRatio?: number
   includeXmlDeclaration?: boolean
@@ -108,25 +114,33 @@ function sparkle(x: number, y: number, r: number, fill: string): string {
   return `<path d="${d}" fill="${escapeXml(fill)}" opacity="0.85" />`
 }
 
-/** Torn/perforated comb edge: triangular notches in `color` biting into the paper. */
-function perforation(
+/** Torn-receipt card silhouette: a closed path with sawtooth top & bottom edges and
+ *  straight sides. The notches expose whatever is behind the card (the page bg, or
+ *  transparency on a clean export), so the torn look reads with OR without paper fill. */
+function tornCardPath(
   x0: number,
   width: number,
-  edgeY: number,
-  pointDown: boolean,
-  color: string,
+  top: number,
+  height: number,
   tooth = 12,
   depth = 9,
 ): string {
+  const bottom = top + height
   const count = Math.max(2, Math.floor(width / tooth))
   const w = width / count
-  const dir = pointDown ? depth : -depth
-  let d = ''
+  let d = `M${n(x0)} ${n(top)}`
+  // top edge, left → right: valleys dip down into the paper
   for (let i = 0; i < count; i++) {
     const x = x0 + i * w
-    d += `M${n(x)} ${n(edgeY)}L${n(x + w / 2)} ${n(edgeY + dir)}L${n(x + w)} ${n(edgeY)}Z`
+    d += `L${n(x + w / 2)} ${n(top + depth)}L${n(x + w)} ${n(top)}`
   }
-  return `<path d="${d}" fill="${escapeXml(color)}" />`
+  d += `L${n(x0 + width)} ${n(bottom)}` // right side
+  // bottom edge, right → left: valleys rise up into the paper
+  for (let i = 0; i < count; i++) {
+    const x = x0 + width - i * w
+    d += `L${n(x - w / 2)} ${n(bottom - depth)}L${n(x - w)} ${n(bottom)}`
+  }
+  return d + 'Z' // left side, back to start
 }
 
 /** Black & white image filter (luminance-weighted grayscale), resvg-supported. */
@@ -288,22 +302,37 @@ export function renderReceiptToSvg(
   const totalHeight = Math.round(cardBottom + outerMargin)
 
   const borderStyle = theme.decoration?.borderStyle ?? 'solid'
+  // "Receipt-machine" torn edges: a selectable layout. Defaults to the theme
+  // (thermal = on, custom = off) but the caller can force it either way.
+  const showEdges = options.perforatedEdges ?? theme.decoration?.perforatedEdges ?? false
   // Clean/transparent export: drop the page background and the card surface fill
-  // (the "fake paper"), keep the card border so the receipt boundary still reads.
+  // (the "fake paper"); keep a visible boundary so the receipt still reads.
   const background = transparent ? '' : svgRect(0, 0, width, totalHeight, { fill: theme.palette.background })
-  const card = svgRect(cardX, cardTop, cardWidth, cardHeight, {
-    fill: transparent ? undefined : theme.palette.surface,
-    rx: theme.radius.card,
-    stroke: !isThermal && borderStyle !== 'none' ? theme.palette.border : undefined,
-    strokeWidth: !isThermal && borderStyle !== 'none' ? 1.5 : undefined,
-    dash: !isThermal && borderStyle === 'dashed' ? '5 6' : undefined,
-  })
 
-  let edges = ''
-  if (!transparent && theme.decoration?.perforatedEdges) {
-    edges =
-      perforation(cardX, cardWidth, cardTop, true, theme.palette.background) +
-      perforation(cardX, cardWidth, cardBottom, false, theme.palette.background)
+  let card: string
+  if (showEdges) {
+    // Torn silhouette. Opaque: notches expose the page bg (matches the classic
+    // thermal look — no full outline). Transparent: stroke the outline so the torn
+    // shape still reads on a clean PNG.
+    const edgeColor = theme.palette.border ?? theme.palette.text
+    const stroke = transparent ? edgeColor : !isThermal && borderStyle !== 'none' ? theme.palette.border : undefined
+    const dashed = transparent ? borderStyle === 'dashed' : !isThermal && borderStyle === 'dashed'
+    card =
+      `<path d="${tornCardPath(cardX, cardWidth, cardTop, cardHeight)}" ` +
+      `fill="${transparent ? 'none' : escapeXml(theme.palette.surface)}"` +
+      (stroke
+        ? ` stroke="${escapeXml(stroke)}" stroke-width="1.5" stroke-linejoin="round"` +
+          (dashed ? ' stroke-dasharray="5 6"' : '')
+        : '') +
+      ' />'
+  } else {
+    card = svgRect(cardX, cardTop, cardWidth, cardHeight, {
+      fill: transparent ? undefined : theme.palette.surface,
+      rx: theme.radius.card,
+      stroke: !isThermal && borderStyle !== 'none' ? theme.palette.border : undefined,
+      strokeWidth: !isThermal && borderStyle !== 'none' ? 1.5 : undefined,
+      dash: !isThermal && borderStyle === 'dashed' ? '5 6' : undefined,
+    })
   }
 
   let decorations = ''
@@ -371,7 +400,6 @@ export function renderReceiptToSvg(
     background +
     card +
     bgImage +
-    edges +
     decorations +
     parts.join('') +
     stickerLayer +

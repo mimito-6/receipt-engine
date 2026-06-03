@@ -197,6 +197,27 @@ describe('renderReceiptToSvg', () => {
     expect(clean).toContain('fill="none"') // card surface transparent
   })
 
+  it('perforatedEdges overrides the theme + renders a torn silhouette', () => {
+    const flat = renderReceiptToSvg(baseReceipt, { theme: 'custom' })
+    const torn = renderReceiptToSvg(baseReceipt, { theme: 'custom', perforatedEdges: true })
+    // custom is flat by default → no torn silhouette
+    expect(flat).not.toContain('stroke-linejoin="round"')
+    // forcing edges on yields the torn card path (more geometry than a plain rect)
+    expect(torn).toContain('stroke-linejoin="round"')
+    expect(torn.length).toBeGreaterThan(flat.length)
+    // thermal is torn by default → forcing off falls back to a plain rect card
+    expect(renderReceiptToSvg(baseReceipt, { theme: 'thermal', perforatedEdges: false })).not.toContain(
+      'stroke-linejoin="round"',
+    )
+  })
+
+  it('torn edges survive a transparent/clean export (outline preserved)', () => {
+    // thermal has perforatedEdges by default; a clean export keeps the torn outline
+    const clean = renderReceiptToSvg(baseReceipt, { theme: 'thermal', transparentBackground: true })
+    expect(clean).toContain('stroke-linejoin="round"') // torn silhouette path
+    expect(clean).toContain('fill="none"') // no paper fill — just the torn outline
+  })
+
   it('expands legacy block keys (header → logo/name/subtitle)', () => {
     // an old saved config still renders without dropping content
     const svg = renderReceiptToSvg({ ...receipt, blockOrder: ['message', 'header', 'qr', 'items'] })

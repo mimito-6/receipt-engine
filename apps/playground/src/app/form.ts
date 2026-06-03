@@ -3,7 +3,7 @@
 import { $ } from './dom'
 import { render } from './render'
 import { layoutOverlay } from './overlay'
-import { type Draft, curLook, curMono, curPad, curWidth, esc, isImg, state } from './state'
+import { type Draft, curEdges, curLook, curMono, curPad, curWidth, esc, isImg, state } from './state'
 import { t } from './i18n'
 
 export function ensure(k: string): any {
@@ -264,6 +264,7 @@ export function syncFormFromState(): void {
   ;($('f-font-cjk') as HTMLSelectElement).value = c.cjkFont
   ;($('c-stars') as HTMLInputElement).checked = !!c.stars
   ;($('c-mono') as HTMLInputElement).checked = curMono()
+  ;($('c-edges') as HTMLInputElement).checked = curEdges()
   ;($('dl-clean') as HTMLInputElement).checked = state.cleanExport
   ;($('s-width') as HTMLInputElement).value = String(curWidth())
   $('v-width').textContent = curWidth() + 'px'

@@ -19,6 +19,7 @@ function snapshot(): string {
     width: state.width,
     pad: state.pad,
     mono: state.mono,
+    edges: state.edges,
     scale: state.scale,
   })
 }
@@ -75,6 +76,7 @@ function apply(json: string): void {
   state.width = s.width
   state.pad = s.pad
   state.mono = s.mono
+  state.edges = s.edges ?? { custom: false, thermal: true }
   state.scale = s.scale
   state.sel = -1
   state.selection = null

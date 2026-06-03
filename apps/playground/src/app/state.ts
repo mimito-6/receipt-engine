@@ -39,6 +39,8 @@ export interface State {
   pad: { custom: Pad | null; thermal: Pad | null }
   /** Force all images B&W, per theme (thermal defaults on). */
   mono: { custom: boolean; thermal: boolean }
+  /** Torn "receipt-machine" edges, per theme (thermal defaults on). */
+  edges: { custom: boolean; thermal: boolean }
   scale: number
   /** Export with a transparent background (clean PNG for printing). */
   cleanExport: boolean
@@ -55,6 +57,7 @@ export const state: State = {
   width: { custom: 720, thermal: 384 },
   pad: { custom: null, thermal: null },
   mono: { custom: false, thermal: true },
+  edges: { custom: false, thermal: true },
   scale: 340,
   cleanExport: false,
   sel: -1,
@@ -241,4 +244,7 @@ export function curWidth(): number {
 }
 export function curMono(): boolean {
   return state.mono[state.theme]
+}
+export function curEdges(): boolean {
+  return state.edges[state.theme]
 }

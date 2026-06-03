@@ -125,6 +125,7 @@ export function buildConfig(): Record<string, unknown> {
     width: state.width,
     pad: state.pad,
     mono: state.mono,
+    edges: state.edges,
     scale: state.scale,
     look: state.look,
     receipt: state.receipt,
