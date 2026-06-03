@@ -29,7 +29,7 @@ import {
 } from './io'
 import { downloadPng } from './pngExport'
 import { layoutOverlay, setStickerCommit, setStickerSelect } from './overlay'
-import { clearSelection, refreshInspector } from './inspector'
+import { clearSelection, onCanvasDblClick, refreshInspector } from './inspector'
 import { installEdgeHandles } from './resize'
 import { beginCanvasGesture } from './reorder'
 
@@ -101,8 +101,9 @@ function wire(): void {
     renderStickerList()
   })
 
-  // canvas: tap text to style it; drag a section to reorder it
+  // canvas: tap text to style it; drag a section to reorder it; double-tap to edit text
   $('svg-host').addEventListener('pointerdown', beginCanvasGesture as EventListener)
+  $('svg-host').addEventListener('dblclick', onCanvasDblClick as EventListener)
 
   // theme + example
   $('theme-seg')

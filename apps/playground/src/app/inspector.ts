@@ -50,6 +50,49 @@ function resetOverride(id: string): void {
 }
 
 // ---------------------------------------------------------------------------
+// Editable text content (a subset of ids map to a single model field)
+// ---------------------------------------------------------------------------
+
+interface TextField {
+  get: () => string
+  set: (v: string) => void
+}
+/** A getter/setter into the model for the element's text, or null if computed. */
+function modelText(id: string): TextField | null {
+  const r: any = state.receipt
+  const SIMPLE: Record<string, [string, string]> = {
+    'merchant.name': ['merchant', 'name'],
+    'merchant.subtitle': ['merchant', 'subtitle'],
+    'qr.label': ['qr', 'label'],
+    'qr.caption': ['qr', 'caption'],
+    'message.title': ['message', 'title'],
+    'message.body': ['message', 'body'],
+    'message.footer': ['message', 'footer'],
+  }
+  if (SIMPLE[id]) {
+    const [a, b] = SIMPLE[id]
+    return {
+      get: () => (r[a] && r[a][b]) || '',
+      set: (v) => {
+        if (!r[a]) r[a] = {}
+        r[a][b] = v || undefined
+      },
+    }
+  }
+  const im = id.match(/^items\.(\d+)\.name$/)
+  if (im) {
+    const i = Number(im[1])
+    return {
+      get: () => (r.items[i] && r.items[i].name) || '',
+      set: (v) => {
+        if (r.items[i]) r.items[i].name = v
+      },
+    }
+  }
+  return null // prices / totals are computed — style-only
+}
+
+// ---------------------------------------------------------------------------
 // DOM construction
 // ---------------------------------------------------------------------------
 
@@ -68,6 +111,7 @@ function build(): void {
     '<div class="insp-head"><span class="insp-title">文字樣式</span>' +
     '<button class="insp-x" id="insp-close" title="關閉">×</button></div>' +
     '<div class="insp-target" id="insp-target"></div>' +
+    '<label class="insp-field" id="insp-text-wrap">文字內容<input type="text" id="insp-text" autocomplete="off" /></label>' +
     '<label class="insp-field">字體' +
     '<select id="insp-font"><option value="">(沿用整體)</option>' +
     FONT_PRESETS.map((f) => `<option value="${f.id}">${f.label}</option>`).join('') +
@@ -88,7 +132,17 @@ function build(): void {
   const fontSel = $('insp-font') as HTMLSelectElement
   const colorInp = $('insp-color') as HTMLInputElement
   const sizeInp = $('insp-size') as HTMLInputElement
+  const textInp = $('insp-text') as HTMLInputElement
   ;($('insp-close') as HTMLButtonElement).onclick = () => clearSelection()
+  textInp.oninput = () => {
+    const id = currentId()
+    if (!id) return
+    const mt = modelText(id)
+    if (mt) {
+      mt.set(textInp.value)
+      render()
+    }
+  }
   fontSel.onchange = () => {
     const id = currentId()
     if (!id) return
@@ -177,6 +231,15 @@ function syncControls(id: string, el: SVGGraphicsElement): void {
   const o = overrideFor(id) || {}
   const cs = getComputedStyle(el as unknown as Element)
   ;($('insp-target') as HTMLElement).textContent = labelFor(id)
+  // editable text content (style-only for computed prices/totals)
+  const mt = modelText(id)
+  const wrap = $('insp-text-wrap')
+  if (mt) {
+    wrap.style.display = ''
+    ;($('insp-text') as HTMLInputElement).value = mt.get()
+  } else {
+    wrap.style.display = 'none'
+  }
   const fontSel = $('insp-font') as HTMLSelectElement
   const preset = o.fontFamily ? FONT_PRESETS.find((f) => f.stack === o.fontFamily) : null
   fontSel.value = preset ? preset.id : ''
@@ -222,10 +285,27 @@ export function refreshInspector(): void {
   }
   const el = findEl(id)
   if (!el) {
+    // While the user is editing the text, the element may briefly vanish (e.g.
+    // an emptied name) — keep the panel open so they can keep typing.
+    if (document.activeElement === $('insp-text')) {
+      if (box) box.hidden = true
+      return
+    }
     clearSelection()
     return
   }
   positionUi(el)
+}
+
+/** Double-tap a text element to jump straight into editing its content. */
+export function onCanvasDblClick(e: MouseEvent): void {
+  const hit = (e.target as Element | null)?.closest('[data-re-id]')
+  const id = hit?.getAttribute('data-re-id')
+  if (!id || !modelText(id)) return
+  selectText(id)
+  const inp = $('insp-text') as HTMLInputElement
+  inp.focus()
+  inp.select()
 }
 
 function positionUi(el: SVGGraphicsElement): void {
