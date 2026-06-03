@@ -15,6 +15,7 @@ export default defineConfig({
       '@receipt-engine/react': pkg('react', 'src/index.tsx'),
       '@receipt-engine/import': pkg('import'),
       '@receipt-engine/escpos': pkg('escpos'),
+      '@receipt-engine/bitmap': pkg('bitmap'),
     },
   },
   test: {

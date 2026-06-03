@@ -48,6 +48,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/themes
 
+  packages/bitmap: {}
+
   packages/cli:
     dependencies:
       '@receipt-engine/core':
