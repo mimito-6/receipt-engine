@@ -123,6 +123,28 @@ describe('renderReceiptToSvg', () => {
     expect(def.indexOf('Mimito Booth')).toBeLessThan(def.indexOf('Thank you!'))
   })
 
+  it('background image always covers the card, even when panned', () => {
+    const withBg: ReceiptDocument = {
+      ...baseReceipt,
+      assets: { backgroundImage: PNG, backgroundX: 200, backgroundY: -150, backgroundScale: 1 },
+    }
+    const svg = renderReceiptToSvg(withBg, { theme: 'custom', width: 720 })
+    const m = svg.match(
+      /<image href="[^"]*" x="([-\d.]+)" y="([-\d.]+)" width="([\d.]+)" height="([\d.]+)" preserveAspectRatio="xMidYMid slice"/,
+    )
+    expect(m).toBeTruthy()
+    const x = parseFloat(m![1])
+    const y = parseFloat(m![2])
+    const w = parseFloat(m![3])
+    const cardX = 26 // outerMargin (custom)
+    const cardWidth = 720 - 52
+    // covers the full card horizontally despite the pan — no blank gap exposed
+    expect(x).toBeLessThanOrEqual(cardX)
+    expect(x + w).toBeGreaterThanOrEqual(cardX + cardWidth)
+    // panned up → the image top is above the card top (so the top can't gap)
+    expect(y).toBeLessThanOrEqual(26)
+  })
+
   it('tags elements only in interactive mode', () => {
     const interactive = renderReceiptToSvg(receipt, { interactive: true })
     expect(interactive).toContain('data-re-block="items"')

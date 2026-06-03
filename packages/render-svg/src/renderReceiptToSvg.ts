@@ -284,11 +284,16 @@ export function renderReceiptToSvg(
   let bgClip = ''
   if (bgSrc && isImageSource(bgSrc)) {
     const op = doc.assets?.backgroundOpacity ?? 1
-    const scale = doc.assets?.backgroundScale ?? 1
-    const bgW = cardWidth * scale
-    const bgH = cardHeight * scale
-    const bgX = cardX + (cardWidth - bgW) / 2 + (doc.assets?.backgroundX ?? 0)
-    const bgY = cardTop + (cardHeight - bgH) / 2 + (doc.assets?.backgroundY ?? 0)
+    // The background always covers the whole card — no blank gaps. Scale is
+    // floored at 1 (cover), and the image box grows by the pan offset so moving
+    // it can never pull an edge inside the card.
+    const scale = Math.max(1, doc.assets?.backgroundScale ?? 1)
+    const panX = doc.assets?.backgroundX ?? 0
+    const panY = doc.assets?.backgroundY ?? 0
+    const bgW = cardWidth * scale + 2 * Math.abs(panX)
+    const bgH = cardHeight * scale + 2 * Math.abs(panY)
+    const bgX = cardX + (cardWidth - bgW) / 2 + panX
+    const bgY = cardTop + (cardHeight - bgH) / 2 + panY
     const filterAttr = monoFilterId ? ` filter="${monoFilterId}"` : ''
     bgClip =
       `<clipPath id="re-bg"><rect x="${n(cardX)}" y="${n(cardTop)}" width="${n(cardWidth)}" ` +
