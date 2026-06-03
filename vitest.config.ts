@@ -16,6 +16,7 @@ export default defineConfig({
       '@receipt-engine/import': pkg('import'),
       '@receipt-engine/escpos': pkg('escpos'),
       '@receipt-engine/bitmap': pkg('bitmap'),
+      '@receipt-engine/connect': pkg('connect'),
     },
   },
   test: {

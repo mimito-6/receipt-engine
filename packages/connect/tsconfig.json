@@ -1,0 +1,11 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@receipt-engine/bitmap": ["../bitmap/src/index.ts"],
+      "@receipt-engine/escpos": ["../escpos/src/index.ts"]
+    }
+  },
+  "include": ["src"]
+}

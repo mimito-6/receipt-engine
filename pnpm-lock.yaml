@@ -69,6 +69,15 @@ importers:
         specifier: ^4.19.2
         version: 4.22.4
 
+  packages/connect:
+    dependencies:
+      '@receipt-engine/bitmap':
+        specifier: workspace:*
+        version: link:../bitmap
+      '@receipt-engine/escpos':
+        specifier: workspace:*
+        version: link:../escpos
+
   packages/core:
     dependencies:
       zod:
