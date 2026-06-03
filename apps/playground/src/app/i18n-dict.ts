@@ -411,6 +411,11 @@ export const DICT: Record<string, { zh: string; ja: string; en: string }> = {
     "ja": "上下の位置",
     "en": "Vertical position"
   },
+  "field.bgRotation": {
+    "zh": "旋轉",
+    "ja": "回転",
+    "en": "Rotation"
+  },
   "btn.uploadSticker": {
     "zh": "上傳貼紙圖",
     "ja": "ステッカー画像をアップロード",

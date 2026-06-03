@@ -165,6 +165,18 @@ describe('renderReceiptToSvg', () => {
     expect(at({ backgroundScale: 2 })).toContain('preserveAspectRatio="xMidYMid meet"')
   })
 
+  it('rotates the background image around its centre when backgroundRotation is set', () => {
+    const rotated = renderReceiptToSvg(
+      { ...baseReceipt, assets: { backgroundImage: PNG, backgroundRotation: 30 } },
+      { theme: 'custom', width: 720 },
+    )
+    expect(rotated).toMatch(/<image[^>]*transform="rotate\(30 /) // rotate(deg cx cy)
+    // no transform when rotation is unset/zero
+    expect(renderReceiptToSvg({ ...baseReceipt, assets: { backgroundImage: PNG } }, { theme: 'custom' })).not.toContain(
+      'transform="rotate(',
+    )
+  })
+
   it('tags elements only in interactive mode', () => {
     const interactive = renderReceiptToSvg(receipt, { interactive: true })
     expect(interactive).toContain('data-re-block="body"')

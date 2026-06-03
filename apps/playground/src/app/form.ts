@@ -288,6 +288,8 @@ export function syncFormFromState(): void {
   $('v-bgx').textContent = ($('s-bgx') as HTMLInputElement).value + 'px'
   ;($('s-bgy') as HTMLInputElement).value = String(a.backgroundY != null ? a.backgroundY : 0)
   $('v-bgy').textContent = ($('s-bgy') as HTMLInputElement).value + 'px'
+  ;($('s-bgrot') as HTMLInputElement).value = String(a.backgroundRotation != null ? a.backgroundRotation : 0)
+  $('v-bgrot').textContent = ($('s-bgrot') as HTMLInputElement).value + '°'
   // panels stay collapsed by default — the user expands what they need
   renderItems()
   renderDiscounts()

@@ -97,6 +97,8 @@ export const AssetsSchema = z.object({
   backgroundX: z.number().optional(),
   /** Background image vertical offset in px. */
   backgroundY: z.number().optional(),
+  /** Background image rotation in degrees (around its center). Defaults to 0. */
+  backgroundRotation: z.number().optional(),
 })
 
 export const CustomBlockSchema = z.discriminatedUnion('type', [

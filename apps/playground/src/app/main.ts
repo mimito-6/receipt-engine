@@ -429,6 +429,7 @@ function wire(): void {
         if (a.backgroundScale == null) a.backgroundScale = 1
         if (a.backgroundX == null) a.backgroundX = 0
         if (a.backgroundY == null) a.backgroundY = 0
+        if (a.backgroundRotation == null) a.backgroundRotation = 0
         syncFormFromState()
         render()
       })
@@ -441,6 +442,7 @@ function wire(): void {
       delete a.backgroundScale
       delete a.backgroundX
       delete a.backgroundY
+      delete a.backgroundRotation
       if (!Object.keys(a).length) delete state.receipt.assets
     }
     syncFormFromState()
@@ -464,6 +466,11 @@ function wire(): void {
   $('s-bgy').addEventListener('input', function (this: HTMLInputElement) {
     ensure('assets').backgroundY = +this.value
     $('v-bgy').textContent = this.value + 'px'
+    render()
+  })
+  $('s-bgrot').addEventListener('input', function (this: HTMLInputElement) {
+    ensure('assets').backgroundRotation = +this.value
+    $('v-bgrot').textContent = this.value + '°'
     render()
   })
 

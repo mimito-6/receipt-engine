@@ -371,17 +371,20 @@ export function renderReceiptToSvg(
     const scale = Math.max(0.05, doc.assets?.backgroundScale ?? 1)
     const panX = doc.assets?.backgroundX ?? 0
     const panY = doc.assets?.backgroundY ?? 0
+    const rot = doc.assets?.backgroundRotation ?? 0
     const bgW = cardWidth * scale
     const bgH = cardHeight * scale
     const bgX = cardX + (cardWidth - bgW) / 2 + panX
     const bgY = cardTop + (cardHeight - bgH) / 2 + panY
     const filterAttr = monoFilterId ? ` filter="${monoFilterId}"` : ''
+    // Rotate around the image's (box) centre; the card clip still trims the result.
+    const rotAttr = rot ? ` transform="rotate(${n(rot)} ${n(bgX + bgW / 2)} ${n(bgY + bgH / 2)})"` : ''
     bgClip =
       `<clipPath id="re-bg"><rect x="${n(cardX)}" y="${n(cardTop)}" width="${n(cardWidth)}" ` +
       `height="${n(cardHeight)}" rx="${n(theme.radius.card)}"/></clipPath>`
     bgImage =
       `<g clip-path="url(#re-bg)"><image href="${escapeXml(bgSrc)}" x="${n(bgX)}" y="${n(bgY)}" ` +
-      `width="${n(bgW)}" height="${n(bgH)}" preserveAspectRatio="xMidYMid meet" opacity="${op}"${filterAttr} /></g>`
+      `width="${n(bgW)}" height="${n(bgH)}" preserveAspectRatio="xMidYMid meet" opacity="${op}"${rotAttr}${filterAttr} /></g>`
   }
 
   const defsInner = (monoImages ? monoFilter(MONO_FILTER_ID) : '') + bgClip
