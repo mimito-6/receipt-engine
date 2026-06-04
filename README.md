@@ -1,42 +1,96 @@
-# receipt-engine
+<div align="center">
 
-**English** · [繁體中文](README.zh-TW.md) · [日本語](README.ja.md)
+<img src="apps/playground/public/og-image.png" alt="receipt-engine" width="680">
 
-Receipts, but delightful.
+# 🧾 receipt-engine
 
-`receipt-engine` is an open-source rendering engine for beautiful, shareable,
-and printable receipts. It turns structured receipt JSON into branded digital
-receipt cards, SVG/HTML previews, PNG images, and future thermal-printer output.
+**Receipts, but delightful.**
+Turn structured receipt JSON into beautiful, shareable, printable receipts — designed right in your browser.
 
-It is designed for POS apps, artist alley booths, doujin events, craft markets,
-pop-up stores, and local-first commerce tools.
+<br>
 
-> One receipt JSON in → SVG, HTML, and PNG out. Same data, many surfaces.
+[![Live editor](https://img.shields.io/badge/%E2%96%B6_Live_editor-open-d6336c?style=for-the-badge)](https://mimito-6.github.io/receipt-engine/)
+&nbsp;
+[![Docs](https://img.shields.io/badge/Docs-read-5b3256?style=for-the-badge)](docs/)
+
+[![Deploy](https://github.com/mimito-6/receipt-engine/actions/workflows/pages.yml/badge.svg)](https://github.com/mimito-6/receipt-engine/actions/workflows/pages.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue?style=flat-square)](LICENSE)
+![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6?style=flat-square&logo=typescript&logoColor=white)
+![Front-end only](https://img.shields.io/badge/runs-100%25_in_browser-2f9e44?style=flat-square)
+
+English · [繁體中文](README.zh-TW.md) · [日本語](README.ja.md)
+
+</div>
 
 ---
 
-## Why
+<p align="center">
+  <a href="https://mimito-6.github.io/receipt-engine/">
+    <img src="docs/assets/editor.png" alt="The in-browser direct-manipulation editor" width="900">
+  </a>
+</p>
 
-A receipt doesn't have to be ugly. For a creator at an artist alley or a stall
-at a craft market, the receipt is a **brand touchpoint** — a tiny gift the
-customer keeps, scans, and shares. `receipt-engine` makes that easy while
-staying a neutral, embeddable library (e.g. drop it into an offline-first POS
-like OpenBooth: pass a receipt JSON, get back PNG / SVG / HTML).
+> **One receipt JSON in → SVG, HTML, and PNG out.** Same data, many surfaces — with a delightful
+> direct-manipulation editor on top. Built for artist-alley booths, doujin events, craft markets,
+> pop-up stores, and local-first POS tools (e.g. [OpenBooth](apps/openbooth-bridge)).
 
-## Features
+A receipt doesn't have to be ugly. For a creator at a booth, the receipt is a **brand touchpoint** —
+a tiny gift the customer keeps, scans, and shares. `receipt-engine` makes that easy while staying a
+neutral, embeddable library: pass it a receipt JSON, get back PNG / SVG / HTML — or hand a merchant
+the browser editor and let them design their own.
 
-- 📄 **One schema, many outputs** — SVG (canonical), HTML, PNG.
-- 🎨 **Themes** — `custom` (the colorful default) and `thermal`, plus full custom themes. The `custom` theme lets you change colors, pick fonts, and add stickers; `thermal` is monospace and auto-converts embedded images to black & white.
-- 🧱 **Custom blocks** — text, image, divider, QR, between totals and message.
-- 🔢 **Smart totals** — subtotals, discounts, tax, payments and change computed for you.
-- 🔗 **QR codes** — digital receipt, social, coupon, feedback links.
-- 🖨️ **Thermal printing** — ESC/POS raster (GS v 0) over Web Bluetooth, straight from the browser (Android Chrome/Edge).
-- 📲 **Browser PNG & share** — rasterize to PNG client-side (canvas) and share to a phone via Web Share — no server needed.
-- 🧩 **React component** + **CLI** + typed core API.
-- 🛡️ **Safe & deterministic** — every value escaped; no network, no fonts fetched.
-- 📱 **Mobile-ready** — SVG / HTML / PNG all render in a phone browser.
+## ✨ Highlights
 
-## Packages
+- 🖌️ **Direct-manipulation editor** — tap text to restyle, drag stickers to scale/rotate, drag the
+  card edges to resize, drag blocks to reorder. Runs entirely in the browser, on phones too.
+- 📄 **One schema, many outputs** — SVG (canonical) · HTML · PNG, all deterministic.
+- 🎨 **Themes** — `custom` (colorful, change colors / fonts / stickers) and `thermal` (monospace,
+  auto-grayscaled images), plus fully custom themes via `mergeTheme`.
+- 🖨️ **Thermal printing** — ESC/POS raster (GS v 0) over **Web Bluetooth**, straight from the browser.
+- 📲 **Browser PNG & share** — rasterize to PNG client-side (canvas) and share via Web Share — no server.
+- 🌏 **i18n** — the editor UI ships in 中文 / 日本語 / English.
+- 🔗 **QR codes**, 🔢 **smart totals**, 🧱 **custom blocks**, 🧩 **React component** + **CLI** + typed core.
+- 🛡️ **Safe & deterministic** — every user value is escaped; the receipt never leaves the browser for a server.
+
+## 🎨 Themes
+
+| 🎨 `custom` — colorful & brandable | 🧾 `thermal` — receipt-printer look |
+|:---:|:---:|
+| <img src="docs/assets/receipt-custom.png" alt="custom theme" width="300"> | <img src="docs/assets/receipt-thermal.png" alt="thermal theme" width="300"> |
+| Colors, fonts, stickers, logo, background image (scale / rotate), QR. | Monospace, B&W, torn perforated edges — what a real till prints. |
+
+## 🚀 Try it
+
+**▶️ [Open the live editor](https://mimito-6.github.io/receipt-engine/)** — no install, no login, works on your phone.
+Edit the sample receipt right on the canvas, then download **PNG / SVG / HTML** or save a config file.
+
+Or run it locally (pnpm monorepo — packages aren't published to npm yet):
+
+```bash
+pnpm install
+pnpm build
+pnpm test
+# then open apps/playground/public/index.html in any browser
+```
+
+<details>
+<summary><b>What you can do in the editor</b></summary>
+
+- **Tap any text** → a contextual inspector to change its content, font, color, size and weight
+  (saved per-element in `styleOverrides`); double-tap to edit text inline.
+- **Tap a sticker** → a Photoshop-style frame: corner handles scale, a top handle rotates,
+  two-finger pinch on touch; drag to move with alignment snapping.
+- **Drag the card edges** → change width / top / bottom padding.
+- **Drag a section** (or use the layout-order ↑/↓ panel) → reorder blocks (`blockOrder`).
+- Upload a **logo / background** (background is scalable, rotatable, transparent-able), pick
+  **colors & fonts**, toggle a **transparent** background / card / QR backing, switch `custom` /
+  `thermal`, save/restore a config, and download **PNG with the fonts embedded** so the export
+  matches the preview.
+
+The editor only mutates the receipt model — exports stay deterministic and editor-metadata-free.
+</details>
+
+## 📦 Packages
 
 | Package | What it does |
 |---------|--------------|
@@ -52,58 +106,10 @@ like OpenBooth: pass a receipt JSON, get back PNG / SVG / HTML).
 | `@receipt-engine/react` | `<ReceiptCard />`. |
 | `@receipt-engine/cli` | `receipt-engine render …`. |
 
-**Apps:** [`apps/playground`](apps/playground) — static in-browser editor (runs on phones) · `apps/openbooth-bridge` — the OpenBooth ⇄ receipt-engine integration bundle.
+**Apps:** [`apps/playground`](apps/playground) — the static in-browser editor (deployed above) ·
+[`apps/openbooth-bridge`](apps/openbooth-bridge) — the OpenBooth ⇄ receipt-engine integration bundle.
 
-## Install (development)
-
-This is a pnpm monorepo. Packages are not published to npm yet — clone and build:
-
-```bash
-pnpm install
-pnpm build
-pnpm test
-```
-
-## Try it in the browser (playground)
-
-A static, client-side **direct-manipulation editor** lives in
-[`apps/playground`](apps/playground). After `pnpm build`, open
-`apps/playground/public/index.html` in any browser and edit the receipt right on
-the canvas:
-
-- **Tap any text** → a contextual inspector to change its content, font, color,
-  size and weight (saved per-element in `styleOverrides`); double-tap to edit text.
-- **Tap a sticker** → a Photoshop-style frame: corner handles scale, a top handle
-  rotates, two-finger pinch on touch; drag to move with alignment snapping.
-- **Drag the card edges** → change width / top / bottom padding.
-- **Drag a section** (or use the 版面順序 ↑/↓ panel) → reorder blocks (`blockOrder`).
-- Upload a logo / background, pick colors & fonts, switch `custom` / `thermal`
-  themes, save/restore a config file, and download as SVG / HTML / **PNG (with the
-  fonts embedded, so the export matches the preview)**.
-
-Everything runs entirely in the browser and is fully touch-friendly, so it works
-on phones too (see [Using it on a phone](#using-it-on-a-phone)). The editor only
-mutates the receipt model — exports stay deterministic and editor-metadata-free.
-
-## CLI
-
-```bash
-# from the repo, the CLI runs via the dev script:
-pnpm --filter @receipt-engine/cli dev render examples/cute-booth/receipt.json --theme custom --format svg  --out receipt.svg
-pnpm --filter @receipt-engine/cli dev render examples/cute-booth/receipt.json --theme custom --format html --out receipt.html
-pnpm --filter @receipt-engine/cli dev render examples/cute-booth/receipt.json --theme custom --format png  --out receipt.png
-```
-
-Once built, the `receipt-engine` bin is available:
-
-```bash
-receipt-engine render receipt.json --theme custom --format png --out receipt.png
-```
-
-Options: `--theme custom|thermal`, `--format svg|html|png`, `--out <path>`,
-`--width <number>`, `--pretty`. `svg`/`html` print to stdout when `--out` is omitted.
-
-## TypeScript API
+## 🧑‍💻 Use it as a library
 
 ```ts
 import { renderReceiptToSvg } from '@receipt-engine/render-svg'
@@ -113,17 +119,42 @@ const svg = renderReceiptToSvg(receipt, { theme: 'custom', width: 720 })
 const png = await renderReceiptToPng(receipt, { theme: 'custom', pixelRatio: 2 })
 ```
 
-## React
-
 ```tsx
 import { ReceiptCard } from '@receipt-engine/react'
 
-export function App() {
-  return <ReceiptCard receipt={receipt} theme="custom" width={360} />
-}
+export const App = () => <ReceiptCard receipt={receipt} theme="custom" width={360} />
 ```
 
-## Receipt JSON
+<details>
+<summary><b>CLI</b></summary>
+
+```bash
+# from the repo, the CLI runs via the dev script:
+pnpm --filter @receipt-engine/cli dev render examples/cute-booth/receipt.json --theme custom --format svg --out receipt.svg
+
+# once built, the bin is available:
+receipt-engine render receipt.json --theme custom --format png --out receipt.png
+```
+
+Options: `--theme custom|thermal`, `--format svg|html|png`, `--out <path>`, `--width <number>`,
+`--pretty`. `svg`/`html` print to stdout when `--out` is omitted.
+</details>
+
+<details>
+<summary><b>Theme customization</b></summary>
+
+```ts
+import { getTheme, mergeTheme } from '@receipt-engine/themes'
+import { renderReceiptToSvg } from '@receipt-engine/render-svg'
+
+const theme = mergeTheme(getTheme('custom'), {
+  palette: { primary: '#0b7285', accent: '#0b7285' },
+})
+const svg = renderReceiptToSvg(receipt, { theme })
+```
+</details>
+
+## 📄 Receipt JSON
 
 ```jsonc
 {
@@ -143,64 +174,31 @@ export function App() {
 }
 ```
 
-See [`docs/schema.md`](docs/schema.md) for the full field reference, and the
-[`examples/`](examples) folder for `simple`, `cute-booth`, and `openbooth-like`.
+Full field reference in [`docs/schema.md`](docs/schema.md). Ready-made examples live in
+[`examples/`](examples) (`simple`, `cute-booth`, `openbooth-like`).
 
-## Theme customization
+## 📱 Using it on a phone
 
-```ts
-import { getTheme, mergeTheme } from '@receipt-engine/themes'
-import { renderReceiptToSvg } from '@receipt-engine/render-svg'
+The rendering paths are **pure front-end JavaScript** — SVG, HTML, and **PNG (canvas, via
+`@receipt-engine/connect`)** all run directly in a mobile browser, no server required. That's how the
+playground renders, exports PNG, and even **thermal-prints over Web Bluetooth** on a phone.
+(`@receipt-engine/render-png` is a separate server-side path using a native module, for batch / Node.)
 
-const theme = mergeTheme(getTheme('custom'), {
-  palette: { primary: '#0b7285', accent: '#0b7285' },
-})
-const svg = renderReceiptToSvg(receipt, { theme })
-```
+The simplest way to use it: **[open the deployed editor](https://mimito-6.github.io/receipt-engine/)**
+on your phone. To embed rendering in your own app (React Native / WebView), import
+`@receipt-engine/render-svg` or `@receipt-engine/render-html` directly.
 
-## Generate sample images
+## 📚 Docs
 
-```bash
-pnpm build
-pnpm samples   # writes samples/<example>-<theme>.{svg,png}
-```
+[Schema](docs/schema.md) · [Themes](docs/themes.md) · [Rendering](docs/rendering.md) · [Roadmap](docs/roadmap.md)
 
-## Using it on a phone
+## 🗺️ Roadmap
 
-A quick mental model of what runs where:
+**Shipped (v0.1)** in-browser editor · browser PNG export · ESC/POS thermal print over Web Bluetooth ·
+OpenBooth integration · 中/日/英 i18n.
+**Next** hosted receipt pages · coupon QR · community themes · plugin system.
+Full list in [`docs/roadmap.md`](docs/roadmap.md).
 
-- This project is a **library + CLI**, but the rendering paths are **pure front-end
-  JavaScript** — SVG, HTML, and **PNG (via canvas in `@receipt-engine/connect`)** all run
-  directly in a mobile browser, no server required. That's how the playground renders,
-  exports PNG, and even **thermal-prints over Web Bluetooth** on a phone.
-- `@receipt-engine/render-png` is a separate **server-side** PNG path (native module),
-  for batch / Node use — not needed in the browser.
-
-Three practical ways to use it on a phone today:
-
-1. **Recommended** — deploy `apps/playground/public` (one HTML + one `.js`) to any
-   static host (GitHub Pages, Netlify, Vercel) and open the URL on your phone.
-2. **Same Wi-Fi** — run a static server on your computer and open `http://<your-ip>:<port>` from the phone.
-3. **Just view output** — generate a PNG/HTML with the CLI and send the file to the
-   phone; phones open images and web pages natively.
-
-To embed rendering in your own mobile app (React Native / WebView), import
-`@receipt-engine/render-svg` or `@receipt-engine/render-html` directly — neither has
-any computer-only dependency.
-
-## Docs
-
-- [Schema](docs/schema.md)
-- [Themes](docs/themes.md)
-- [Rendering](docs/rendering.md)
-- [Roadmap](docs/roadmap.md)
-
-## Roadmap (short)
-
-**Shipped (v0.1)** in-browser direct-manipulation editor, browser PNG export (canvas),
-ESC/POS thermal print over Web Bluetooth, OpenBooth integration · **next** hosted receipt
-pages, coupon QR, community themes, plugin system. Full list in [`docs/roadmap.md`](docs/roadmap.md).
-
-## License
+## 📜 License
 
 [MIT](LICENSE) © mimito
