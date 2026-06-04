@@ -1,107 +1,107 @@
-# receipt-engine
+<div align="center">
+
+<img src="apps/playground/public/og-image.png" alt="receipt-engine" width="680">
+
+# 🧾 receipt-engine
+
+**讓收據變好看。**
+把結構化的收據 JSON,變成漂亮、可分享、可列印的收據 —— 直接在瀏覽器裡設計。
+
+<br>
+
+[![Live editor](https://img.shields.io/badge/%E2%96%B6_%E7%B7%9A%E4%B8%8A%E7%B7%A8%E8%BC%AF%E5%99%A8-open-d6336c?style=for-the-badge)](https://mimito-6.github.io/receipt-engine/)
+&nbsp;
+[![Docs](https://img.shields.io/badge/Docs-read-5b3256?style=for-the-badge)](docs/)
+
+[![Deploy](https://github.com/mimito-6/receipt-engine/actions/workflows/pages.yml/badge.svg)](https://github.com/mimito-6/receipt-engine/actions/workflows/pages.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue?style=flat-square)](LICENSE)
+![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6?style=flat-square&logo=typescript&logoColor=white)
+![純前端](https://img.shields.io/badge/%E7%B4%94%E5%89%8D%E7%AB%AF-100%25_%E7%80%8F%E8%A6%BD%E5%99%A8%E5%85%A7-2f9e44?style=flat-square)
 
 [English](README.md) · **繁體中文** · [日本語](README.ja.md)
 
-把收據變好看。
-
-`receipt-engine` 是一個開源工具:你給它一筆消費資料,它就幫你產生一張漂亮、可以分享、也能列印的收據。可以是手機上看的圖、一頁網頁,或是一張 PNG 圖檔,未來還能接收據機列印。
-
-適合:小店、攤位收銀、創作者擺攤(像同人場、動漫場的個人攤位)、手作市集、快閃店,以及那種「不一定要連網路也能用」的收銀工具。
-
-> 給它一筆資料,一次產出「圖、網頁、圖檔」三種收據。
+</div>
 
 ---
 
-## 這是要解決什麼
+<p align="center">
+  <a href="https://mimito-6.github.io/receipt-engine/">
+    <img src="docs/assets/editor.png" alt="瀏覽器內的直接操作編輯器" width="900">
+  </a>
+</p>
 
-收據不一定要醜。對在同人場或手作市集擺攤的人來說,一張用心的收據,其實是你跟客人之間的一個小連結——一份客人會留著、會拍照、會分享出去的小東西。
+> **一份收據 JSON 進 → SVG、HTML、PNG 出。** 同一份資料、多種輸出 —— 還附上一個直接在收據上操作的編輯器。
+> 為同人攤位、Comiket / 同人誌即賣會、手作市集、快閃店、在地優先的 POS 工具(例如 [OpenBooth](apps/openbooth-bridge))而生。
 
-`receipt-engine` 讓做出這種收據變得很簡單;而且它是一個獨立的小工具,可以被你自己的程式或收銀系統直接拿去用。舉例:之後接到像 OpenBooth 這種「不連網也能用的收銀 App」時,你只要把一筆收據資料丟進去,它就回給你圖、網頁或圖檔。
+收據不一定要醜。對擺攤的創作者來說,收據是一個**品牌觸點** —— 一份客人會留著、會掃、會分享的小禮物。
+`receipt-engine` 讓這件事變簡單,同時維持中立、可嵌入的函式庫:丟一份收據 JSON,拿回 PNG / SVG / HTML;
+或直接把瀏覽器編輯器交給店家,讓他們自己設計。
 
-## 它能做什麼
+## ✨ 亮點
 
-- 📄 **一份資料,三種輸出**:手機/網頁看的向量圖(SVG)、可直接打開的整頁網頁(HTML)、圖檔(PNG)。
-- 🎨 **兩種現成風格**:`自訂(custom)` 和 `收據機(thermal)`。`自訂` 是彩色的那種,可以自己換顏色、挑字體,還能貼貼紙;`收據機` 是黑白窄條那種,等寬字體,而且會自動把放進去的圖片轉成黑白。
-- 🧱 **可自由加區塊**:加一段文字、一張圖、一條分隔線,或一個 QR code。
-- 🔢 **金額自動算**:小計、折扣、稅、找零都幫你算好,不用自己加。
-- 🔗 **QR code**:可以連到你的數位收據、社群、優惠券或回饋表單。
-- 🧩 給工程師的:現成的網頁元件(React)、命令列工具,還有完整型別的程式介面。
-- 🛡️ **安全又穩定**:客人打的字會自動處理特殊符號,不會弄壞畫面;不連網、不偷抓你的字型;同一筆資料每次產生的結果都一模一樣。
-- 📱 **手機友善**:做圖和網頁這件事可以直接在手機瀏覽器裡跑(見下方「在手機上用」)。
+- 🖌️ **直接操作編輯器** —— 點文字就改樣式、拖貼紙縮放旋轉、拖邊界改尺寸、拖區塊排序。全程在瀏覽器裡跑,手機也行。
+- 📄 **一套 schema、多種輸出** —— SVG(主格式)· HTML · PNG,全部確定性渲染。
+- 🎨 **主題** —— `custom`(彩色,可改色/字/貼紙)與 `thermal`(等寬、圖自動轉灰),也能用 `mergeTheme` 完全自訂。
+- 🖨️ **熱感列印** —— ESC/POS raster(GS v 0)透過 **Web Bluetooth**,直接從瀏覽器印。
+- 📲 **瀏覽器 PNG 與分享** —— 前端 canvas 轉 PNG,用 Web Share 傳給手機,免伺服器。
+- 🌏 **多語** —— 編輯器 UI 內建 中文 / 日本語 / English。
+- 🔗 **QR 條碼**、🔢 **自動金額計算**、🧱 **自訂區塊**、🧩 **React 元件** + **CLI** + 型別化核心 API。
+- 🛡️ **安全且確定性** —— 每個使用者輸入都跳脫;收據不會上傳到伺服器。
 
-## 先試玩看看(不用寫程式)
+## 🎨 主題
 
-想先看效果,最快的方法:
+| 🎨 `custom` —— 彩色、可品牌化 | 🧾 `thermal` —— 收據機質感 |
+|:---:|:---:|
+| <img src="docs/assets/receipt-custom.png" alt="custom 主題" width="300"> | <img src="docs/assets/receipt-thermal.png" alt="thermal 主題" width="300"> |
+| 顏色、字體、貼紙、LOGO、底圖(可縮放/旋轉)、QR。 | 等寬、黑白、鋸齒撕邊 —— 真正收據機印出來的樣子。 |
 
-1. 先照下面「在本機跑起來」做 `pnpm install` 和 `pnpm build`。
-2. 用瀏覽器直接打開 `apps/playground/public/index.html`。
-3. 左邊即時預覽收據,右邊改資料、上面換風格,還能直接下載。
+## 🚀 試用
 
-整個頁面都在你自己的瀏覽器裡跑,不會上傳任何東西,**手機也能開**。
+**▶️ [打開線上編輯器](https://mimito-6.github.io/receipt-engine/)** —— 免安裝、免登入,手機也能用。
+直接在收據上編輯範例,再下載 **PNG / SVG / HTML** 或存設定檔。
 
-## 在本機跑起來
-
-需要 [Node.js](https://nodejs.org/) 18 以上和 [pnpm](https://pnpm.io/)。
-
-```bash
-pnpm install   # 第一次先安裝
-pnpm build     # 建置
-pnpm test      # 跑測試(可選)
-```
-
-接著三種試法,挑一個:
-
-**A. 開試玩網頁**(最直覺):用瀏覽器打開 `apps/playground/public/index.html`。
-
-**B. 用一行指令產生一張收據**:
+或在本機跑(pnpm monorepo,套件尚未發布到 npm):
 
 ```bash
-pnpm --filter @receipt-engine/cli dev render examples/cute-booth/receipt.json --theme custom --format png --out receipt.png
+pnpm install
+pnpm build
+pnpm test
+# 然後用瀏覽器打開 apps/playground/public/index.html
 ```
 
-把 `--format` 換成 `svg` 或 `html` 也可以。Windows 下產生 `.html` 後,用 `start receipt.html` 就能開來看。
+<details>
+<summary><b>編輯器能做什麼</b></summary>
 
-**C. 一次產生全部範例圖**:`pnpm samples`(圖會放到 `samples/` 資料夾,共 3 個範例 × 3 種風格)。
+- **點任何文字** → 跳出情境工具列,改內容、字體、顏色、大小、粗細(逐元素存進 `styleOverrides`);雙擊就地改字。
+- **點貼紙** → PS 式變形框:四角縮放、上方旋轉、觸控雙指縮放旋轉;拖移時有對齊吸附。
+- **拖卡片邊界** → 改寬度 / 上下留白。
+- **拖一個區塊**(或用「版面順序」↑/↓ 面板)→ 重排版面(`blockOrder`)。
+- 上傳 **LOGO / 底圖**(底圖可縮放、旋轉、透明),選 **顏色與字體**,切換 **透明** 背景 / 卡片 / QR 底色,
+  切 `custom` / `thermal`,存讀設定檔,下載 **內嵌字體的 PNG**(匯出跟預覽一致)。
 
-## 在手機上用
+編輯器只改收據模型 —— 匯出維持確定性、不含編輯器中繼資料。
+</details>
 
-先把目前的狀況講清楚,避免誤會:
+## 📦 套件
 
-- 這個專案本身是「工具/函式庫 + 命令列」,它跑在**電腦或伺服器**上,不是一個你直接裝在手機上的 App。
-- 但是它「產生向量圖(SVG)」和「產生網頁(HTML)」的功能是**純前端**的——也就是說,這段程式可以直接在**手機的瀏覽器裡**跑,不需要伺服器。
-- 只有「產生 PNG 圖檔」目前需要在電腦/伺服器端做(用到一個原生套件)。未來 v0.2 會換成可以在瀏覽器裡跑的版本(`@resvg/resvg-wasm`),到時候手機端也能直接出 PNG。
+| 套件 | 用途 |
+|------|------|
+| `@receipt-engine/core` | Schema、驗證、正規化、金額計算。 |
+| `@receipt-engine/themes` | 內建主題 + `getTheme` / `mergeTheme`。 |
+| `@receipt-engine/render-svg` | 收據 → SVG 字串(主格式)。 |
+| `@receipt-engine/render-html` | 收據 → 獨立 HTML。 |
+| `@receipt-engine/render-png` | 收據 → PNG `Buffer`(resvg,伺服器端)。 |
+| `@receipt-engine/bitmap` | 熱感印表機用的 1-bit 抖色 + 位元打包。 |
+| `@receipt-engine/escpos` | ESC/POS 指令 + raster 輸出(GS v 0)。 |
+| `@receipt-engine/connect` | 瀏覽器交付:Web Bluetooth 熱感列印、canvas PNG、Web Share。 |
+| `@receipt-engine/import` | POS / 訂單 → 收據轉接(含 OpenBooth)+ 版型套用。 |
+| `@receipt-engine/react` | `<ReceiptCard />`。 |
+| `@receipt-engine/cli` | `receipt-engine render …`。 |
 
-所以「在手機上用」實際上有三條路:
+**Apps:** [`apps/playground`](apps/playground) —— 上面部署的瀏覽器編輯器 ·
+[`apps/openbooth-bridge`](apps/openbooth-bridge) —— OpenBooth ⇄ receipt-engine 整合 bundle。
 
-1. **最推薦**:把 `apps/playground/public` 這個資料夾(就一個 HTML + 一個 `.js`)丟到任何免費靜態網站空間(GitHub Pages、Netlify、Vercel 都行),用手機開那個網址,就能在手機上即時做收據、下載圖。
-2. **同一個 Wi-Fi 臨時試**:在電腦上跑一個靜態伺服器,手機連「電腦的 IP:埠號」。
-3. **只是要看結果**:用上面的指令產生 PNG/HTML,把檔案傳到手機(或貼到聊天室、Email),手機本來就能開圖和網頁。
-
-想把渲染包進你自己的手機 App(React Native / WebView)也行:`@receipt-engine/render-svg`、`@receipt-engine/render-html` 沒有任何「只能在電腦跑」的相依,直接 import 就能在手機端產生收據。
-
-## 各個套件在做什麼
-
-| 套件 | 做的事 |
-|------|--------|
-| `@receipt-engine/core` | 收據資料的「規格 + 檢查 + 自動算錢」。 |
-| `@receipt-engine/themes` | 兩種內建風格,以及換風格的工具。 |
-| `@receipt-engine/render-svg` | 把收據畫成向量圖(主要的渲染器)。 |
-| `@receipt-engine/render-html` | 把收據包成一頁可直接打開的網頁。 |
-| `@receipt-engine/render-png` | 把收據轉成 PNG 圖檔。 |
-| `@receipt-engine/react` | 現成的網頁元件 `<ReceiptCard />`。 |
-| `@receipt-engine/cli` | 命令列工具:一行指令把收據檔變成圖。 |
-| `@receipt-engine/playground` | 純前端試玩網頁(手機可開)。 |
-
-## 給工程師:命令列
-
-```bash
-receipt-engine render receipt.json --theme custom --format png --out receipt.png
-```
-
-選項:`--theme custom|thermal`、`--format svg|html|png`、`--out <檔名>`、
-`--width <數字>`、`--pretty`。沒給 `--out` 時,`svg`/`html` 會直接印在畫面上。
-
-## 給工程師:程式介面
+## 🧑‍💻 當作函式庫使用
 
 ```ts
 import { renderReceiptToSvg } from '@receipt-engine/render-svg'
@@ -111,23 +111,34 @@ const svg = renderReceiptToSvg(receipt, { theme: 'custom', width: 720 })
 const png = await renderReceiptToPng(receipt, { theme: 'custom', pixelRatio: 2 })
 ```
 
-## 給工程師:React
-
 ```tsx
 import { ReceiptCard } from '@receipt-engine/react'
 
-export function App() {
-  return <ReceiptCard receipt={receipt} theme="custom" width={360} />
-}
+export const App = () => <ReceiptCard receipt={receipt} theme="custom" width={360} />
 ```
 
-## 收據資料長這樣
+<details>
+<summary><b>CLI</b></summary>
+
+```bash
+# 在 repo 內用 dev 腳本執行:
+pnpm --filter @receipt-engine/cli dev render examples/cute-booth/receipt.json --theme custom --format svg --out receipt.svg
+
+# build 完之後,bin 就可用:
+receipt-engine render receipt.json --theme custom --format png --out receipt.png
+```
+
+選項:`--theme custom|thermal`、`--format svg|html|png`、`--out <path>`、`--width <number>`、`--pretty`。
+省略 `--out` 時,`svg`/`html` 會印到 stdout。
+</details>
+
+## 📄 收據 JSON
 
 ```jsonc
 {
   "schemaVersion": "0.1",
   "currency": "TWD",
-  "merchant": { "name": "Mimito Booth", "subtitle": "手作 × 插畫 × 小誌", "icon": "🎀" },
+  "merchant": { "name": "Mimito Booth", "subtitle": "手作 × 插畫 × 小誌", "logo": "./assets/logo.svg" },
   "event": { "name": "Artist Alley", "boothNumber": "A12" },
   "transaction": { "receiptNo": "AA-A12-018", "issuedAt": "2026-06-01T14:30:00+08:00" },
   "items": [
@@ -135,41 +146,32 @@ export function App() {
     { "name": "Mini Zine", "quantity": 1, "unitPrice": 180, "tags": ["特典"] }
   ],
   "discounts": [{ "label": "套組優惠", "amount": 50 }],
-  "payments": [{ "method": "Cash", "amount": 700 }],
+  "payments": [{ "method": "現金", "amount": 700 }],
   "qr": { "value": "https://instagram.com/mimito.art", "label": "追蹤我們" },
   "message": { "title": "Thank you! ♡", "body": "感謝支持我們的攤位!" }
 }
 ```
 
-每個欄位的詳細說明看 [`docs/schema.md`](docs/schema.md);完整範例在
-[`examples/`](examples) 資料夾(`simple`、`cute-booth`、`openbooth-like`)。
+完整欄位說明見 [`docs/schema.md`](docs/schema.md)。現成範例在 [`examples/`](examples)(`simple`、`cute-booth`、`openbooth-like`)。
 
-## 換顏色 / 自訂風格
+## 📱 在手機上用
 
-```ts
-import { getTheme, mergeTheme } from '@receipt-engine/themes'
-import { renderReceiptToSvg } from '@receipt-engine/render-svg'
+渲染路徑都是**純前端 JavaScript** —— SVG、HTML、**PNG(canvas,透過 `@receipt-engine/connect`)** 全部直接在
+手機瀏覽器裡跑,免伺服器。playground 就是這樣在手機上渲染、匯出 PNG,甚至 **透過 Web Bluetooth 熱感列印**。
+(`@receipt-engine/render-png` 是另一條伺服器端 PNG 路徑,用原生模組,給批次 / Node 用。)
 
-// 以「自訂」為底,只改主色
-const theme = mergeTheme(getTheme('custom'), {
-  palette: { primary: '#0b7285', accent: '#0b7285' },
-})
-const svg = renderReceiptToSvg(receipt, { theme })
-```
+最簡單的用法:在手機上 **[打開部署好的編輯器](https://mimito-6.github.io/receipt-engine/)**。
+要嵌進自己的 App(React Native / WebView),直接 import `@receipt-engine/render-svg` 或 `@receipt-engine/render-html`。
 
-## 文件
+## 📚 文件
 
-- [收據資料規格](docs/schema.md)
-- [風格主題](docs/themes.md)
-- [渲染說明](docs/rendering.md)
-- [開發藍圖](docs/roadmap.md)
+[Schema](docs/schema.md) · [主題](docs/themes.md) · [渲染](docs/rendering.md) · [路線圖](docs/roadmap.md)
 
-## 開發藍圖(精簡)
+## 🗺️ 路線圖
 
-**v0.2** 風格調整工具、手機/瀏覽器端直接出 PNG · **v0.3** 收據機列印(ESC/POS)與
-58/80mm 版面 · **v0.4** 線上收據頁、優惠券 QR、社群風格庫 · **v0.5** 外掛系統。
-完整清單見 [`docs/roadmap.md`](docs/roadmap.md)。
+**已出貨(v0.1)** 瀏覽器編輯器 · 瀏覽器 PNG 匯出 · ESC/POS 熱感列印(Web Bluetooth)· OpenBooth 整合 · 中/日/英多語。
+**接下來** 託管收據頁 · 優惠 QR · 社群主題 · 外掛系統。完整清單見 [`docs/roadmap.md`](docs/roadmap.md)。
 
-## 授權
+## 📜 授權
 
 [MIT](LICENSE) © mimito
