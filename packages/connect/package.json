@@ -1,5 +1,6 @@
 {
   "name": "@receipt-engine/connect",
+  "private": true,
   "version": "0.1.0",
   "description": "Browser delivery for receipt-engine: Web Bluetooth ESC/POS thermal printing and Web Share to a phone, plus SVG→ImageData/PNG canvas helpers.",
   "license": "MIT",

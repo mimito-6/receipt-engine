@@ -93,7 +93,8 @@ export const AssetsSchema = z.object({
   backgroundImage: z.string().optional(),
   /** Background image opacity, 0–1. Defaults to 1. */
   backgroundOpacity: z.number().min(0).max(1).optional(),
-  /** Background image scale multiplier over the card's cover size. Defaults to 1. */
+  /** Background image scale: the placement box is the card size × this (the image is
+   *  contained inside it, keeping its aspect ratio). 1 = card-sized. Defaults to 1. */
   backgroundScale: z.number().positive().optional(),
   /** Background image horizontal offset in px. */
   backgroundX: z.number().optional(),

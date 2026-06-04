@@ -1,5 +1,6 @@
 {
   "name": "@receipt-engine/react",
+  "private": true,
   "version": "0.1.0",
   "description": "React component that renders a receipt-engine document as an inline SVG card.",
   "license": "MIT",

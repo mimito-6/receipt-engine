@@ -1,5 +1,6 @@
 {
   "name": "@receipt-engine/render-html",
+  "private": true,
   "version": "0.1.0",
   "description": "Wrap a receipt SVG in a mobile-friendly, standalone HTML document.",
   "license": "MIT",

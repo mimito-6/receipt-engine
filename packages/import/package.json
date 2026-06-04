@@ -1,5 +1,6 @@
 {
   "name": "@receipt-engine/import",
+  "private": true,
   "version": "0.1.0",
   "description": "Map external POS / order JSON (incl. OpenBooth) into a validated receipt-engine ReceiptDocument.",
   "license": "MIT",

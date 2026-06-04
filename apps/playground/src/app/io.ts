@@ -127,6 +127,7 @@ export function buildConfig(): Record<string, unknown> {
     mono: state.mono,
     edges: state.edges,
     scale: state.scale,
+    cleanExport: state.cleanExport,
     look: state.look,
     receipt: state.receipt,
   }

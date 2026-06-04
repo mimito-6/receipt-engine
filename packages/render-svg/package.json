@@ -1,5 +1,6 @@
 {
   "name": "@receipt-engine/render-svg",
+  "private": true,
   "version": "0.1.0",
   "description": "Render a receipt document to a deterministic SVG string. The canonical renderer for receipt-engine.",
   "license": "MIT",

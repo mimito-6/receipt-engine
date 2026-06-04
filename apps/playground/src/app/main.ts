@@ -105,6 +105,7 @@ function applyConfig(cfg: any): void {
     thermal: cfg.edges ? !!cfg.edges.thermal : true,
   }
   if (typeof cfg.scale === 'number') state.scale = cfg.scale
+  if (typeof cfg.cleanExport === 'boolean') state.cleanExport = cfg.cleanExport
   state.sel = -1
   state.selection = null
   setTheme(cfg.theme === 'thermal' ? 'thermal' : 'custom')
@@ -267,9 +268,15 @@ function wire(): void {
     }
     render()
   }
-  ;['q-on', 'q-value', 'q-label', 'q-caption', 'q-bg-hex', 'q-bg-clear'].forEach((id) =>
+  ;['q-on', 'q-value', 'q-label', 'q-caption', 'q-bg-clear'].forEach((id) =>
     $(id).addEventListener('input', qrUpdate),
   )
+  // typing a valid hex unticks 透明 so the colour actually applies (matches wireColor)
+  $('q-bg-hex').addEventListener('input', () => {
+    const v = ($('q-bg-hex') as HTMLInputElement).value.trim()
+    if (/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(v)) ($('q-bg-clear') as HTMLInputElement).checked = false
+    qrUpdate()
+  })
   // QR backing colour picker → untick 透明, sync its hex twin, then rebuild
   $('q-bg').addEventListener('input', () => {
     ;($('q-bg-clear') as HTMLInputElement).checked = false
@@ -536,3 +543,29 @@ document.querySelectorAll<HTMLButtonElement>('.lang button[data-lang]').forEach(
   })
 })
 applyI18n()
+
+// First-visit coachmark: a phone visitor has no hover cue, so point at the receipt
+// to reveal the core interaction (tap any text to edit). Dismisses on the first canvas
+// touch or after a few seconds, and only shows once per browser.
+try {
+  if (!localStorage.getItem('re-coach-seen')) {
+    const coach = document.createElement('div')
+    coach.className = 're-coach'
+    coach.setAttribute('data-i18n', 'coach.tapToEdit')
+    coach.textContent = t('coach.tapToEdit')
+    $('paper').appendChild(coach)
+    const dismiss = (): void => {
+      coach.remove()
+      $('svg-host').removeEventListener('pointerdown', dismiss)
+      try {
+        localStorage.setItem('re-coach-seen', '1')
+      } catch {
+        /* ignore */
+      }
+    }
+    $('svg-host').addEventListener('pointerdown', dismiss)
+    setTimeout(dismiss, 8000)
+  }
+} catch {
+  /* ignore (e.g. localStorage blocked) */
+}

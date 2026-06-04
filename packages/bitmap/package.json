@@ -1,5 +1,6 @@
 {
   "name": "@receipt-engine/bitmap",
+  "private": true,
   "version": "0.1.0",
   "description": "Convert RGBA pixels to a 1-bpp thermal bitmap (luminance + threshold / Floyd–Steinberg / Atkinson dithering, MSB-first packing). Dependency-free and isomorphic.",
   "license": "MIT",

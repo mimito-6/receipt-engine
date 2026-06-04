@@ -1,5 +1,6 @@
 {
   "name": "@receipt-engine/core",
+  "private": true,
   "version": "0.1.0",
   "description": "Receipt JSON schema, validation, normalization and totals for receipt-engine.",
   "license": "MIT",

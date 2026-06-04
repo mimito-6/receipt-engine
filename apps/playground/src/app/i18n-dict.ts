@@ -581,6 +581,11 @@ export const DICT: Record<string, { zh: string; ja: string; en: string }> = {
     "ja": "透明",
     "en": "Transparent"
   },
+  "coach.tapToEdit": {
+    "zh": "👆 點任何文字就能編輯",
+    "ja": "👆 文字をタップして編集",
+    "en": "👆 Tap any text to edit"
+  },
   "field.messageTitle": {
     "zh": "標題",
     "ja": "見出し",
@@ -672,9 +677,9 @@ export const DICT: Record<string, { zh: string; ja: string; en: string }> = {
     "en": "Embedding fonts…"
   },
   "footer.text": {
-    "zh": "純前端 · 不上傳任何資料 · 由 @receipt-engine/render-svg 在瀏覽器內渲染",
-    "ja": "フロントエンドのみ · データは一切アップロードしません · @receipt-engine/render-svg がブラウザ内で描画",
-    "en": "Front-end only · nothing is uploaded · rendered in your browser by @receipt-engine/render-svg"
+    "zh": "純前端 · 收據不上傳伺服器 · 由 @receipt-engine/render-svg 在瀏覽器內渲染",
+    "ja": "フロントエンドのみ · レシートはサーバーに送信しません · @receipt-engine/render-svg がブラウザ内で描画",
+    "en": "Front-end only · your receipt isn’t uploaded to any server · rendered by @receipt-engine/render-svg"
   },
   "inspector.title": {
     "zh": "文字樣式",

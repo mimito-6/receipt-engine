@@ -120,8 +120,10 @@ brand page, social link, next-visit coupon, feedback form, or product page.
 - `footerImage` — image drawn at the bottom of the receipt.
 - `backgroundImage` — image drawn behind the content (clipped to the card).
 - `backgroundOpacity` — `0`–`1` (default `1`).
-- `backgroundScale` — multiplier over the card's cover size (default `1`).
+- `backgroundScale` — placement-box scale (card size × this; the image is *contained*,
+  keeping its aspect ratio). `1` = card-sized (default).
 - `backgroundX`, `backgroundY` — background offset in px.
+- `backgroundRotation` — background image rotation in degrees, around its centre (default `0`).
 
 Under the `thermal` theme the background image is rendered in black & white too.
 

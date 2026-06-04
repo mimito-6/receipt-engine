@@ -1,0 +1,36 @@
+name: Deploy playground to GitHub Pages
+
+# The playground is a self-contained static site (apps/playground/public): index.html
+# + the built IIFE bundles + fonts, all referenced with relative paths. The bundles are
+# committed (rebuilt before each push), so Pages just uploads the folder — no CI build.
+
+on:
+  push:
+    branches: [main]
+    paths: ['apps/playground/public/**', '.github/workflows/pages.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow one concurrent deployment; newer pushes supersede in-flight ones.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: apps/playground/public
+      - id: deployment
+        uses: actions/deploy-pages@v4

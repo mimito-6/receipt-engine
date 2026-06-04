@@ -1,5 +1,6 @@
 {
   "name": "@receipt-engine/themes",
+  "private": true,
   "version": "0.1.0",
   "description": "Built-in receipt themes (custom, thermal) for receipt-engine.",
   "license": "MIT",

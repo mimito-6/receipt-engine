@@ -1,5 +1,6 @@
 {
   "name": "@receipt-engine/cli",
+  "private": true,
   "version": "0.1.0",
   "description": "Command-line renderer for receipt-engine: receipt JSON -> SVG / HTML / PNG.",
   "license": "MIT",

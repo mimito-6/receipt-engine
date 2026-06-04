@@ -6,7 +6,7 @@
 <meta name="color-scheme" content="light dark" />
 <meta name="theme-color" content="#d6336c" />
 <title>receipt-engine · 生成你的收據模板</title>
-<meta name="description" content="在瀏覽器裡直接設計、生成可愛又實用的收據模板:點文字改字、拖貼紙、即時預覽,可印到熱感收據機或分享給客人。純前端、不上傳任何資料,手機也能用。" />
+<meta name="description" content="在瀏覽器裡直接設計、生成可愛又實用的收據模板:點文字改字、拖貼紙、即時預覽,可印到熱感收據機或分享給客人。純前端、收據不上傳伺服器,手機也能用。" />
 <!-- favicon: a little torn-receipt mark (inline SVG, no extra request) -->
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23d6336c'/%3E%3Cpath d='M9 6h14v19l-2.3-1.7L18.3 25 16 23.3 13.7 25 11.3 23.3 9 25z' fill='white'/%3E%3Crect x='11.5' y='11' width='9' height='1.8' rx='.9' fill='%23d6336c'/%3E%3Crect x='11.5' y='15' width='9' height='1.8' rx='.9' fill='%23f06595'/%3E%3C/svg%3E" />
 <!-- Social preview. NOTE: set og:url / og:image to your ABSOLUTE deploy URL for full unfurl support. -->
@@ -99,6 +99,15 @@
   .err { display: none; color: #ffd2cf; background: rgba(180,35,24,.35); border: 1px solid rgba(255,120,110,.5);
     border-radius: 10px; padding: 8px 12px; font-size: 12px; white-space: pre-wrap; max-width: 360px; }
   .canvas-hint { color: #b9b9c4; font-size: 11px; text-align: center; max-width: 360px; line-height: 1.6; }
+  /* first-visit coachmark: points at the receipt so a phone visitor discovers tap-to-edit */
+  .re-coach { position: absolute; left: 50%; top: 8px; transform: translateX(-50%); z-index: 7;
+    background: var(--accent); color: #fff; font-size: 12px; font-weight: 700; padding: 7px 13px;
+    border-radius: 999px; box-shadow: 0 6px 18px rgba(214,51,108,.5); pointer-events: none;
+    white-space: nowrap; animation: re-coach-bob 1.4s ease-in-out infinite; }
+  .re-coach::after { content: ''; position: absolute; left: 50%; bottom: -4px; width: 10px; height: 10px;
+    background: var(--accent); border-radius: 2px; transform: translateX(-50%) rotate(45deg); }
+  @keyframes re-coach-bob { 0%, 100% { transform: translateX(-50%) translateY(0); }
+    50% { transform: translateX(-50%) translateY(-4px); } }
   .canvas-tools { display: flex; gap: 8px; }
   .canvas-tools button { font: inherit; font-size: 12px; font-weight: 600; color: #fff;
     background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.22); border-radius: 999px;
@@ -515,7 +524,7 @@
   </div>
 </div>
 
-<footer data-i18n="footer.text">純前端 · 不上傳任何資料 · 由 @receipt-engine/render-svg 在瀏覽器內渲染</footer>
+<footer data-i18n="footer.text">純前端 · 收據不上傳伺服器 · 由 @receipt-engine/render-svg 在瀏覽器內渲染</footer>
 
 <!-- Editor app (bundles the engine). Built from src/app/main.ts -> public/playground.global.js -->
 <script src="./playground.global.js"></script>

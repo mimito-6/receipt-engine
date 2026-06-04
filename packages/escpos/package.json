@@ -1,5 +1,6 @@
 {
   "name": "@receipt-engine/escpos",
+  "private": true,
   "version": "0.1.0",
   "description": "Dependency-free, isomorphic ESC/POS command encoder (GS v 0 raster, init/feed/cut/align) for thermal receipt printers.",
   "license": "MIT",

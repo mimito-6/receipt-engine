@@ -1,5 +1,6 @@
 {
   "name": "@receipt-engine/render-png",
+  "private": true,
   "version": "0.1.0",
   "description": "Rasterize a receipt to a PNG buffer via @resvg/resvg-js.",
   "license": "MIT",
