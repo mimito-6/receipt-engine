@@ -265,6 +265,12 @@ describe('renderReceiptToSvg', () => {
     )
   })
 
+  it('custom card frame is a solid hairline, not dashed', () => {
+    const svg = renderReceiptToSvg(receipt, { theme: 'custom', width: 720 })
+    expect(svg).not.toContain('stroke-dasharray="5 6"') // the dashed card frame is gone
+    expect(svg).toContain(`stroke="${getTheme('custom').palette.border}"`) // …still a hairline frame
+  })
+
   it('expands legacy block keys (header → logo/name/subtitle)', () => {
     // an old saved config still renders without dropping content
     const svg = renderReceiptToSvg({ ...receipt, blockOrder: ['message', 'header', 'qr', 'items'] })

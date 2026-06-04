@@ -309,6 +309,8 @@ export function renderReceiptToSvg(
   // card). The card — shape, surface colour, border, torn edges, bg image — stays,
   // so a clean PNG is the receipt card floating on transparency.
   const background = transparent ? '' : svgRect(0, 0, width, totalHeight, { fill: theme.palette.background })
+  // The card frame is always a SOLID hairline (never dashed) — borderStyle only styles
+  // the inner divider lines. Thermal has no frame; a theme with borderStyle 'none' opts out.
   const cardStroke = !isThermal && borderStyle !== 'none' ? theme.palette.border : undefined
 
   let card: string
@@ -318,10 +320,7 @@ export function renderReceiptToSvg(
     card =
       `<path d="${tornCardPath(cardX, cardWidth, cardTop, cardHeight)}" ` +
       `fill="${escapeXml(theme.palette.surface)}"` +
-      (cardStroke
-        ? ` stroke="${escapeXml(cardStroke)}" stroke-width="1.5" stroke-linejoin="round"` +
-          (borderStyle === 'dashed' ? ' stroke-dasharray="5 6"' : '')
-        : '') +
+      (cardStroke ? ` stroke="${escapeXml(cardStroke)}" stroke-width="1.5" stroke-linejoin="round"` : '') +
       ' />'
   } else {
     card = svgRect(cardX, cardTop, cardWidth, cardHeight, {
@@ -329,7 +328,6 @@ export function renderReceiptToSvg(
       rx: theme.radius.card,
       stroke: cardStroke,
       strokeWidth: cardStroke ? 1.5 : undefined,
-      dash: !isThermal && borderStyle === 'dashed' ? '5 6' : undefined,
     })
   }
 
