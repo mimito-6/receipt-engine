@@ -244,11 +244,11 @@ function wire(): void {
   })
 
   // qr
-  // QR backing colour from the hex field: a 3/6-digit hex, "transparent"/"透明", or
-  // undefined (→ the renderer's default white). White keeps it scannable on any card.
+  // QR backing colour: the "透明" toggle wins; otherwise a 3/6-digit hex; otherwise
+  // undefined (→ the renderer's default white, which keeps it scannable on any card).
   const qrBg = (): string | undefined => {
+    if (($('q-bg-clear') as HTMLInputElement).checked) return 'transparent'
     const v = (($('q-bg-hex') as HTMLInputElement).value || '').trim().toLowerCase()
-    if (v === 'transparent' || v === '透明') return 'transparent'
     if (/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(v)) return v
     return undefined
   }
@@ -267,11 +267,12 @@ function wire(): void {
     }
     render()
   }
-  ;['q-on', 'q-value', 'q-label', 'q-caption', 'q-bg-hex'].forEach((id) =>
+  ;['q-on', 'q-value', 'q-label', 'q-caption', 'q-bg-hex', 'q-bg-clear'].forEach((id) =>
     $(id).addEventListener('input', qrUpdate),
   )
-  // QR backing colour picker → sync its hex twin, then rebuild
+  // QR backing colour picker → untick 透明, sync its hex twin, then rebuild
   $('q-bg').addEventListener('input', () => {
+    ;($('q-bg-clear') as HTMLInputElement).checked = false
     ;($('q-bg-hex') as HTMLInputElement).value = ($('q-bg') as HTMLInputElement).value
     qrUpdate()
   })
@@ -292,30 +293,39 @@ function wire(): void {
   // look (colors with hex twin / fonts / stars / mono)
   const HEX3OR6 = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i
   const HEX_ANY = /^#([0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i
-  const wireColor = (pickerId: string, hexId: string, key: 'primary' | 'bg' | 'surface' | 'text'): void => {
+  const wireColor = (
+    pickerId: string,
+    hexId: string,
+    key: 'primary' | 'bg' | 'surface' | 'text',
+    clearId?: string,
+  ): void => {
     const picker = $(pickerId) as HTMLInputElement
     const hex = $(hexId) as HTMLInputElement
-    picker.addEventListener('input', () => {
-      ;(curLook() as any)[key] = picker.value
-      hex.value = picker.value
+    const clear = clearId ? ($(clearId) as HTMLInputElement) : null
+    const commit = (): void => {
+      const v = hex.value.trim()
+      ;(curLook() as any)[key] = clear?.checked ? 'transparent' : HEX_ANY.test(v) ? v : picker.value
       render()
+    }
+    picker.addEventListener('input', () => {
+      if (clear) clear.checked = false
+      hex.value = picker.value
+      commit()
     })
-    // paste / type a hex code (or "transparent" for bg / 卡片)
     hex.addEventListener('input', () => {
       const v = hex.value.trim().toLowerCase()
-      if (v === 'transparent' || v === '透明') {
-        ;(curLook() as any)[key] = 'transparent'
-        render()
-      } else if (HEX_ANY.test(v)) {
-        ;(curLook() as any)[key] = v
+      if (HEX_ANY.test(v)) {
+        if (clear) clear.checked = false
         if (HEX3OR6.test(v)) picker.value = v.length === 4 ? expandHex(v) : v
-        render()
+        commit()
       }
     })
+    // "透明" toggle (no typing) — overrides the colour with transparent.
+    if (clear) clear.addEventListener('change', commit)
   }
   wireColor('c-primary', 'c-primary-hex', 'primary')
-  wireColor('c-bg', 'c-bg-hex', 'bg')
-  wireColor('c-surface', 'c-surface-hex', 'surface')
+  wireColor('c-bg', 'c-bg-hex', 'bg', 'c-bg-clear')
+  wireColor('c-surface', 'c-surface-hex', 'surface', 'c-surface-clear')
   wireColor('c-text', 'c-text-hex', 'text')
   $('f-font-latin').addEventListener('change', function (this: HTMLSelectElement) {
     curLook().latinFont = this.value

@@ -216,10 +216,12 @@ function val(id: string, v: unknown): void {
   ;($(id) as HTMLInputElement).value = v == null ? '' : String(v)
 }
 
-/** Sync a colour: the hex field always shows the value; the native picker only
- *  when it's a 3/6-digit hex (it can't represent transparent / 8-digit). */
-function setColor(pickerId: string, hexId: string, value: string): void {
-  ;($(hexId) as HTMLInputElement).value = value || ''
+/** Sync a colour: the hex field shows the value (blank when transparent); the native
+ *  picker only when it's a 3/6-digit hex; the optional "透明" toggle reflects transparent. */
+function setColor(pickerId: string, hexId: string, value: string, clearId?: string): void {
+  const transparent = value === 'transparent'
+  if (clearId) ($(clearId) as HTMLInputElement).checked = transparent
+  ;($(hexId) as HTMLInputElement).value = transparent ? '' : value || ''
   const picker = $(pickerId) as HTMLInputElement
   if (/^#[0-9a-f]{6}$/i.test(value)) picker.value = value
   else if (/^#[0-9a-f]{3}$/i.test(value)) {
@@ -253,13 +255,13 @@ export function syncFormFromState(): void {
   val('q-value', q.value)
   val('q-label', q.label)
   val('q-caption', q.caption)
-  setColor('q-bg', 'q-bg-hex', q.background || '') // empty hex = default white
+  setColor('q-bg', 'q-bg-hex', q.background || '', 'q-bg-clear') // empty = default white
   val('m-title', msg.title)
   val('m-body', msg.body)
   val('m-footer', msg.footer)
   setColor('c-primary', 'c-primary-hex', c.primary)
-  setColor('c-bg', 'c-bg-hex', c.bg)
-  setColor('c-surface', 'c-surface-hex', c.surface)
+  setColor('c-bg', 'c-bg-hex', c.bg, 'c-bg-clear')
+  setColor('c-surface', 'c-surface-hex', c.surface, 'c-surface-clear')
   setColor('c-text', 'c-text-hex', c.text)
   ;($('f-font-latin') as HTMLSelectElement).value = c.latinFont
   ;($('f-font-cjk') as HTMLSelectElement).value = c.cjkFont
