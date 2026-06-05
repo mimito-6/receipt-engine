@@ -5,6 +5,7 @@
 import { $, clientToReceipt, rectOf, scaleFactor, svgEl } from './dom'
 import { clamp, isImg, state } from './state'
 import { snapSticker, type Guide } from './snapping'
+import { vibrate } from './feel'
 import { t } from './i18n'
 
 const MIN_SIZE = 4
@@ -72,26 +73,28 @@ function clearGuides(): void {
     .querySelectorAll('.re-guide')
     .forEach((g) => g.remove())
 }
-function drawGuides(guides: Guide[]): void {
+// Guides are NEUTRAL by default (chrome ink); a fresh snap flashes them PINK (the
+// reserved "committed" colour) via the .snap class — see drag handler below.
+function drawGuides(guides: Guide[], pulse = false): void {
   clearGuides()
   const ov = $('sticker-overlay')
   for (const g of guides) {
     const line = document.createElement('div')
-    line.className = 're-guide'
+    line.className = 're-guide' + (pulse ? ' snap' : '')
     if (g.axis === 'x') {
       const { l } = mapToPaper(g.pos, 0)
       line.style.left = l + 'px'
       line.style.top = '0'
       line.style.width = '0'
       line.style.height = '100%'
-      line.style.borderLeft = '1px dashed var(--accent)'
+      line.style.borderLeft = '1px dashed var(--ink-affordance)'
     } else {
       const { t } = mapToPaper(0, g.pos)
       line.style.top = t + 'px'
       line.style.left = '0'
       line.style.height = '0'
       line.style.width = '100%'
-      line.style.borderTop = '1px dashed var(--accent)'
+      line.style.borderTop = '1px dashed var(--ink-affordance)'
     }
     ov.appendChild(line)
   }
@@ -267,6 +270,7 @@ function attachPointer(el: HandleEl, sk: any, i: number): void {
       }
     }
 
+    let lastSnap = ''
     const move = (ev: PointerEvent): void => {
       if (!pts.has(ev.pointerId)) return
       pts.set(ev.pointerId, { x: ev.clientX, y: ev.clientY })
@@ -291,7 +295,12 @@ function attachPointer(el: HandleEl, sk: any, i: number): void {
         sk.y = snapped.y
         placeEl(el, sk)
         positionFrame(sk)
-        drawGuides(snapped.guides)
+        // snap-confirm: pulse the guide pink + a haptic tap only on the FRESH snap onset
+        const key = snapped.guides.map((g) => g.axis).sort().join(',')
+        const fresh = key !== '' && key !== lastSnap
+        drawGuides(snapped.guides, fresh)
+        if (fresh) vibrate(8)
+        lastSnap = key
       }
     }
     const up = (ev: PointerEvent): void => {

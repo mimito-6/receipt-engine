@@ -279,6 +279,9 @@
 
   /* ---- sticker PS-style transform frame + alignment guides ---- */
   .re-guide { position: absolute; pointer-events: none; z-index: 5; }
+  /* snap-confirm: the guide flashes pink (the reserved commit colour) at the snap instant, then settles neutral */
+  .re-guide.snap { animation: re-snap-flash .24s var(--ease-out); }
+  @keyframes re-snap-flash { 0%, 35% { border-color: var(--accent); } 100% { border-color: var(--ink-affordance); } }
   .re-frame { position: absolute; pointer-events: none; z-index: 4; border: 1.5px dashed var(--ink-affordance); border-radius: 3px; }
   .re-h { position: absolute; pointer-events: auto; width: 16px; height: 16px; background: #fff;
     border: 2px solid var(--ink-affordance); border-radius: 50%; box-shadow: 0 1px 3px rgba(22,22,30,.35); touch-action: none; }
