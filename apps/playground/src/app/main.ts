@@ -35,6 +35,7 @@ import { installEdgeHandles } from './resize'
 import { beginCanvasGesture } from './reorder'
 import { redo, resetHistory, undo } from './history'
 import { applyI18n, setLang, t, type Lang } from './i18n'
+import { fastPrint, playPrintReveal, setFastPrint } from './printReveal'
 
 // Expose the engine under the historical global so embedders/docs keep working.
 ;(window as unknown as Record<string, unknown>).ReceiptEngine = {
@@ -389,10 +390,14 @@ function wire(): void {
     if (this.files && this.files[0]) readFile(this.files[0], (uri) => addSticker(uri))
   })
 
-  // downloads
-  $('dl-png').addEventListener('click', downloadPng)
-  $('dl-svg').addEventListener('click', downloadSvg)
-  $('dl-html').addEventListener('click', downloadHtml)
+  // downloads — play the print-feed ceremony, then export (fast-mode / reduced-motion skip it)
+  $('dl-png').addEventListener('click', () => void playPrintReveal().then(downloadPng))
+  $('dl-svg').addEventListener('click', () => void playPrintReveal().then(downloadSvg))
+  $('dl-html').addEventListener('click', () => void playPrintReveal().then(downloadHtml))
+  ;($('fast-print') as HTMLInputElement).checked = fastPrint()
+  $('fast-print').addEventListener('change', function (this: HTMLInputElement) {
+    setFastPrint(this.checked)
+  })
 
   // JSON load
   $('load-receipt').addEventListener('click', () => {

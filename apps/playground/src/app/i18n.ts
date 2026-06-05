@@ -23,6 +23,16 @@ const EXTRA: Record<string, { zh: string; ja: string; en: string }> = {
     ja: 'ギザギザのレシート型。背景なしの書き出しでも残ります',
     en: 'Torn-edge layout — kept even in a clean/transparent export',
   },
+  // ── print-feed ceremony (Phase B) ──
+  'print.warming': { zh: '預熱印表機…', ja: 'プリンター予熱中…', en: 'Warming up the press…' },
+  'print.printing': { zh: '列印中…', ja: '印刷中…', en: 'Printing…' },
+  'print.done': { zh: '列印完成', ja: '印刷完了', en: 'Printed' },
+  'print.skip': { zh: '點一下跳過', ja: 'タップでスキップ', en: 'Tap to skip' },
+  'export.fastPrint': {
+    zh: '快速匯出(略過列印動畫)',
+    ja: '高速書き出し(印刷アニメをスキップ)',
+    en: 'Fast export (skip the print animation)',
+  },
 }
 const TABLE: Record<string, { zh: string; ja: string; en: string }> = { ...DICT, ...EXTRA }
 
