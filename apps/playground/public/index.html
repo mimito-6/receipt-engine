@@ -140,6 +140,7 @@
     padding: 6px 14px; cursor: pointer; box-shadow: var(--shadow-panel); transition: border-color var(--dur-tap); }
   .canvas-tools button:hover:not(:disabled) { border-color: var(--ink-affordance); }
   .canvas-tools button:disabled { opacity: .4; cursor: default; box-shadow: none; }
+  .canvas-tools .icon-btn { padding: 6px 11px; font-size: 14px; line-height: 1; }
 
   .controls { display: grid; gap: 22px; }
   .group { display: grid; gap: 12px; }
@@ -590,6 +591,7 @@
     <div class="canvas-tools">
       <button id="undo" data-i18n-title="nav.undo" title="上一步" disabled><span aria-hidden="true">↶</span> <span data-i18n="nav.undo">上一步</span></button>
       <button id="redo" data-i18n-title="nav.redo" title="下一步" disabled><span aria-hidden="true">↷</span> <span data-i18n="nav.redo">下一步</span></button>
+      <button id="mute-toggle" class="icon-btn" data-i18n-title="sound.toggle" title="音效開關" aria-pressed="false" style="margin-left:auto">🔇</button>
     </div>
     <div id="paper"><div id="svg-host"></div><div id="sticker-overlay"></div></div>
     <div class="canvas-hint" data-i18n="canvas.hint">點文字改內容/字體 · 拖貼紙縮放旋轉 · 拖邊界改尺寸 · 拖區塊排順序</div>

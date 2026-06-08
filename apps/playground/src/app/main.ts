@@ -36,6 +36,7 @@ import { beginCanvasGesture } from './reorder'
 import { redo, resetHistory, undo } from './history'
 import { applyI18n, setLang, t, type Lang } from './i18n'
 import { fastPrint, playPrintReveal, setFastPrint } from './printReveal'
+import { isMuted, primeAudio, setMuted } from './sound'
 
 // Expose the engine under the historical global so embedders/docs keep working.
 ;(window as unknown as Record<string, unknown>).ReceiptEngine = {
@@ -392,12 +393,35 @@ function wire(): void {
   })
 
   // downloads — play the print-feed ceremony, then export (fast-mode / reduced-motion skip it)
-  $('dl-png').addEventListener('click', () => void playPrintReveal().then(downloadPng))
-  $('dl-svg').addEventListener('click', () => void playPrintReveal().then(downloadSvg))
-  $('dl-html').addEventListener('click', () => void playPrintReveal().then(downloadHtml))
+  $('dl-png').addEventListener('click', () => {
+    primeAudio()
+    void playPrintReveal().then(downloadPng)
+  })
+  $('dl-svg').addEventListener('click', () => {
+    primeAudio()
+    void playPrintReveal().then(downloadSvg)
+  })
+  $('dl-html').addEventListener('click', () => {
+    primeAudio()
+    void playPrintReveal().then(downloadHtml)
+  })
   ;($('fast-print') as HTMLInputElement).checked = fastPrint()
   $('fast-print').addEventListener('change', function (this: HTMLInputElement) {
     setFastPrint(this.checked)
+  })
+
+  // sound mute toggle — default muted; the single source of truth for audio
+  const muteBtn = $('mute-toggle') as HTMLButtonElement
+  const syncMute = (): void => {
+    const m = isMuted()
+    muteBtn.textContent = m ? '🔇' : '🔊'
+    muteBtn.setAttribute('aria-pressed', m ? 'false' : 'true')
+  }
+  syncMute()
+  muteBtn.addEventListener('click', () => {
+    primeAudio()
+    setMuted(!isMuted())
+    syncMute()
   })
 
   // JSON load

@@ -6,6 +6,7 @@
 import { $ } from './dom'
 import { esc } from './state'
 import { announce, prefersReducedMotion, vibrate } from './feel'
+import { playDing, playWhir } from './sound'
 import { t } from './i18n'
 
 const FAST_KEY = 're-fast-print'
@@ -80,9 +81,14 @@ export function playPrintReveal(): Promise<void> {
         announce(t('print.printing'))
         stage.classList.add('feeding')
         vibrate(10)
+        playWhir(1.05)
       }, 420)
     })
-    // resolve after warming (420) + feed (1000) + settle (380)
+    // a soft completion ding when the feed finishes (a skipped run won't ding)
+    window.setTimeout(() => {
+      if (!done) playDing()
+    }, 1480)
+    // resolve after warming (420) + feed (1050) + settle (330)
     window.setTimeout(finish, 1800)
   })
 }

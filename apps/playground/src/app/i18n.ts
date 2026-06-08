@@ -38,6 +38,7 @@ const EXTRA: Record<string, { zh: string; ja: string; en: string }> = {
   'restore.prompt': { zh: '還原上次的設計?', ja: '前回のデザインを復元しますか?', en: 'Restore your last design?' },
   'restore.yes': { zh: '還原', ja: '復元', en: 'Restore' },
   'restore.no': { zh: '不用', ja: 'いいえ', en: 'No thanks' },
+  'sound.toggle': { zh: '音效開關', ja: '効果音 オン/オフ', en: 'Sound on / off' },
 }
 const TABLE: Record<string, { zh: string; ja: string; en: string }> = { ...DICT, ...EXTRA }
 
