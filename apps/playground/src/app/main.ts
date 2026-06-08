@@ -37,6 +37,7 @@ import { redo, resetHistory, undo } from './history'
 import { applyI18n, setLang, t, type Lang } from './i18n'
 import { fastPrint, playPrintReveal, setFastPrint } from './printReveal'
 import { isMuted, primeAudio, setMuted } from './sound'
+import { openHandoff } from './handoff'
 
 // Expose the engine under the historical global so embedders/docs keep working.
 ;(window as unknown as Record<string, unknown>).ReceiptEngine = {
@@ -409,6 +410,8 @@ function wire(): void {
   $('fast-print').addEventListener('change', function (this: HTMLInputElement) {
     setFastPrint(this.checked)
   })
+  // "hand to customer" present-mode
+  $('handoff-enter').addEventListener('click', openHandoff)
 
   // sound mute toggle — default muted; the single source of truth for audio
   const muteBtn = $('mute-toggle') as HTMLButtonElement

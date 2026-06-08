@@ -39,6 +39,19 @@ const EXTRA: Record<string, { zh: string; ja: string; en: string }> = {
   'restore.yes': { zh: '還原', ja: '復元', en: 'Restore' },
   'restore.no': { zh: '不用', ja: 'いいえ', en: 'No thanks' },
   'sound.toggle': { zh: '音效開關', ja: '効果音 オン/オフ', en: 'Sound on / off' },
+  // ── customer handoff present-mode (Phase C) ──
+  'handoff.enter': { zh: '交給客人', ja: 'お客さまへ渡す', en: 'Hand to customer' },
+  'handoff.title': { zh: '交給客人', ja: 'お客さまへ', en: 'Hand to customer' },
+  'handoff.close': { zh: '關閉', ja: '閉じる', en: 'Close' },
+  'handoff.share': { zh: '分享', ja: '共有', en: 'Share' },
+  'handoff.save': { zh: '儲存圖片', ja: '画像を保存', en: 'Save image' },
+  'handoff.shareTitle': { zh: '我的收據', ja: 'レシート', en: 'My receipt' },
+  'handoff.shared': { zh: '已分享', ja: '共有しました', en: 'Shared' },
+  'handoff.savedHint': {
+    zh: '已下載圖片(iPhone 可長按圖片儲存)',
+    ja: '画像を保存しました(iPhone は長押しで保存)',
+    en: 'Saved (on iPhone, long-press the image to save)',
+  },
 }
 const TABLE: Record<string, { zh: string; ja: string; en: string }> = { ...DICT, ...EXTRA }
 

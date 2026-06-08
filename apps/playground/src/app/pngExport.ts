@@ -96,47 +96,67 @@ export async function buildFontFaceCss(): Promise<string> {
   return parts.join('\n')
 }
 
-export async function downloadPng(): Promise<void> {
-  const btn = $('dl-png') as HTMLButtonElement
-  const label = btn.textContent
-  btn.textContent = t('btn.downloadPng.busy')
-  btn.disabled = true
+/** Rasterize an SVG string to a PNG Blob via an isolated <img> + canvas (2x). */
+function svgToPngBlob(svg: string): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    const url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml;charset=utf-8' }))
+    img.onload = () => {
+      try {
+        const sc = 2
+        const cv = document.createElement('canvas')
+        cv.width = img.naturalWidth * sc
+        cv.height = img.naturalHeight * sc
+        const cx = cv.getContext('2d')!
+        cx.scale(sc, sc)
+        cx.drawImage(img, 0, 0)
+        cv.toBlob((b) => {
+          URL.revokeObjectURL(url)
+          b ? resolve(b) : reject(new Error('toBlob'))
+        }, 'image/png')
+      } catch (e) {
+        URL.revokeObjectURL(url)
+        reject(e as Error)
+      }
+    }
+    img.onerror = () => {
+      URL.revokeObjectURL(url)
+      reject(new Error('img'))
+    }
+    img.src = url
+  })
+}
+
+/** The clean, finished receipt as a PNG Blob (with embedded fonts). Shared by download + share. */
+export async function receiptPngBlob(): Promise<Blob> {
   let css = ''
   try {
     css = await buildFontFaceCss()
   } catch {
     /* fall back to no embedded fonts */
   }
-  btn.textContent = label
-  btn.disabled = false
-
   const svg = renderReceiptToSvg(
     state.receipt as never,
     exportOpts({ fontFaceCss: css, includeXmlDeclaration: true }) as never,
   )
-  const img = new Image()
-  const url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml;charset=utf-8' }))
-  img.onload = () => {
-    try {
-      const sc = 2
-      const cv = document.createElement('canvas')
-      cv.width = img.naturalWidth * sc
-      cv.height = img.naturalHeight * sc
-      const cx = cv.getContext('2d')!
-      cx.scale(sc, sc)
-      cx.drawImage(img, 0, 0)
-      cv.toBlob((b) => {
-        b ? dl('receipt.png', b) : showError(t('error.pngFailed'))
-      }, 'image/png')
-    } catch {
-      showError(t('error.pngExternalImage'))
-    } finally {
-      URL.revokeObjectURL(url)
+  return svgToPngBlob(svg)
+}
+
+export async function downloadPng(): Promise<void> {
+  const btn = $('dl-png') as HTMLButtonElement | null
+  const label = btn?.textContent ?? ''
+  if (btn) {
+    btn.textContent = t('btn.downloadPng.busy')
+    btn.disabled = true
+  }
+  try {
+    dl('receipt.png', await receiptPngBlob())
+  } catch {
+    showError(t('error.pngFailed'))
+  } finally {
+    if (btn) {
+      btn.textContent = label
+      btn.disabled = false
     }
   }
-  img.onerror = () => {
-    URL.revokeObjectURL(url)
-    showError(t('error.pngFailed'))
-  }
-  img.src = url
 }
