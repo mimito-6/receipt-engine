@@ -62,6 +62,7 @@ function setTheme(t: ThemeName): void {
 
 function loadExample(key: string): void {
   const ex = examples[key]
+  ;($('example') as HTMLSelectElement).value = key // keep the "start from a sample" dropdown in sync
   state.receipt = normalize(deepClone(ex.receipt))
   state.sel = -1
   state.selection = null
@@ -573,4 +574,62 @@ try {
   }
 } catch {
   /* ignore (e.g. localStorage blocked) */
+}
+
+// ── autosave + restore ──────────────────────────────────────────────────────
+// Debounce the full design (the same blob the config file saves) to localStorage so
+// a phone refresh / accidental tab-close never wipes a 10-minute design, and offer to
+// restore it once at boot. Reuses buildConfig()/applyConfig() — no new serialization.
+const AUTOSAVE_KEY = 're-autosave'
+let _saveT = 0
+function autosaveNow(): void {
+  try {
+    localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(buildConfig()))
+  } catch {
+    /* ignore: quota exceeded (large data-URI images) or storage blocked */
+  }
+}
+function scheduleAutosave(): void {
+  window.clearTimeout(_saveT)
+  _saveT = window.setTimeout(autosaveNow, 900)
+}
+// form edits fire input/change; canvas gestures don't, so also save on leave/hide
+document.addEventListener('input', scheduleAutosave, true)
+document.addEventListener('change', scheduleAutosave, true)
+window.addEventListener('beforeunload', autosaveNow)
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') autosaveNow()
+})
+
+function offerRestore(cfg: unknown): void {
+  const bar = document.createElement('div')
+  bar.className = 're-restore'
+  bar.setAttribute('role', 'dialog')
+  const msg = document.createElement('span')
+  msg.textContent = t('restore.prompt')
+  const yes = document.createElement('button')
+  yes.textContent = t('restore.yes')
+  const no = document.createElement('button')
+  no.className = 'ghost'
+  no.textContent = t('restore.no')
+  bar.append(msg, yes, no)
+  document.body.appendChild(bar)
+  const close = (): void => bar.remove()
+  yes.addEventListener('click', () => {
+    applyConfig(cfg)
+    close()
+  })
+  no.addEventListener('click', close)
+  setTimeout(close, 12000)
+}
+
+// only at boot, before any interaction, so a returning visitor can pick their work back up
+try {
+  const saved = localStorage.getItem(AUTOSAVE_KEY)
+  if (saved) {
+    const cfg = JSON.parse(saved)
+    if (cfg && cfg.receipt) offerRestore(cfg)
+  }
+} catch {
+  /* ignore */
 }

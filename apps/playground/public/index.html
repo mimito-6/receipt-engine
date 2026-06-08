@@ -371,6 +371,16 @@
     from { clip-path: inset(0 0 100% 0); transform: translateY(-6px); }
     to   { clip-path: inset(0 0 0 0);    transform: translateY(0); } }
   .print-skip { margin-top: 18px; font-size: 11px; color: var(--muted); opacity: .7; }
+
+  /* ---- "restore your last design?" boot banner (autosave) ---- */
+  .re-restore { position: fixed; left: 50%; bottom: calc(16px + env(safe-area-inset-bottom)); transform: translateX(-50%);
+    z-index: 80; display: flex; align-items: center; gap: 9px; background: var(--panel); color: var(--ink);
+    border: 1px solid var(--line); box-shadow: var(--shadow-float); border-radius: 999px; padding: 7px 9px 7px 15px;
+    font-size: 13px; max-width: calc(100vw - 24px); animation: re-restore-in var(--dur-settle) var(--ease-out); }
+  @keyframes re-restore-in { from { opacity: 0; transform: translate(-50%, 8px); } to { opacity: 1; transform: translate(-50%, 0); } }
+  .re-restore button { font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; border-radius: 999px;
+    border: 1px solid transparent; padding: 6px 14px; background: var(--ink-affordance); color: #fff; }
+  .re-restore button.ghost { background: var(--panel); color: var(--muted); border-color: var(--line); }
 </style>
 </head>
 <body>
@@ -402,7 +412,7 @@
         </div>
         <div class="row2" style="margin-top:10px">
           <div><label class="field" data-i18n="field.startFromSample">從範例開始</label>
-            <select id="example"><option value="cute" data-i18n="example.cute">同人攤位</option><option value="coffee" data-i18n="example.coffee">咖啡店</option><option value="market" data-i18n="example.market">手作市集</option></select></div>
+            <select id="example"><option value="blank" data-i18n="example.blank">從空白開始</option><option value="cute" data-i18n="example.cute">同人攤位</option><option value="coffee" data-i18n="example.coffee">咖啡店</option><option value="market" data-i18n="example.market">手作市集</option></select></div>
           <div><label class="field" data-i18n="field.currency">幣別</label>
             <select id="f-currency"><option>TWD</option><option>USD</option><option>JPY</option><option>EUR</option><option>CNY</option><option>HKD</option><option>KRW</option><option>THB</option><option>SGD</option></select></div>
         </div>

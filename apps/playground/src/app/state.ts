@@ -128,6 +128,24 @@ export const THERMAL_LOOK: Look = {
 }
 
 export const examples: Record<string, { receipt: Draft; custom: Look }> = {
+  blank: {
+    receipt: {
+      schemaVersion: '0.1',
+      currency: 'TWD',
+      merchant: { name: '我的小店' },
+      transaction: { receiptNo: '0001', issuedAt: '2026-06-01T12:00' },
+      items: [{ name: '商品 1', quantity: 1, unitPrice: 100 }],
+      message: { title: 'Thank you!' },
+    } as Draft,
+    custom: {
+      primary: '#3b3b44',
+      bg: '#ffffff',
+      surface: '#ffffff',
+      text: '#2a2a31',
+      latinFont: 'quicksand',
+      cjkFont: 'noto',
+    },
+  },
   coffee: {
     receipt: {
       schemaVersion: '0.1',
