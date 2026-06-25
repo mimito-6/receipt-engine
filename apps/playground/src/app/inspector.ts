@@ -226,7 +226,7 @@ function findEl(id: string): SVGGraphicsElement | null {
 }
 
 /** Friendly label for what's selected. */
-function labelFor(id: string): string {
+export function labelFor(id: string): string {
   const map: Record<string, string> = {
     'merchant.name': 'label.merchant.name',
     'merchant.subtitle': 'label.merchant.subtitle',

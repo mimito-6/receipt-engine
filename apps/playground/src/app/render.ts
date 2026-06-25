@@ -12,7 +12,7 @@ import { safeValidateReceipt } from '@receipt-engine/core'
 import { $, clearError, showError } from './dom'
 import { curEdges, curLook, curMono, curPad, curWidth, deepClone, fontStack, state } from './state'
 import { layoutOverlay } from './overlay'
-import { refreshInspector } from './inspector'
+import { labelFor, refreshInspector } from './inspector'
 import { positionEdgeHandles } from './resize'
 import { renderOrderPanel } from './reorder'
 import { scheduleHistory } from './history'
@@ -81,8 +81,12 @@ export function render(): void {
     .forEach((el) => {
       el.setAttribute('tabindex', '0')
       el.setAttribute('role', 'button')
-      const txt = el.textContent
-      if (txt) el.setAttribute('aria-label', txt)
+      // friendly SR name: "<field> <value>" (e.g. "合計 120") so a bare total isn't read as "120"
+      const id = el.getAttribute('data-re-id') || ''
+      const txt = (el.textContent || '').trim()
+      const lbl = labelFor(id)
+      const aria = lbl === id ? txt : (lbl + ' ' + txt).trim()
+      if (aria) el.setAttribute('aria-label', aria)
     })
   applyScale()
   layoutOverlay()
