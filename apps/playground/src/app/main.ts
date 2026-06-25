@@ -38,6 +38,7 @@ import { applyI18n, setLang, t, type Lang } from './i18n'
 import { fastPrint, playPrintReveal, setFastPrint } from './printReveal'
 import { isMuted, primeAudio, setMuted } from './sound'
 import { openHandoff } from './handoff'
+import { releaseFocus, trapFocus } from './feel'
 
 // Expose the engine under the historical global so embedders/docs keep working.
 ;(window as unknown as Record<string, unknown>).ReceiptEngine = {
@@ -695,6 +696,7 @@ try {
     const dismiss = (): void => {
       intro.classList.add('out')
       $('svg-host').removeEventListener('pointerdown', dismiss)
+      releaseFocus()
       try {
         localStorage.setItem('re-intro-seen', '1')
       } catch {
@@ -706,8 +708,12 @@ try {
     intro.addEventListener('pointerdown', (e) => {
       if (e.target === intro) dismiss()
     })
+    intro.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') dismiss()
+    })
     $('svg-host').addEventListener('pointerdown', dismiss)
     window.requestAnimationFrame(() => intro.classList.add('in'))
+    trapFocus(intro) // a11y: keep Tab inside the modal, focus Start, restore on dismiss
   }
 } catch {
   /* ignore (e.g. localStorage blocked) */
