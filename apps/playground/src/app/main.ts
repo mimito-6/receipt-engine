@@ -4,7 +4,7 @@ import { renderReceiptToSvg } from '@receipt-engine/render-svg'
 import { renderReceiptToHtml } from '@receipt-engine/render-html'
 import { getTheme, mergeTheme } from '@receipt-engine/themes'
 import { safeValidateReceipt } from '@receipt-engine/core'
-import { $, clientToReceipt, dl, readFile, showError } from './dom'
+import { $, clientToReceipt, dl, readFile, showError, svgEl } from './dom'
 import {
   STICKERS,
   THERMAL_LOOK,
@@ -60,6 +60,11 @@ function setTheme(t: ThemeName): void {
     .forEach((b) => b.classList.toggle('on', (b as HTMLElement).dataset.theme === t))
   syncFormFromState()
   render()
+  // quick opacity swap so a theme change reads as a fresh "print" (opacity only — rect-safe)
+  const host = $('svg-host')
+  host.classList.remove('theme-swap')
+  void host.offsetWidth
+  host.classList.add('theme-swap')
 }
 
 function loadExample(key: string): void {
@@ -196,6 +201,32 @@ function wire(): void {
       e.preventDefault()
       redo()
     }
+  })
+
+  // keyboard: nudge the selected sticker with arrow keys (Shift = bigger step) — a precise,
+  // a11y-friendly alternative to dragging
+  window.addEventListener('keydown', (e) => {
+    const sel = state.selection
+    if (!sel || sel.kind !== 'sticker') return
+    const tag = (e.target as HTMLElement | null)?.tagName
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
+    const delta: Record<string, [number, number]> = {
+      ArrowLeft: [-1, 0],
+      ArrowRight: [1, 0],
+      ArrowUp: [0, -1],
+      ArrowDown: [0, 1],
+    }
+    const d = delta[e.key]
+    if (!d) return
+    const stk = (state.receipt as unknown as { stickers?: Array<{ x?: number; y?: number }> }).stickers?.[sel.index]
+    if (!stk) return
+    e.preventDefault()
+    const step = e.shiftKey ? 12 : 2
+    const vb = svgEl()?.viewBox.baseVal
+    stk.x = Math.round(Math.max(0, Math.min(vb ? vb.width : 9999, (stk.x || 0) + d[0] * step)))
+    stk.y = Math.round(Math.max(0, Math.min(vb ? vb.height : 9999, (stk.y || 0) + d[1] * step)))
+    layoutOverlay()
+    ;($('json') as HTMLTextAreaElement).value = JSON.stringify(state.receipt, null, 2)
   })
 
   // theme + example
@@ -632,24 +663,51 @@ applyI18n()
 // First-visit coachmark: a phone visitor has no hover cue, so point at the receipt
 // to reveal the core interaction (tap any text to edit). Dismisses on the first canvas
 // touch or after a few seconds, and only shows once per browser.
+// First-visit "studio" intro: a zine title card that teaches the core interactions, once
+// per browser. Dismisses on Start, a tap on the canvas, or a tap on the backdrop.
 try {
-  if (!localStorage.getItem('re-coach-seen')) {
-    const coach = document.createElement('div')
-    coach.className = 're-coach'
-    coach.setAttribute('data-i18n', 'coach.tapToEdit')
-    coach.textContent = t('coach.tapToEdit')
-    $('paper').appendChild(coach)
+  if (!localStorage.getItem('re-intro-seen')) {
+    const intro = document.createElement('div')
+    intro.className = 're-intro'
+    intro.setAttribute('role', 'dialog')
+    intro.setAttribute('aria-label', t('intro.title'))
+    const card = document.createElement('div')
+    card.className = 're-intro-card'
+    const mk = (cls: string, txt: string, tag = 'div'): HTMLElement => {
+      const el = document.createElement(tag)
+      el.className = cls
+      el.textContent = txt
+      return el
+    }
+    card.append(mk('re-intro-kicker', t('intro.kicker')), mk('re-intro-title', t('intro.title')))
+    card.append(mk('re-intro-tag', t('intro.tagline'), 'p'))
+    const chips = document.createElement('div')
+    chips.className = 're-intro-chips'
+    for (const c of [t('intro.chip1'), t('intro.chip2'), t('intro.chip3')]) chips.append(mk('', c, 'span'))
+    card.append(chips)
+    const go = document.createElement('button')
+    go.type = 'button'
+    go.className = 're-intro-go'
+    go.textContent = t('intro.start')
+    card.append(go)
+    intro.append(card)
+    document.body.append(intro)
     const dismiss = (): void => {
-      coach.remove()
+      intro.classList.add('out')
       $('svg-host').removeEventListener('pointerdown', dismiss)
       try {
-        localStorage.setItem('re-coach-seen', '1')
+        localStorage.setItem('re-intro-seen', '1')
       } catch {
         /* ignore */
       }
+      window.setTimeout(() => intro.remove(), 280)
     }
+    go.addEventListener('click', dismiss)
+    intro.addEventListener('pointerdown', (e) => {
+      if (e.target === intro) dismiss()
+    })
     $('svg-host').addEventListener('pointerdown', dismiss)
-    setTimeout(dismiss, 8000)
+    window.requestAnimationFrame(() => intro.classList.add('in'))
   }
 } catch {
   /* ignore (e.g. localStorage blocked) */

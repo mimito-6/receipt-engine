@@ -216,6 +216,13 @@ function makeHandle(sk: any, i: number): HandleEl {
   const el = document.createElement('div') as HandleEl
   el.className = 'sticker-handle' + (i === state.sel ? ' sel' : '')
   el.dataset.i = String(i)
+  // keyboard-reachable: Tab to a sticker focuses+selects it; arrow keys then nudge it (see main.ts)
+  el.tabIndex = 0
+  el.setAttribute('role', 'button')
+  el.setAttribute('aria-label', t('panel.stickers.title'))
+  el.addEventListener('focus', () => {
+    if (state.sel !== i) select(i)
+  })
   if (isImg(sk.content)) {
     const im = document.createElement('img')
     im.src = sk.content

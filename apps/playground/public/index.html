@@ -491,6 +491,31 @@
   }
   .btn:active, .seg button:active, .order-btn:active, .dl button:active, .emoji-pick button:active,
   .canvas-tools button:active:not(:disabled), .x:active, .lang button:active { transform: translateY(1px); }
+
+  /* first-run "studio" intro (zine modal, once per browser) */
+  .re-intro { position: fixed; inset: 0; z-index: 240; display: flex; align-items: center; justify-content: center;
+    padding: 20px; background: rgba(20,20,15,.42); opacity: 0; transition: opacity var(--dur-settle) var(--ease-out); }
+  @supports ((backdrop-filter: blur(3px)) or (-webkit-backdrop-filter: blur(3px))) {
+    .re-intro { -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); } }
+  .re-intro.in { opacity: 1; }
+  .re-intro.out { opacity: 0; }
+  .re-intro-card { position: relative; max-width: 380px; width: 100%; background: var(--panel);
+    border: 2px solid var(--ink); border-radius: var(--r-lg); box-shadow: 7px 7px 0 var(--zine-blue);
+    padding: 26px 24px 24px; transform: rotate(-.6deg); }
+  .re-intro-kicker { font-family: var(--font-label); font-size: 11px; letter-spacing: .12em; color: var(--zine-blue); font-weight: 700; }
+  .re-intro-title { font-family: var(--font-display); font-weight: 400; font-size: clamp(30px, 9vw, 42px); line-height: .95; color: var(--ink); margin-top: 6px; }
+  .re-intro-tag { margin: 12px 0 0; color: var(--muted); font-size: 13.5px; line-height: 1.55; }
+  .re-intro-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+  .re-intro-chips span { font-size: 12px; font-weight: 700; color: var(--ink); background: var(--zine-lime);
+    padding: 5px 11px; border-radius: 4px; transform: skewX(-8deg); }
+  .re-intro-chips span:nth-child(2) { transform: skewX(7deg); }
+  .re-intro-go { margin-top: 20px; width: 100%; font: inherit; font-weight: 700; font-size: 15px; cursor: pointer;
+    color: #fff; background: var(--zine-blue); border: none; border-radius: 10px; padding: 13px; box-shadow: 3px 3px 0 var(--ink); }
+  .re-intro-go:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--ink); }
+
+  /* theme-switch fade (opacity only — never transforms #paper, so overlay rects stay valid) */
+  @media (prefers-reduced-motion: no-preference) { #svg-host.theme-swap svg { animation: re-theme-swap .3s var(--ease-out); } }
+  @keyframes re-theme-swap { from { opacity: .2; } to { opacity: 1; } }
 </style>
 </head>
 <body>

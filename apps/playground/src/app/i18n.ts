@@ -62,6 +62,18 @@ const EXTRA: Record<string, { zh: string; ja: string; en: string }> = {
   'placeholder.icon': { zh: '或一個字當圖示', ja: '1文字をアイコンに', en: 'A letter as icon' },
   'btn.saveConfig': { zh: '↓ 下載設定檔', ja: '↓ 設定を保存', en: '↓ Save config' },
   'btn.loadConfig': { zh: '↑ 載入設定檔', ja: '↑ 設定を読込', en: '↑ Load config' },
+  // ── first-run studio intro (Phase C) ──
+  'intro.kicker': { zh: '[ 收據工作室 ]', ja: '[ レシート工房 ]', en: '[ RECEIPT STUDIO ]' },
+  'intro.title': { zh: '做一張你的收據', ja: 'レシートを作ろう', en: 'Make your receipt' },
+  'intro.tagline': {
+    zh: '點文字改字、拖貼紙、選版型 —— 做完一鍵交給客人。',
+    ja: '文字をタップ、ステッカーをドラッグ、テーマを選ぶ —— 完成したらお客さまへ。',
+    en: 'Tap to edit, drag stickers, pick a theme — then hand it to your customer.',
+  },
+  'intro.chip1': { zh: '點文字改字', ja: '文字をタップ', en: 'Tap text' },
+  'intro.chip2': { zh: '拖貼紙', ja: 'ステッカーをドラッグ', en: 'Drag stickers' },
+  'intro.chip3': { zh: '切版型', ja: 'テーマ切替', en: 'Switch theme' },
+  'intro.start': { zh: '開始設計', ja: 'はじめる', en: 'Start designing' },
 }
 const TABLE: Record<string, { zh: string; ja: string; en: string }> = { ...DICT, ...EXTRA }
 
