@@ -2,7 +2,7 @@
 // and syncFormFromState which pushes the whole state back into the inputs.
 import { $, clientToReceipt, svgEl } from './dom'
 import { render } from './render'
-import { layoutOverlay } from './overlay'
+import { layoutOverlay, popSticker } from './overlay'
 import { type Draft, clamp, curEdges, curLook, curMono, curPad, curWidth, esc, isImg, state } from './state'
 import { t } from './i18n'
 
@@ -55,7 +55,9 @@ export function renderItems(): void {
         if (inp.value === '') return
         const num = Number(inp.value)
         if (!Number.isFinite(num)) return
-        it[k] = num
+        const v = clamp(num, 0, k === 'quantity' ? 1e6 : 1e9) // keep totals finite (no ∞/NaN in the receipt)
+        it[k] = v
+        if (v !== num) inp.value = String(v)
       }
       render()
     })
@@ -92,7 +94,8 @@ export function renderDiscounts(): void {
         if (inp.value === '') return
         const num = Number(inp.value)
         if (!Number.isFinite(num)) return
-        d.amount = num
+        d.amount = clamp(num, 0, 1e9)
+        if (d.amount !== num) inp.value = String(d.amount)
       }
       render()
     })
@@ -130,7 +133,8 @@ export function renderPayments(): void {
         if (inp.value === '') return
         const num = Number(inp.value)
         if (!Number.isFinite(num)) return
-        p.amount = num
+        p.amount = clamp(num, 0, 1e9)
+        if (p.amount !== num) inp.value = String(p.amount)
       }
       render()
     })
@@ -208,6 +212,7 @@ export function addSticker(content: string): void {
   state.sel = r.stickers.length - 1
   // select the new sticker so its transform frame (scale / rotate / ×) shows
   state.selection = { kind: 'sticker', index: state.sel }
+  popSticker(state.sel)
   renderStickerList()
   render()
 }
@@ -227,6 +232,7 @@ export function addStickerAt(content: string, x: number, y: number): void {
   })
   state.sel = r.stickers.length - 1
   state.selection = { kind: 'sticker', index: state.sel }
+  popSticker(state.sel)
   renderStickerList()
   render()
 }

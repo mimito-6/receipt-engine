@@ -5,8 +5,14 @@
 import { $, clientToReceipt, rectOf, scaleFactor, svgEl } from './dom'
 import { clamp, isImg, state } from './state'
 import { snapSticker, type Guide } from './snapping'
-import { vibrate } from './feel'
+import { prefersReducedMotion, vibrate } from './feel'
 import { t } from './i18n'
+
+// the next layoutOverlay() pops this sticker index in (set by addSticker/addStickerAt)
+let _popIdx = -1
+export function popSticker(i: number): void {
+  _popIdx = i
+}
 
 const MIN_SIZE = 4
 const MAX_SIZE = 4000 // effectively unlimited — let the user scale stickers freely
@@ -346,7 +352,17 @@ export function layoutOverlay(): void {
     placeEl(el, sk)
     attachPointer(el, sk, i)
     ov.appendChild(el)
+    if (i === _popIdx && !prefersReducedMotion() && typeof el.animate === 'function') {
+      el.animate(
+        [
+          { transform: el.style.transform + ' scale(.4)', opacity: 0 },
+          { transform: el.style.transform + ' scale(1)', opacity: 1 },
+        ],
+        { duration: 260, easing: 'cubic-bezier(.2,.7,.3,1)' },
+      )
+    }
   })
+  _popIdx = -1
   if (state.selection?.kind === 'sticker') {
     const i = state.selection.index
     if (stickers[i]) showFrameFor(stickers[i])

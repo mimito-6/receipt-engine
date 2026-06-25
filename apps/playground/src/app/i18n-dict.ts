@@ -172,9 +172,9 @@ export const DICT: Record<string, { zh: string; ja: string; en: string }> = {
     "en": "Config file · advanced JSON"
   },
   "theme.custom.title": {
-    "zh": "🎨 自訂",
-    "ja": "🎨 カスタム",
-    "en": "🎨 Custom"
+    "zh": "自訂彩色",
+    "ja": "カラー",
+    "en": "Custom"
   },
   "theme.custom.sub": {
     "zh": "彩色,可改色/字/貼紙",
@@ -182,9 +182,9 @@ export const DICT: Record<string, { zh: string; ja: string; en: string }> = {
     "en": "Color — change colors, fonts & stickers"
   },
   "theme.thermal.title": {
-    "zh": "🧾 收據機",
-    "ja": "🧾 レシートプリンター",
-    "en": "🧾 Receipt printer"
+    "zh": "收據機",
+    "ja": "レシート",
+    "en": "Thermal"
   },
   "theme.thermal.sub": {
     "zh": "黑白等寬,圖自動轉灰",
@@ -962,19 +962,19 @@ export const DICT: Record<string, { zh: string; ja: string; en: string }> = {
     "en": "Drag to adjust bottom padding"
   },
   "status.logoSet": {
-    "zh": "✓ 已設定商標圖片",
-    "ja": "✓ ロゴ画像を設定しました",
-    "en": "✓ Logo image set"
+    "zh": "已設定商標圖片",
+    "ja": "ロゴ画像を設定しました",
+    "en": "Logo image set"
   },
   "status.logoSetSync": {
-    "zh": "✓ 已設定商標圖片(清空 emoji 欄改回文字圖示)",
-    "ja": "✓ ロゴ画像を設定しました(絵文字欄を空にすると文字アイコンに戻ります)",
-    "en": "✓ Logo image set (clear the emoji field to switch back to a text icon)"
+    "zh": "已設定商標圖片(清空「圖示文字」欄即可改回文字招牌)",
+    "ja": "ロゴ画像を設定しました(「アイコン文字」欄を空にすると文字の看板に戻ります)",
+    "en": "Logo image set (clear the icon-letter field to switch back to a text sign)"
   },
   "status.bgSet": {
-    "zh": "✓ 已設定底圖",
-    "ja": "✓ 背景画像を設定しました",
-    "en": "✓ Background image set"
+    "zh": "已設定底圖",
+    "ja": "背景画像を設定しました",
+    "en": "Background image set"
   },
   "status.bgNone": {
     "zh": "(尚未設定底圖)",

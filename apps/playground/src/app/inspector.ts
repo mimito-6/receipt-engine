@@ -325,6 +325,19 @@ export function onCanvasDblClick(e: MouseEvent): void {
   inp.scrollIntoView({ block: 'nearest' }) // keep the field visible above the on-screen keyboard
 }
 
+/** Enter / Space on a keyboard-focused receipt text element opens the inspector to edit it. */
+export function onCanvasKeydown(e: KeyboardEvent): void {
+  if (e.key !== 'Enter' && e.key !== ' ') return
+  const hit = (e.target as Element | null)?.closest('[data-re-id]')
+  const id = hit?.getAttribute('data-re-id')
+  if (!id || !modelText(id)) return
+  e.preventDefault()
+  selectText(id)
+  const inp = $('insp-text') as HTMLInputElement
+  inp.focus()
+  inp.select()
+}
+
 function positionUi(el: SVGGraphicsElement): void {
   if (!box || !panel) return
   const rect = el.getBoundingClientRect()
@@ -345,6 +358,10 @@ function positionUi(el: SVGGraphicsElement): void {
   if (sheet) {
     panel.style.left = ''
     panel.style.top = ''
+    // the bottom sheet covers the lower screen — scroll the tapped element clear of it
+    const sheetH = panel.offsetHeight || 0
+    const overlap = rect.bottom - (window.innerHeight - sheetH - 12)
+    if (overlap > 8) window.scrollBy(0, overlap)
   } else {
     const pw = panel.offsetWidth || 280
     const ph = panel.offsetHeight || 200

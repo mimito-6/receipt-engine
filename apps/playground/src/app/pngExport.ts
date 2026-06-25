@@ -104,10 +104,16 @@ function svgToPngBlob(svg: string): Promise<Blob> {
     const url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml;charset=utf-8' }))
     img.onload = () => {
       try {
-        const sc = 2
+        // 2x for crispness, but clamp so a tall receipt can't exceed the browser canvas cap
+        // (~4096px/side, ~16.7M px on iOS Safari) and silently produce a blank/null blob
+        const W = img.naturalWidth
+        const H = img.naturalHeight
+        const MAX_SIDE = 4096
+        const MAX_AREA = 16e6
+        const sc = Math.max(1, Math.min(2, MAX_SIDE / W, MAX_SIDE / H, Math.sqrt(MAX_AREA / (W * H))))
         const cv = document.createElement('canvas')
-        cv.width = img.naturalWidth * sc
-        cv.height = img.naturalHeight * sc
+        cv.width = Math.round(W * sc)
+        cv.height = Math.round(H * sc)
         const cx = cv.getContext('2d')!
         cx.scale(sc, sc)
         cx.drawImage(img, 0, 0)

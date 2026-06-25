@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
 <meta name="color-scheme" content="light dark" />
 <meta name="theme-color" content="#d6336c" />
 <title>receipt-engine · 生成你的收據模板</title>
@@ -220,8 +220,8 @@
   .item { grid-template-columns: 1fr 46px 64px 28px; }
   .drow { grid-template-columns: 1fr 72px 28px; }
   .prow { grid-template-columns: 1fr 72px 28px; }
-  .item input, .drow input, .prow input { padding: 7px 8px; font-size: 13px; }
-  .x { border: none; background: #f1f1f4; color: #999; border-radius: var(--r-sm); height: 32px; cursor: pointer; font-size: 16px; transition: background var(--dur-tap), color var(--dur-tap); }
+  .item input, .drow input, .prow input { padding: 7px 8px; font-size: 13px; min-width: 0; } /* let fixed tracks hold so the × stays visible at 320px */
+  .x { border: none; background: #f1f1f4; color: var(--muted); border-radius: var(--r-sm); height: 32px; cursor: pointer; font-size: 16px; transition: background var(--dur-tap), color var(--dur-tap); }
   .x:hover { background: var(--ink-soft); color: var(--ink); }
   .det { font-size: 11px; color: var(--muted); cursor: pointer; margin: 2px 0 8px; }
 
@@ -236,6 +236,7 @@
     pointer-events: none; transform: rotate(-7deg); opacity: .92; filter: drop-shadow(0 6px 10px rgba(22,22,30,.32));
     transition: transform var(--dur-tap); }
   .re-sticker-ghost.over { transform: rotate(0) scale(1.1); }
+  .re-sticker-ghost.land { transition: transform var(--dur-settle) var(--ease-out), opacity var(--dur-settle); transform: rotate(0) scale(.55); opacity: 0; }
   .stk { border: 1px solid var(--line); border-radius: 10px; padding: 8px; margin-top: 8px; }
   .stk-head { display: flex; align-items: center; gap: 8px; }
   .stk-head .glyph { font-size: 22px; width: 28px; text-align: center; }
@@ -277,7 +278,7 @@
   .inspector[hidden] { display: none; }
   .insp-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
   .insp-title { font-family: var(--font-label); font-size: 13px; font-weight: 700; letter-spacing: var(--ls-label); }
-  .insp-x { margin-left: auto; border: none; background: #f1f1f4; color: #888; width: 26px; height: 26px;
+  .insp-x { margin-left: auto; border: none; background: #f1f1f4; color: var(--muted); width: 26px; height: 26px;
     border-radius: var(--r-sm); cursor: pointer; font-size: 16px; line-height: 1; transition: background var(--dur-tap), color var(--dur-tap); }
   .insp-x:hover { background: var(--ink-soft); color: var(--ink); }
   .insp-target { font-family: var(--font-label); font-size: 11px; color: var(--muted); background: var(--ink-soft); border-radius: var(--r-sm); padding: 4px 8px; margin-bottom: 10px; }
@@ -433,9 +434,10 @@
   .handoff.feeding .handoff-paper { animation: print-feed 1.05s var(--ease-out) forwards; }
   .handoff-paper svg { width: 100%; height: auto; display: block; border-radius: 6px; }
   .handoff-actions { display: flex; gap: 10px; position: sticky; bottom: 0; padding-top: 4px; }
-  .handoff-act { font: inherit; font-size: 15px; font-weight: 700; cursor: pointer; border-radius: 999px;
-    border: 1px solid var(--line); background: var(--panel); color: var(--ink); padding: 12px 22px; box-shadow: var(--shadow-float); }
-  .handoff-act.primary { background: linear-gradient(180deg, var(--accent-2), var(--accent)); color: #fff; border-color: transparent; }
+  .handoff-act { font: inherit; font-size: 15px; font-weight: 700; cursor: pointer; border-radius: 8px;
+    border: 1px solid var(--ink); background: var(--panel); color: var(--ink); padding: 12px 22px; box-shadow: 3px 3px 0 var(--ink); }
+  .handoff-act.primary { background: linear-gradient(180deg, var(--accent-2), var(--accent)); color: #fff; border-color: transparent; box-shadow: 3px 3px 0 var(--ink); }
+  .handoff-act:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--ink); }
 
   /* ── BLUE STORE PRESS — spec chips, sticker buttons, "the press runs" load ── */
   .spec-cap { font-family: var(--font-label); font-size: 11px; letter-spacing: .04em; color: var(--muted);
@@ -505,6 +507,9 @@
   .re-intro-go { margin-top: 20px; width: 100%; font: inherit; font-weight: 700; font-size: 15px; cursor: pointer;
     color: #fff; background: var(--zine-blue); border: none; border-radius: 10px; padding: 13px; box-shadow: 3px 3px 0 var(--ink); }
   .re-intro-go:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--ink); }
+  @media (prefers-reduced-motion: no-preference) { .re-intro.in .re-intro-card { animation: intro-stamp .34s var(--ease-out) both; } }
+  @keyframes intro-stamp { from { opacity: 0; transform: rotate(-4deg) scale(.9) translateY(10px); }
+    to { opacity: 1; transform: rotate(-.6deg) scale(1) translateY(0); } }
 
   /* theme-switch fade (opacity only — never transforms #paper, so overlay rects stay valid) */
   @media (prefers-reduced-motion: no-preference) { #svg-host.theme-swap svg { animation: re-theme-swap .3s var(--ease-out); } }

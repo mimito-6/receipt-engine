@@ -30,7 +30,7 @@ import {
 } from './io'
 import { downloadPng } from './pngExport'
 import { layoutOverlay, setStickerCommit, setStickerDelete, setStickerSelect } from './overlay'
-import { clearSelection, onCanvasDblClick, refreshInspector } from './inspector'
+import { clearSelection, onCanvasDblClick, onCanvasKeydown, refreshInspector } from './inspector'
 import { installEdgeHandles } from './resize'
 import { beginCanvasGesture } from './reorder'
 import { redo, resetHistory, undo } from './history'
@@ -152,14 +152,23 @@ function attachStickerDrag(btn: HTMLButtonElement, content: string): void {
       document.removeEventListener('pointermove', move)
       document.removeEventListener('pointerup', up)
       document.removeEventListener('pointercancel', up)
-      ghost?.remove()
       if (!dragging) {
+        ghost?.remove()
         addSticker(content) // a plain tap drops it in the middle
-      } else if (over(ev.clientX, ev.clientY)) {
-        const p = clientToReceipt(ev.clientX, ev.clientY)
-        addStickerAt(content, p.x, p.y)
+        return
       }
-      // dragged off the receipt -> cancel
+      if (over(ev.clientX, ev.clientY)) {
+        const p = clientToReceipt(ev.clientX, ev.clientY)
+        addStickerAt(content, p.x, p.y) // the new handle pops in (see overlay.layoutOverlay)
+      }
+      // land the ghost where it dropped (shrink+fade), then clean up
+      const g = ghost
+      if (g) {
+        g.classList.add('land')
+        const done = (): void => g.remove()
+        g.addEventListener('transitionend', done, { once: true })
+        window.setTimeout(done, 400)
+      }
     }
     document.addEventListener('pointermove', move)
     document.addEventListener('pointerup', up)
@@ -185,6 +194,7 @@ function wire(): void {
   // canvas: tap text to style it; drag a section to reorder it; double-tap to edit text
   $('svg-host').addEventListener('pointerdown', beginCanvasGesture as EventListener)
   $('svg-host').addEventListener('dblclick', onCanvasDblClick as EventListener)
+  $('svg-host').addEventListener('keydown', onCanvasKeydown as EventListener) // Enter/Space on a focused text edits it
 
   // undo / redo (buttons + keyboard)
   $('undo').addEventListener('click', undo)
@@ -676,6 +686,7 @@ try {
     const intro = document.createElement('div')
     intro.className = 're-intro'
     intro.setAttribute('role', 'dialog')
+    intro.setAttribute('aria-modal', 'true')
     intro.setAttribute('aria-label', t('intro.title'))
     const card = document.createElement('div')
     card.className = 're-intro-card'
@@ -753,7 +764,8 @@ function scheduleAutosave(): void {
 // form edits fire input/change; canvas gestures don't, so also save on leave/hide
 document.addEventListener('input', scheduleAutosave, true)
 document.addEventListener('change', scheduleAutosave, true)
-window.addEventListener('beforeunload', autosaveNow)
+// save on hide (covers tab-close / app-switch) — NOT beforeunload, whose synchronous stringify
+// of multi-MB base64 images would stall the close on a low-end phone
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'hidden') autosaveNow()
 })

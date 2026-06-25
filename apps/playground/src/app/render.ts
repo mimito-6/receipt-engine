@@ -74,6 +74,16 @@ export function render(): void {
     return
   }
   $('paper').className = state.theme === 'thermal' ? 'thermal' : ''
+  // keyboard/SR a11y: make each editable receipt text focusable + labelled (mirrors stickers);
+  // Enter/Space on a focused one opens the inspector (see onCanvasKeydown)
+  $('svg-host')
+    .querySelectorAll('svg [data-re-id]')
+    .forEach((el) => {
+      el.setAttribute('tabindex', '0')
+      el.setAttribute('role', 'button')
+      const txt = el.textContent
+      if (txt) el.setAttribute('aria-label', txt)
+    })
   applyScale()
   layoutOverlay()
   refreshInspector()
