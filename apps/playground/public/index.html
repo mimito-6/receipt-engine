@@ -432,8 +432,9 @@
   .handoff-x { position: fixed; top: calc(10px + env(safe-area-inset-top)); right: 12px; width: 36px; height: 36px;
     border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 999px; font-size: 20px;
     line-height: 1; cursor: pointer; box-shadow: var(--shadow-panel); z-index: 2; }
-  .handoff-paper-wrap { width: min(360px, 86vw); overflow: hidden;
-    -webkit-mask-image: linear-gradient(180deg, #000 96%, transparent); mask-image: linear-gradient(180deg, #000 96%, transparent); }
+  /* full crisp receipt when presented (the clip-path reveal lives on .handoff-paper); the
+     overlay itself scrolls for a tall receipt. No bottom mask — the footer/QR must stay sharp. */
+  .handoff-paper-wrap { width: min(360px, 86vw); overflow: hidden; }
   .handoff-paper { clip-path: inset(0 0 100% 0);
     filter: drop-shadow(0 1px 2px rgba(22,22,30,.14)) drop-shadow(0 22px 44px rgba(22,22,30,.26)); }
   .handoff.shown .handoff-paper { clip-path: inset(0 0 0 0); }
