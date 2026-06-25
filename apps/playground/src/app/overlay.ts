@@ -289,8 +289,10 @@ function attachPointer(el: HandleEl, sk: any, i: number): void {
         sk.rotation = Math.round(((pinch.rot + (ang - pinch.ang) + 540) % 360) - 180)
         repositionSelected(sk)
       } else {
+        const sv = svgEl()
+        if (!sv) return // a concurrent render() tore down the SVG mid-drag — don't throw
         const p = clientToReceipt(ev.clientX, ev.clientY)
-        const vb = svgEl()!.viewBox.baseVal
+        const vb = sv.viewBox.baseVal
         const rawX = clamp(p.x + grab.dx, 0, vb.width)
         const rawY = clamp(p.y + grab.dy, 0, vb.height)
         const snapped = snapSticker(rawX, rawY, {

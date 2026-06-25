@@ -698,8 +698,11 @@ try {
     card.append(go)
     intro.append(card)
     document.body.append(intro)
+    const introBg = [document.querySelector('.layout'), document.querySelector('header')]
+    introBg.forEach((el) => el?.setAttribute('aria-hidden', 'true')) // hide the editor from AT while the modal is up
     const dismiss = (): void => {
       intro.classList.add('out')
+      introBg.forEach((el) => el?.removeAttribute('aria-hidden'))
       $('svg-host').removeEventListener('pointerdown', dismiss)
       releaseFocus()
       try {
@@ -758,7 +761,9 @@ document.addEventListener('visibilitychange', () => {
 function offerRestore(cfg: unknown): void {
   const bar = document.createElement('div')
   bar.className = 're-restore'
-  bar.setAttribute('role', 'dialog')
+  // a transient suggestion, not a modal — role=status (a false role=dialog would demand a focus trap)
+  bar.setAttribute('role', 'status')
+  bar.setAttribute('aria-label', t('restore.prompt'))
   const msg = document.createElement('span')
   msg.textContent = t('restore.prompt')
   const yes = document.createElement('button')
@@ -774,7 +779,8 @@ function offerRestore(cfg: unknown): void {
     close()
   })
   no.addEventListener('click', close)
-  setTimeout(close, 12000)
+  const autoT = window.setTimeout(close, 12000)
+  bar.addEventListener('focusin', () => window.clearTimeout(autoT)) // don't cut an AT user off mid-read
 }
 
 // only at boot, before any interaction, so a returning visitor can pick their work back up

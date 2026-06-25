@@ -372,9 +372,9 @@ export const DICT: Record<string, { zh: string; ja: string; en: string }> = {
     "en": "Upload logo"
   },
   "placeholder.icon": {
-    "zh": "或貼 emoji 🎀",
-    "ja": "または絵文字を貼り付け 🎀",
-    "en": "or paste an emoji 🎀"
+    "zh": "或一個字當圖示",
+    "ja": "1文字をアイコンに",
+    "en": "A letter as icon"
   },
   "subLabel.background": {
     "zh": "底圖 / 背景(透明度・大小・位置)",
@@ -580,11 +580,6 @@ export const DICT: Record<string, { zh: string; ja: string; en: string }> = {
     "zh": "透明",
     "ja": "透明",
     "en": "Transparent"
-  },
-  "coach.tapToEdit": {
-    "zh": "👆 點任何文字就能編輯",
-    "ja": "👆 文字をタップして編集",
-    "en": "👆 Tap any text to edit"
   },
   "field.messageTitle": {
     "zh": "標題",

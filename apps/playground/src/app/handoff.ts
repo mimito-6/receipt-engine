@@ -55,6 +55,7 @@ function teardown(): void {
   window.removeEventListener('keydown', onKey)
   window.removeEventListener('popstate', onPop)
   releaseFocus()
+  ;[document.querySelector('.layout'), document.querySelector('header')].forEach((b) => b?.removeAttribute('aria-hidden'))
   el.classList.add('out')
   window.setTimeout(() => el.remove(), 220)
 }
@@ -100,6 +101,10 @@ export function openHandoff(): void {
     `<button class="handoff-act" id="handoff-save">${esc(t('handoff.save'))}</button>` +
     '</div>'
   document.body.appendChild(ov)
+  // hide the editor from assistive tech while the present-mode modal is up
+  ;[document.querySelector('.layout'), document.querySelector('header')].forEach((b) =>
+    b?.setAttribute('aria-hidden', 'true'),
+  )
 
   // clean render == exactly what exports / prints (exportOpts, NOT the interactive editor SVG)
   const svg = renderReceiptToSvg(state.receipt as never, exportOpts({}) as never)

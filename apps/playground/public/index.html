@@ -92,7 +92,7 @@
   header h1 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: clamp(36px, 11vw, 56px);
     line-height: .88; letter-spacing: .01em; text-transform: uppercase; color: #fff;
     transform: rotate(-1.5deg); transform-origin: left center; }
-  header p { margin: 9px 0 0; color: rgba(255,255,255,.84); font-size: 13px; line-height: 1.5; }
+  header p { margin: 9px 0 0; color: rgba(255,255,255,.92); font-size: 13px; line-height: 1.5; }
   .lang { position: relative; z-index: 1; display: flex; gap: 2px; background: transparent; border: none;
     border-radius: 0; padding: 0; flex: none; box-shadow: none; }
   .lang button { font-family: var(--font-display); font-weight: 400; font-size: 16px; letter-spacing: .03em;
@@ -143,15 +143,6 @@
   .err { display: none; color: #9b2c2c; background: #fdecea; border: 1px solid #f5c2c0;
     border-radius: 10px; padding: 8px 12px; font-size: 12px; white-space: pre-wrap; max-width: 360px; }
   .canvas-hint { color: var(--muted); font-size: 11px; text-align: center; max-width: 360px; line-height: 1.6; }
-  /* first-visit coachmark: points at the receipt so a phone visitor discovers tap-to-edit */
-  .re-coach { position: absolute; left: 50%; top: 8px; transform: translateX(-50%); z-index: 7;
-    background: var(--accent); color: #fff; font-size: 12px; font-weight: 700; padding: 7px 13px;
-    border-radius: 999px; box-shadow: 0 6px 18px rgba(214,51,108,.5); pointer-events: none;
-    white-space: nowrap; animation: re-coach-bob 1.4s ease-in-out infinite; }
-  .re-coach::after { content: ''; position: absolute; left: 50%; bottom: -4px; width: 10px; height: 10px;
-    background: var(--accent); border-radius: 2px; transform: translateX(-50%) rotate(45deg); }
-  @keyframes re-coach-bob { 0%, 100% { transform: translateX(-50%) translateY(0); }
-    50% { transform: translateX(-50%) translateY(-4px); } }
   .canvas-tools { display: flex; gap: 8px; }
   .canvas-tools button { font: inherit; font-size: 12px; font-weight: 600; color: var(--ink);
     background: var(--panel); border: 1px solid var(--line); border-radius: 999px;
@@ -407,7 +398,7 @@
   @keyframes print-feed {
     from { clip-path: inset(0 0 100% 0); transform: translateY(-6px); }
     to   { clip-path: inset(0 0 0 0);    transform: translateY(0); } }
-  .print-skip { margin-top: 18px; font-size: 11px; color: var(--muted); opacity: .7; }
+  .print-skip { margin-top: 18px; font-size: 11px; color: var(--ink); opacity: .8; }
 
   /* ---- "restore your last design?" boot banner (autosave) ---- */
   .re-restore { position: fixed; left: 50%; bottom: calc(16px + env(safe-area-inset-bottom)); transform: translateX(-50%);
@@ -518,6 +509,14 @@
   /* theme-switch fade (opacity only — never transforms #paper, so overlay rects stay valid) */
   @media (prefers-reduced-motion: no-preference) { #svg-host.theme-swap svg { animation: re-theme-swap .3s var(--ease-out); } }
   @keyframes re-theme-swap { from { opacity: .2; } to { opacity: 1; } }
+
+  /* phone touch targets: bump the highest-traffic controls toward the 44px minimum (desktop's tight zine sizing stays) */
+  @media (pointer: coarse) {
+    .lang button { padding: 9px 11px; }
+    .dl button { padding: 12px 18px; }
+    .canvas-tools button { padding: 10px 14px; }
+    .canvas-tools .icon-btn { padding: 10px 12px; }
+  }
 </style>
 </head>
 <body>
@@ -540,7 +539,7 @@
 
     <!-- ===== Group 1 · 外觀與版面(長相) ===== -->
     <section class="group">
-      <div class="group-title"><span class="chap-no" aria-hidden="true">01</span><span class="ico" aria-hidden="true">🎨</span><span data-i18n="group.appearance">外觀與版面</span></div>
+      <div class="group-title"><span class="chap-no" aria-hidden="true">01</span><span data-i18n="group.appearance">外觀與版面</span></div>
 
       <details class="card" open><summary><span data-i18n="panel.style.title">風格與顏色字體</span> <span class="hint" data-i18n="panel.style.hint">主題 / 範例 / 顏色 / 字體</span></summary>
         <div class="seg" id="theme-seg">
@@ -637,7 +636,7 @@
 
     <!-- ===== Group 2 · 收據內容(寫什麼) ===== -->
     <section class="group">
-      <div class="group-title"><span class="chap-no" aria-hidden="true">02</span><span class="ico" aria-hidden="true">🧾</span><span data-i18n="group.content">收據內容</span></div>
+      <div class="group-title"><span class="chap-no" aria-hidden="true">02</span><span data-i18n="group.content">收據內容</span></div>
 
       <details class="card"><summary><span data-i18n="panel.shopName.title">店名 / 標語</span> <span class="hint" data-i18n="panel.shopName.hint">商標在「商標 / 背景」</span></summary>
         <label class="field"><span data-i18n="field.shopName">店名</span> <span class="hint" data-i18n="field.shopName.hint">留空 → 用 LOGO 當招牌</span></label>
@@ -701,7 +700,7 @@
 
     <!-- ===== Group 3 · 存檔 / 匯入 ===== -->
     <section class="group">
-      <div class="group-title"><span class="chap-no" aria-hidden="true">03</span><span class="ico" aria-hidden="true">💾</span><span data-i18n="group.saveImport">存檔 / 匯入</span></div>
+      <div class="group-title"><span class="chap-no" aria-hidden="true">03</span><span data-i18n="group.saveImport">存檔 / 匯入</span></div>
 
       <details class="card"><summary><span data-i18n="panel.saveImport.title">存檔 / 匯入</span> <span class="hint" data-i18n="panel.saveImport.hint">設定檔 · 進階 JSON</span></summary>
         <div class="row2">
@@ -734,8 +733,8 @@
     <div class="canvas-hint" data-i18n="canvas.hint">點文字改內容/字體 · 拖貼紙縮放旋轉 · 拖邊界改尺寸 · 拖區塊排順序</div>
     <label class="dl-clean"><input type="checkbox" id="dl-clean" /> <span data-i18n="export.clean">去背景 PNG(保留卡片)</span> <span class="hint" data-i18n="export.cleanHint">只去掉卡片後面的頁面底色,保留卡片的形狀與顏色,適合印製</span></label>
     <label class="dl-clean"><input type="checkbox" id="fast-print" /> <span data-i18n="export.fastPrint">快速匯出(略過列印動畫)</span></label>
-    <div class="export-label">[ EXPORT ]</div>
     <button id="handoff-enter" class="handoff-enter" data-i18n="handoff.enter">交給客人</button>
+    <div class="export-label">[ EXPORT ]</div>
     <div class="dl">
       <button id="dl-png" data-i18n="btn.downloadPng">下載 PNG</button>
       <button id="dl-svg" data-i18n="btn.downloadSvg">下載 SVG</button>
