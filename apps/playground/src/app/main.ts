@@ -37,7 +37,7 @@ import { redo, resetHistory, undo } from './history'
 import { applyI18n, setLang, t, type Lang } from './i18n'
 import { fastPrint, playPrintReveal, setFastPrint } from './printReveal'
 import { isMuted, primeAudio, setMuted } from './sound'
-import { openHandoff } from './handoff'
+import { isHandoffOpen, openHandoff } from './handoff'
 import { releaseFocus, trapFocus } from './feel'
 
 // Expose the engine under the historical global so embedders/docs keep working.
@@ -489,7 +489,7 @@ function wire(): void {
   // immediately while already playing).
   let exporting = false
   const doExport = (fn: () => void | Promise<void>): void => {
-    if (exporting) return
+    if (exporting || isHandoffOpen()) return // don't stack the print ceremony under the handoff modal
     exporting = true
     primeAudio()
     void playPrintReveal()
@@ -518,6 +518,7 @@ function wire(): void {
     const m = isMuted()
     muteBtn.innerHTML = m ? SPK_OFF : SPK_ON
     muteBtn.setAttribute('aria-pressed', m ? 'false' : 'true')
+    muteBtn.setAttribute('aria-label', t('sound.toggle')) // SR name (the SVG is aria-hidden; title alone isn't exposed)
   }
   syncMute()
   muteBtn.addEventListener('click', () => {

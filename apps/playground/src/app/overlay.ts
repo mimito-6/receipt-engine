@@ -241,13 +241,22 @@ function makeHandle(sk: any, i: number): HandleEl {
 }
 
 function select(i: number): void {
+  // a focus event can arrive on a handle whose index was valid only for the previous
+  // render (delete + re-render race) — bail safely instead of dereferencing undefined
+  const arr = (state.receipt as { stickers?: unknown[] }).stickers
+  if (!arr || !arr[i]) {
+    state.sel = -1
+    state.selection = null
+    clearFrame()
+    return
+  }
   state.sel = i
   state.selection = { kind: 'sticker', index: i }
   document.querySelectorAll('.sticker-handle').forEach((h) => {
     h.classList.toggle('sel', (h as HTMLElement).dataset.i === String(i))
   })
   onSelect()
-  showFrameFor((state.receipt as any).stickers[i])
+  showFrameFor(arr[i])
 }
 
 function attachPointer(el: HandleEl, sk: any, i: number): void {

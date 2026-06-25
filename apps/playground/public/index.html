@@ -228,7 +228,7 @@
   .emoji-pick { display: flex; flex-wrap: wrap; gap: 5px; }
   .emoji-pick button { line-height: 1; padding: 6px; border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--panel); cursor: pointer; transition: background var(--dur-tap), border-color var(--dur-tap); }
   .emoji-pick button:hover { background: var(--ink-soft); border-color: var(--ink-affordance); }
-  .emoji-pick button { touch-action: none; cursor: grab; }
+  .emoji-pick button { touch-action: pan-y; cursor: grab; } /* a clear vertical swipe still scrolls the form; a deliberate >6px pickup starts the drag */
   .emoji-pick button img { width: 23px; height: 23px; display: block; pointer-events: none; }
   .canvas-tools .icon-btn svg { display: block; }
   /* drag-from-tray ghost: a sticker floating under the finger, drops onto the receipt */
@@ -446,7 +446,7 @@
 
   /* ── BLUE STORE PRESS — spec chips, sticker buttons, "the press runs" load ── */
   .spec-cap { font-family: var(--font-label); font-size: 11px; letter-spacing: .04em; color: var(--muted);
-    text-align: center; font-variant-numeric: tabular-nums; margin-bottom: 2px; }
+    text-align: center; font-variant-numeric: tabular-nums; margin: 6px 0 -4px; } /* hug the specimen below, not the toolbar above */
   .spec-cap #spec-readout { color: var(--ink); font-weight: 700; }
   .export-label { font-family: var(--font-label); font-size: 11px; letter-spacing: .14em; color: var(--muted);
     text-align: center; margin: 8px 0 -2px; }
@@ -526,6 +526,8 @@
     .dl button { padding: 12px 18px; }
     .canvas-tools button { padding: 10px 14px; }
     .canvas-tools .icon-btn { padding: 10px 12px; }
+    .emoji-pick { gap: 8px; }
+    .emoji-pick button { padding: 10px; } /* 23px img + 10px ≈ 43px target */
   }
 </style>
 </head>

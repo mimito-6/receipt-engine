@@ -10,42 +10,61 @@ import { exportOpts } from './io'
 import { receiptPngBlob } from './pngExport'
 import { announce, prefersReducedMotion, releaseFocus, toast, trapFocus } from './feel'
 import { playDing, playWhir, primeAudio } from './sound'
+import { isPrintPlaying } from './printReveal'
 import { t } from './i18n'
 
 let openEl: HTMLElement | null = null
+export function isHandoffOpen(): boolean {
+  return !!openEl
+}
+
+// single-flight: a 20-item PNG raster takes >1s on a phone — a double-tap must not fire
+// two save-sheets / a second navigator.share (which rejects with InvalidStateError)
+let handoffBusy = false
 
 async function saveReceipt(): Promise<void> {
+  if (handoffBusy) return
+  handoffBusy = true
   primeAudio()
   try {
     dl('receipt.png', await receiptPngBlob())
     toast(t('handoff.savedHint'))
   } catch {
     /* ignore (e.g. tainted canvas from a cross-origin image) */
+  } finally {
+    handoffBusy = false
   }
 }
 
 async function shareReceipt(): Promise<void> {
+  if (handoffBusy) return
+  handoffBusy = true
   primeAudio()
   let blob: Blob
   try {
     blob = await receiptPngBlob()
   } catch {
+    handoffBusy = false
     return
   }
-  const file = new File([blob], 'receipt.png', { type: 'image/png' })
-  const nav = navigator as Navigator & { canShare?: (d: unknown) => boolean }
-  if (typeof navigator.share === 'function' && nav.canShare && nav.canShare({ files: [file] })) {
-    try {
-      await navigator.share({ files: [file], title: t('handoff.shareTitle') })
-      toast(t('handoff.shared'))
-    } catch {
-      /* user dismissed the share sheet — no-op */
+  try {
+    const file = new File([blob], 'receipt.png', { type: 'image/png' })
+    const nav = navigator as Navigator & { canShare?: (d: unknown) => boolean }
+    if (typeof navigator.share === 'function' && nav.canShare && nav.canShare({ files: [file] })) {
+      try {
+        await navigator.share({ files: [file], title: t('handoff.shareTitle') })
+        toast(t('handoff.shared'))
+      } catch {
+        /* user dismissed the share sheet — no-op */
+      }
+      return
     }
-    return
+    // no Web Share for files (desktop / some iOS) → download + a save hint
+    dl('receipt.png', blob)
+    announce(t('handoff.savedHint'))
+  } finally {
+    handoffBusy = false
   }
-  // no Web Share for files (desktop / some iOS) → download + a save hint
-  dl('receipt.png', blob)
-  announce(t('handoff.savedHint'))
 }
 
 function teardown(): void {
@@ -84,7 +103,7 @@ function onPop(): void {
 }
 
 export function openHandoff(): void {
-  if (openEl) return
+  if (openEl || isPrintPlaying()) return // never stack on top of the print ceremony (one modal, one focus trap)
   primeAudio()
   const ov = document.createElement('div')
   openEl = ov

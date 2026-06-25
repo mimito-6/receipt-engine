@@ -50,8 +50,21 @@ function neededFonts(): FontSrc[] {
   return FONTS.filter((f) => blob.includes("'" + f.family + "'"))
 }
 
+// fetch with a hard timeout — a stalled font request on venue wifi must not hang the export
+// (which runs AFTER the ceremony with the button disabled); on abort the caller falls back to
+// no-embed, i.e. a still-correct PNG with system-font substitution
+async function fetchT(url: string, ms = 4000): Promise<Response> {
+  const ctl = new AbortController()
+  const to = setTimeout(() => ctl.abort(), ms)
+  try {
+    return await fetch(url, { signal: ctl.signal })
+  } finally {
+    clearTimeout(to)
+  }
+}
+
 async function localFace(f: FontSrc): Promise<string> {
-  const res = await fetch(f.url!)
+  const res = await fetchT(f.url!)
   if (!res.ok) throw new Error('font ' + f.url)
   const b64 = ab2b64(await res.arrayBuffer())
   return (
@@ -64,14 +77,14 @@ async function googleFaces(f: FontSrc, text: string): Promise<string> {
   const api =
     `https://fonts.googleapis.com/css2?family=${f.google}:wght@${f.weights}` +
     `&text=${encodeURIComponent(text)}&display=swap`
-  const css = await (await fetch(api)).text()
+  const css = await (await fetchT(api)).text()
   // Inline every gstatic url as a data URI. With &text= subsetting the URL is a
   // dynamic /l/font endpoint (no .woff2 extension), so match any https url().
   const urls = [...css.matchAll(/url\((https:\/\/fonts\.gstatic\.com\/[^)]+)\)/g)].map((m) => m[1])
   let out = css
   for (const u of urls) {
     try {
-      const b64 = ab2b64(await (await fetch(u)).arrayBuffer())
+      const b64 = ab2b64(await (await fetchT(u)).arrayBuffer())
       out = out.split(u).join('data:font/woff2;base64,' + b64)
     } catch {
       /* leave the remote url as a fallback */

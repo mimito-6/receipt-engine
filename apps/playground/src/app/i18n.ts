@@ -24,9 +24,9 @@ const EXTRA: Record<string, { zh: string; ja: string; en: string }> = {
     en: 'Torn-edge layout — kept even in a clean/transparent export',
   },
   // ── print-feed ceremony (Phase B) ──
-  'print.warming': { zh: '預熱印表機…', ja: 'プリンター予熱中…', en: 'Warming up the press…' },
-  'print.printing': { zh: '列印中…', ja: '印刷中…', en: 'Printing…' },
-  'print.done': { zh: '列印完成', ja: '印刷完了', en: 'Printed' },
+  'print.warming': { zh: '印刷機預熱中…', ja: '印刷機を予熱中…', en: 'Warming up the press…' },
+  'print.printing': { zh: '印刷中…', ja: '印刷中…', en: 'Printing…' },
+  'print.done': { zh: '印好了', ja: '刷り上がり', en: 'Printed' },
   'print.skip': { zh: '點一下跳過', ja: 'タップでスキップ', en: 'Tap to skip' },
   'export.fastPrint': {
     zh: '快速匯出(略過列印動畫)',

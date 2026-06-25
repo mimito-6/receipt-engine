@@ -4,6 +4,8 @@
 import { render } from './render'
 import { state } from './state'
 import { syncFormFromState } from './form'
+import { announce } from './feel'
+import { t } from './i18n'
 
 let timeline: string[] = []
 let index = -1
@@ -70,7 +72,7 @@ function flushPending(): void {
   }
 }
 
-function apply(json: string): void {
+function apply(json: string, dir?: 'undo' | 'redo'): void {
   const s = JSON.parse(json)
   state.theme = s.theme
   state.receipt = s.receipt
@@ -88,13 +90,22 @@ function apply(json: string): void {
   } finally {
     applying = false
   }
+  // undo/redo are otherwise a silent hard-cut — confirm the change with the rect-safe
+  // opacity flash (same trick as setTheme) + a screen-reader announce
+  const h = document.getElementById('svg-host')
+  if (h) {
+    h.classList.remove('theme-swap')
+    void h.offsetWidth
+    h.classList.add('theme-swap')
+  }
+  if (dir) announce(t(dir === 'undo' ? 'nav.undo' : 'nav.redo'))
 }
 
 export function undo(): void {
   flushPending()
   if (index > 0) {
     index--
-    apply(timeline[index]!)
+    apply(timeline[index]!, 'undo')
     updateButtons()
   }
 }
@@ -102,7 +113,7 @@ export function undo(): void {
 export function redo(): void {
   if (index < timeline.length - 1) {
     index++
-    apply(timeline[index]!)
+    apply(timeline[index]!, 'redo')
     updateButtons()
   }
 }

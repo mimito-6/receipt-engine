@@ -29,6 +29,9 @@ export function setFastPrint(v: boolean): void {
 }
 
 let playing = false
+export function isPrintPlaying(): boolean {
+  return playing
+}
 
 /**
  * Play the print-feed ceremony for the CURRENT receipt, then resolve.

@@ -642,9 +642,9 @@ export const DICT: Record<string, { zh: string; ja: string; en: string }> = {
     "en": "Load order JSON"
   },
   "note.orderJson": {
-    "zh": "「訂單 JSON」會經由 importOrder() 轉成收據——之後接 POS / 電商系統就走這條。",
-    "ja": "「注文 JSON」は importOrder() を通してレシートに変換されます——POS / EC システムとの連携はこの経路を使います。",
-    "en": "“Order JSON” is converted into a receipt via importOrder() — POS / e-commerce integrations go through this path."
+    "zh": "「訂單 JSON」會自動轉成收據——日後接 POS / 電商系統也走同一條路徑。",
+    "ja": "「注文 JSON」は自動でレシートに変換されます——POS / EC システムとの連携も同じ経路です。",
+    "en": "“Order JSON” is converted into a receipt automatically — POS / e-commerce integrations use the same path."
   },
   "canvas.hint": {
     "zh": "點文字改內容/字體 · 拖貼紙縮放旋轉 · 拖邊界改尺寸 · 拖區塊排順序",
@@ -982,9 +982,9 @@ export const DICT: Record<string, { zh: string; ja: string; en: string }> = {
     "en": "(No background image yet)"
   },
   "toast.importItemsHint": {
-    "zh": "把 POS/訂單系統的 JSON 貼到下方「進階:JSON」,按「載入訂單 JSON」即可。之後接系統就走 importOrder()。",
-    "ja": "POS / 注文システムの JSON を下の「上級者向け:JSON」に貼り付け、「注文 JSON を読み込む」を押してください。システム連携は importOrder() を使います。",
-    "en": "Paste your POS/order-system JSON into “Advanced: JSON” below and click “Load order JSON.” System integrations go through importOrder()."
+    "zh": "把 POS/訂單系統的 JSON 貼到下方「進階:JSON」,按「載入訂單 JSON」即可。之後接系統也走同一條路徑。",
+    "ja": "POS / 注文システムの JSON を下の「上級者向け:JSON」に貼り付け、「注文 JSON を読み込む」を押してください。システム連携も同じ経路です。",
+    "en": "Paste your POS/order-system JSON into “Advanced: JSON” below and click “Load order JSON.” System integrations use the same path."
   },
   "error.notConfigFile": {
     "zh": "這不是有效的設定檔(缺 receipt)。",

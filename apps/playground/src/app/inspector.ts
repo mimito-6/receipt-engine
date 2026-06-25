@@ -13,6 +13,8 @@ const PAD = 4 // selection box padding (screen px)
 
 let panel: HTMLDivElement | null = null
 let box: HTMLDivElement | null = null
+// the receipt text element that opened the inspector — focus returns here on Escape/close
+let srcEl: HTMLElement | null = null
 
 // ---------------------------------------------------------------------------
 // styleOverrides helpers
@@ -136,6 +138,15 @@ function build(): void {
   const sizeNum = $('insp-size-num') as HTMLInputElement
   const textInp = $('insp-text') as HTMLInputElement
   ;($('insp-close') as HTMLButtonElement).onclick = () => clearSelection()
+  // Escape anywhere closes the inspector and returns focus to the receipt text that opened it,
+  // so a keyboard/SR user is never trapped after Enter-to-edit (mirrors feel.releaseFocus)
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && state.selection?.kind === 'text') {
+      const r = srcEl
+      clearSelection()
+      r?.focus()
+    }
+  })
   textInp.oninput = () => {
     const id = currentId()
     if (!id) return
@@ -274,6 +285,7 @@ export function selectText(id: string): void {
   const el = findEl(id)
   if (!el) return
   state.selection = { kind: 'text', id }
+  srcEl = el as unknown as HTMLElement // remember the opener for focus-restore on Escape/close
   state.sel = -1 // drop any sticker selection
   clearFrame()
   document.querySelectorAll('.sticker-handle.sel').forEach((h) => h.classList.remove('sel'))
@@ -285,6 +297,7 @@ export function selectText(id: string): void {
 
 export function clearSelection(): void {
   if (state.selection && state.selection.kind === 'text') state.selection = null
+  srcEl = null
   if (panel) panel.hidden = true
   if (box) box.hidden = true
 }
