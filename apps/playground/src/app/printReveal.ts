@@ -3,8 +3,10 @@
 // SVG in a modal layer, and never touches #paper, the overlays, or the export path,
 // so exports stay byte-deterministic. Reduced-motion / fast-mode get an EQUIVALENT
 // (instant + announced) result, not silence.
+import { renderReceiptToSvg } from '@receipt-engine/render-svg'
 import { $ } from './dom'
-import { esc } from './state'
+import { esc, state } from './state'
+import { exportOpts } from './io'
 import { announce, prefersReducedMotion, vibrate } from './feel'
 import { playDing, playWhir } from './sound'
 import { t } from './i18n'
@@ -52,7 +54,14 @@ export function playPrintReveal(): Promise<void> {
       '<div class="print-paper-wrap"><div class="print-paper"></div></div></div>' +
       `<div class="print-skip">${esc(t('print.skip'))}</div>`
     document.body.appendChild(stage)
-    ;(stage.querySelector('.print-paper') as HTMLElement).appendChild(src.cloneNode(true))
+    // render the SAME receipt the export/handoff show (WITH stickers) — the editor SVG strips
+    // them, so cloning it would "print" a different receipt than the one you download
+    const paperEl = stage.querySelector('.print-paper') as HTMLElement
+    try {
+      paperEl.innerHTML = renderReceiptToSvg(state.receipt as never, exportOpts({}) as never)
+    } catch {
+      paperEl.appendChild(src.cloneNode(true)) // fall back to the live SVG if a render throws
+    }
     const status = stage.querySelector('#print-status') as HTMLElement
 
     let done = false

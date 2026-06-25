@@ -311,7 +311,8 @@
     border-radius: var(--r-sm); background: #f5f5f7; cursor: pointer; color: var(--muted); transition: border-color var(--dur-tap), color var(--dur-tap); }
   .insp-reset:hover { border-color: var(--ink-affordance); color: var(--ink); }
   .inspector.as-sheet { left: 0; right: 0; bottom: 0; top: auto; width: auto; border-radius: 16px 16px 0 0;
-    padding-bottom: calc(13px + env(safe-area-inset-bottom)); box-shadow: 0 -10px 30px rgba(22,22,30,.18); }
+    padding-bottom: calc(13px + env(safe-area-inset-bottom)); box-shadow: 0 -10px 30px rgba(22,22,30,.18);
+    max-height: 72vh; overflow-y: auto; -webkit-overflow-scrolling: touch; } /* on-screen keyboard must not hide lower controls */
 
   /* ---- sticker PS-style transform frame + alignment guides ---- */
   .re-guide { position: absolute; pointer-events: none; z-index: 5; }

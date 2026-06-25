@@ -23,7 +23,7 @@ export function renderItems(): void {
       '<input type="text" value="' + esc(it.name) + '" placeholder="' + esc(t('placeholder.itemName')) + '" data-i="' + i + '" data-k="name" />' +
       '<input type="number" value="' + it.quantity + '" min="1" data-i="' + i + '" data-k="quantity" />' +
       '<input type="number" value="' + it.unitPrice + '" min="0" step="0.01" data-i="' + i + '" data-k="unitPrice" />' +
-      (canDel ? '<button class="x" data-rm="' + i + '">×</button>' : '<span></span>')
+      (canDel ? '<button class="x" aria-label="' + esc(t('row.remove')) + '" data-rm="' + i + '">×</button>' : '<span></span>')
     wrap.appendChild(row)
     const det = document.createElement('div')
     det.className = 'row2'
@@ -78,7 +78,7 @@ export function renderDiscounts(): void {
     row.innerHTML =
       '<input type="text" value="' + esc(d.label) + '" placeholder="' + esc(t('placeholder.discountLabel')) + '" data-i="' + i + '" data-k="label" />' +
       '<input type="number" value="' + d.amount + '" min="0" step="0.01" data-i="' + i + '" data-k="amount" />' +
-      '<button class="x" data-rm="' + i + '">×</button>'
+      '<button class="x" aria-label="' + esc(t('row.remove')) + '" data-rm="' + i + '">×</button>'
     box.appendChild(row)
   })
   box.querySelectorAll('input').forEach((inp) => {
@@ -116,7 +116,7 @@ export function renderPayments(): void {
     row.innerHTML =
       '<input type="text" value="' + esc(p.method) + '" placeholder="' + esc(t('placeholder.paymentMethod')) + '" data-i="' + i + '" data-k="method" />' +
       '<input type="number" value="' + p.amount + '" min="0" step="0.01" data-i="' + i + '" data-k="amount" />' +
-      '<button class="x" data-rm="' + i + '">×</button>'
+      '<button class="x" aria-label="' + esc(t('row.remove')) + '" data-rm="' + i + '">×</button>'
     box.appendChild(row)
   })
   box.querySelectorAll('input').forEach((inp) => {

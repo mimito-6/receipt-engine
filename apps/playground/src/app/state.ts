@@ -215,7 +215,7 @@ export const examples: Record<string, { receipt: Draft; custom: Look }> = {
     receipt: {
       schemaVersion: '0.1',
       currency: 'USD',
-      merchant: { name: 'Corner Coffee', subtitle: 'Daily roast & fresh bakes', icon: '☕' },
+      merchant: { name: 'Corner Coffee', subtitle: 'Daily roast & fresh bakes' },
       transaction: { receiptNo: '0042', issuedAt: '2026-06-01T08:15', cashier: 'Sam' },
       items: [
         { name: 'Flat White', quantity: 1, unitPrice: 4.5 },
@@ -274,7 +274,7 @@ export const examples: Record<string, { receipt: Draft; custom: Look }> = {
       schemaVersion: '0.1',
       locale: 'zh-TW',
       currency: 'TWD',
-      merchant: { name: '微光手作 Glow', subtitle: '蠟燭・乾燥花・香氛', icon: '🕯️' },
+      merchant: { name: '微光手作 Glow', subtitle: '蠟燭・乾燥花・香氛' },
       event: { name: '週末手作市集', boothName: 'Row B · Stall 7', location: '華山 1914', date: '2026-06-01' },
       transaction: { receiptNo: 'MKT-20260601-031', issuedAt: '2026-06-01T16:05', cashier: '阿光' },
       items: [
@@ -285,7 +285,7 @@ export const examples: Record<string, { receipt: Draft; custom: Look }> = {
       discounts: [{ label: '市集首日優惠', amount: 129 }],
       payments: [{ method: 'Cash', amount: 1500 }],
       qr: { value: 'https://glow.example/feedback', label: '填回饋拿小禮' },
-      message: { body: '手工製作,每件都獨一無二。', footer: '下次市集見 ☀' },
+      message: { body: '手工製作,每件都獨一無二。', footer: '下次市集見' },
     } as Draft,
     custom: {
       primary: '#2f6f4f',

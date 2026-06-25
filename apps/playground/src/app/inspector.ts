@@ -322,6 +322,7 @@ export function onCanvasDblClick(e: MouseEvent): void {
   const inp = $('insp-text') as HTMLInputElement
   inp.focus()
   inp.select()
+  inp.scrollIntoView({ block: 'nearest' }) // keep the field visible above the on-screen keyboard
 }
 
 function positionUi(el: SVGGraphicsElement): void {

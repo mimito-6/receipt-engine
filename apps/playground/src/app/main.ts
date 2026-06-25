@@ -462,6 +462,7 @@ function wire(): void {
   STICKERS.forEach((svg) => {
     const b = document.createElement('button')
     b.type = 'button'
+    b.setAttribute('aria-label', t('panel.stickers.title'))
     const im = document.createElement('img')
     im.src = svg
     im.alt = ''
@@ -473,19 +474,23 @@ function wire(): void {
     if (this.files && this.files[0]) readFile(this.files[0], (uri) => addSticker(uri))
   })
 
-  // downloads — play the print-feed ceremony, then export (fast-mode / reduced-motion skip it)
-  $('dl-png').addEventListener('click', () => {
+  // downloads — play the print-feed ceremony, then export. An in-flight guard stops a
+  // double-tap mid-ceremony from firing two downloads + two toasts (playPrintReveal resolves
+  // immediately while already playing).
+  let exporting = false
+  const doExport = (fn: () => void | Promise<void>): void => {
+    if (exporting) return
+    exporting = true
     primeAudio()
-    void playPrintReveal().then(downloadPng)
-  })
-  $('dl-svg').addEventListener('click', () => {
-    primeAudio()
-    void playPrintReveal().then(downloadSvg)
-  })
-  $('dl-html').addEventListener('click', () => {
-    primeAudio()
-    void playPrintReveal().then(downloadHtml)
-  })
+    void playPrintReveal()
+      .then(() => fn())
+      .finally(() => {
+        exporting = false
+      })
+  }
+  $('dl-png').addEventListener('click', () => doExport(downloadPng))
+  $('dl-svg').addEventListener('click', () => doExport(downloadSvg))
+  $('dl-html').addEventListener('click', () => doExport(downloadHtml))
   ;($('fast-print') as HTMLInputElement).checked = fastPrint()
   $('fast-print').addEventListener('change', function (this: HTMLInputElement) {
     setFastPrint(this.checked)
@@ -729,7 +734,13 @@ function autosaveNow(): void {
   try {
     localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(buildConfig()))
   } catch {
-    /* ignore: quota exceeded (large data-URI images) or storage blocked */
+    // quota exceeded (a large data-URI image) or storage blocked: drop any older snapshot so
+    // the boot prompt never offers a STALE design as "your last design"
+    try {
+      localStorage.removeItem(AUTOSAVE_KEY)
+    } catch {
+      /* ignore */
+    }
   }
 }
 function scheduleAutosave(): void {

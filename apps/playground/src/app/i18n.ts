@@ -74,6 +74,7 @@ const EXTRA: Record<string, { zh: string; ja: string; en: string }> = {
   'intro.chip2': { zh: '拖貼紙', ja: 'ステッカーをドラッグ', en: 'Drag stickers' },
   'intro.chip3': { zh: '切版型', ja: 'テーマ切替', en: 'Switch theme' },
   'intro.start': { zh: '開始設計', ja: 'はじめる', en: 'Start designing' },
+  'row.remove': { zh: '移除', ja: '削除', en: 'Remove' },
 }
 const TABLE: Record<string, { zh: string; ja: string; en: string }> = { ...DICT, ...EXTRA }
 
