@@ -4,7 +4,7 @@ import { renderReceiptToSvg } from '@receipt-engine/render-svg'
 import { renderReceiptToHtml } from '@receipt-engine/render-html'
 import { getTheme, mergeTheme } from '@receipt-engine/themes'
 import { safeValidateReceipt } from '@receipt-engine/core'
-import { $, dl, readFile, showError } from './dom'
+import { $, clientToReceipt, dl, readFile, showError } from './dom'
 import {
   STICKERS,
   THERMAL_LOOK,
@@ -16,7 +16,7 @@ import {
   state,
 } from './state'
 import { applyScale, render } from './render'
-import { addSticker, ensure, renderStickerList, syncFormFromState } from './form'
+import { addSticker, addStickerAt, ensure, renderStickerList, syncFormFromState } from './form'
 import {
   buildConfig,
   configFilename,
@@ -114,6 +114,51 @@ function applyConfig(cfg: any): void {
   state.selection = null
   setTheme(cfg.theme === 'thermal' ? 'thermal' : 'custom')
   resetHistory()
+}
+
+/** Pick a sticker up from the tray and drop it onto the receipt (a tap = centred add). */
+function attachStickerDrag(btn: HTMLButtonElement, content: string): void {
+  btn.addEventListener('pointerdown', (e: PointerEvent) => {
+    if (e.button > 0) return
+    e.preventDefault()
+    const sx = e.clientX
+    const sy = e.clientY
+    let ghost: HTMLImageElement | null = null
+    let dragging = false
+    const over = (x: number, y: number): boolean => {
+      const p = $('paper').getBoundingClientRect()
+      return x >= p.left && x <= p.right && y >= p.top && y <= p.bottom
+    }
+    const move = (ev: PointerEvent): void => {
+      if (!dragging && Math.hypot(ev.clientX - sx, ev.clientY - sy) < 6) return
+      dragging = true
+      if (!ghost) {
+        ghost = document.createElement('img')
+        ghost.src = content
+        ghost.className = 're-sticker-ghost'
+        document.body.appendChild(ghost)
+      }
+      ghost.style.left = ev.clientX + 'px'
+      ghost.style.top = ev.clientY + 'px'
+      ghost.classList.toggle('over', over(ev.clientX, ev.clientY))
+    }
+    const up = (ev: PointerEvent): void => {
+      document.removeEventListener('pointermove', move)
+      document.removeEventListener('pointerup', up)
+      document.removeEventListener('pointercancel', up)
+      ghost?.remove()
+      if (!dragging) {
+        addSticker(content) // a plain tap drops it in the middle
+      } else if (over(ev.clientX, ev.clientY)) {
+        const p = clientToReceipt(ev.clientX, ev.clientY)
+        addStickerAt(content, p.x, p.y)
+      }
+      // dragged off the receipt -> cancel
+    }
+    document.addEventListener('pointermove', move)
+    document.addEventListener('pointerup', up)
+    document.addEventListener('pointercancel', up)
+  })
 }
 
 function wire(): void {
@@ -389,7 +434,7 @@ function wire(): void {
     im.src = svg
     im.alt = ''
     b.appendChild(im)
-    b.onclick = () => addSticker(svg)
+    attachStickerDrag(b, svg)
     $('emoji-pick').appendChild(b)
   })
   $('f-sticker').addEventListener('change', function (this: HTMLInputElement) {

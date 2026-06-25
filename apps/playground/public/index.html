@@ -237,8 +237,14 @@
   .emoji-pick { display: flex; flex-wrap: wrap; gap: 5px; }
   .emoji-pick button { line-height: 1; padding: 6px; border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--panel); cursor: pointer; transition: background var(--dur-tap), border-color var(--dur-tap); }
   .emoji-pick button:hover { background: var(--ink-soft); border-color: var(--ink-affordance); }
-  .emoji-pick button img { width: 23px; height: 23px; display: block; }
+  .emoji-pick button { touch-action: none; cursor: grab; }
+  .emoji-pick button img { width: 23px; height: 23px; display: block; pointer-events: none; }
   .canvas-tools .icon-btn svg { display: block; }
+  /* drag-from-tray ghost: a sticker floating under the finger, drops onto the receipt */
+  .re-sticker-ghost { position: fixed; z-index: 130; width: 54px; height: 54px; margin: -27px 0 0 -27px;
+    pointer-events: none; transform: rotate(-7deg); opacity: .92; filter: drop-shadow(0 6px 10px rgba(22,22,30,.32));
+    transition: transform var(--dur-tap); }
+  .re-sticker-ghost.over { transform: rotate(0) scale(1.1); }
   .stk { border: 1px solid var(--line); border-radius: 10px; padding: 8px; margin-top: 8px; }
   .stk-head { display: flex; align-items: center; gap: 8px; }
   .stk-head .glyph { font-size: 22px; width: 28px; text-align: center; }

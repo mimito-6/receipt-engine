@@ -1,9 +1,9 @@
 // Left-panel form: repeatable rows (items / discounts / payments / stickers),
 // and syncFormFromState which pushes the whole state back into the inputs.
-import { $ } from './dom'
+import { $, clientToReceipt, svgEl } from './dom'
 import { render } from './render'
 import { layoutOverlay } from './overlay'
-import { type Draft, curEdges, curLook, curMono, curPad, curWidth, esc, isImg, state } from './state'
+import { type Draft, clamp, curEdges, curLook, curMono, curPad, curWidth, esc, isImg, state } from './state'
 import { t } from './i18n'
 
 export function ensure(k: string): any {
@@ -207,6 +207,25 @@ export function addSticker(content: string): void {
   })
   state.sel = r.stickers.length - 1
   // select the new sticker so its transform frame (scale / rotate / ×) shows
+  state.selection = { kind: 'sticker', index: state.sel }
+  renderStickerList()
+  render()
+}
+
+/** Drop a sticker at a specific receipt-space point (drag-from-tray), clamped to the card. */
+export function addStickerAt(content: string, x: number, y: number): void {
+  const r: any = state.receipt
+  if (!r.stickers) r.stickers = []
+  const vb = svgEl()?.viewBox.baseVal
+  r.stickers.push({
+    content,
+    anchor: 'free',
+    x: Math.round(vb ? clamp(x, 0, vb.width) : x),
+    y: Math.round(vb ? clamp(y, 0, vb.height) : y),
+    size: isImg(content) ? 64 : 46,
+    rotation: 0,
+  })
+  state.sel = r.stickers.length - 1
   state.selection = { kind: 'sticker', index: state.sel }
   renderStickerList()
   render()
