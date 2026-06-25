@@ -160,6 +160,24 @@ export const STICKERS: string[] = [
   vsticker(
     `<path d="M34 22 18 78M60 22 44 78M86 22 70 78" stroke="${_blue}" stroke-width="9" stroke-linecap="round"/>`,
   ),
+  // sun / seal (blue)
+  vsticker(
+    `<circle cx="50" cy="50" r="20" fill="${_blue}"/><g stroke="${_blue}" stroke-width="6" stroke-linecap="round"><path d="M50 6V17M50 83V94M6 50H17M83 50H94M20 20 27 27M73 73 80 80M80 20 73 27M27 73 20 80"/></g>`,
+  ),
+  // diamond (lime + ink)
+  vsticker(`<path d="M50 8 84 50 50 92 16 50Z" fill="${_lime}" stroke="${_ink}" stroke-width="5" stroke-linejoin="round"/>`),
+  // target (blue concentric)
+  vsticker(
+    `<circle cx="50" cy="50" r="36" fill="none" stroke="${_blue}" stroke-width="7"/><circle cx="50" cy="50" r="19" fill="none" stroke="${_blue}" stroke-width="7"/><circle cx="50" cy="50" r="5" fill="${_blue}"/>`,
+  ),
+  // wave / squiggle (ink)
+  vsticker(`<path d="M8 50Q22 28 36 50T64 50T92 50" fill="none" stroke="${_ink}" stroke-width="8" stroke-linecap="round"/>`),
+  // chevron stack (blue)
+  vsticker(
+    `<path d="M20 30 50 52 80 30M20 52 50 74 80 52" fill="none" stroke="${_blue}" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>`,
+  ),
+  // banner / pennant (blue)
+  vsticker(`<path d="M14 28H86V60L74 51 62 60 50 51 38 60 26 51 14 60Z" fill="${_blue}"/>`),
 ]
 export const DEFAULT_W: Record<ThemeName, number> = { custom: 720, thermal: 384 }
 
