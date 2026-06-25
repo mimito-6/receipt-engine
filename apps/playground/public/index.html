@@ -22,7 +22,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <!-- Latin display fonts + a matched CJK web font (Noto Sans TC) so Chinese & Latin look unified -->
-<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Quicksand:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&family=Baloo+2:wght@500;600;700&family=Poppins:wght@400;500;600&family=Fredoka:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@400;600;700&family=Space+Mono:wght@400;700&family=Quicksand:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&family=Baloo+2:wght@500;600;700&family=Poppins:wght@400;500;600&family=Fredoka:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet" />
 <link href="https://cdn.jsdelivr.net/npm/@fontsource/sarasa-mono-tc@5/index.min.css" rel="stylesheet" />
 <style>
   /* Bundled OFL pixel/bitmap CJK fonts (cover Latin + Chinese in one pixel style) */
@@ -30,20 +30,27 @@
   @font-face { font-family: 'Boutique Bitmap 9x9'; src: url('fonts/BoutiqueBitmap9x9.ttf') format('truetype'); font-display: swap; }
   @font-face { font-family: 'Boutique Bitmap 9x9 Bold'; src: url('fonts/BoutiqueBitmap9x9_Bold.ttf') format('truetype'); font-display: swap; }
   :root {
-    /* ── modern neutral stage (light, not paper-textured) ── */
-    --desk: #edeef1; --desk-2: #e4e6ea;
-    --panel: #ffffff; --neutral-0: #ffffff;
-    --ink: #2a2a31;            /* primary text — soft near-black, never #000 */
-    --muted: #6c6f78;          /* secondary text */
-    --line: #e4e5ea;           /* hairlines / input borders */
-    /* ── neutral interaction ink: EVERY selectable affordance ── */
-    --ink-affordance: #3b3b44; /* selection rings, handles, guides, seg.on, focus */
-    --ink-soft: rgba(43,43,52,.07);  /* soft tint for selected / hover surfaces */
-    --ink-ring: rgba(43,43,52,.16);  /* focus ring */
-    /* ── accent = COMMIT / VERB ONLY (download / print / hand-over / snap-confirm) ── */
+    color-scheme: light; /* cream/blue system is light-only — never let a UA dark inversion fight it */
+    /* ── BLUE STORE PRESS — warm grid-paper cream desk ── */
+    --desk: #F4EFE1; --desk-2: #ECE5D2;
+    --panel: #FBF8EF; --neutral-0: #FBF8EF;
+    --ink: #14140F;            /* warm near-black zine ink, never #000 */
+    --muted: #5F5B4E;          /* warm taupe-grey secondary text */
+    --line: #D8CFB8;           /* warm cream hairline */
+    /* ── interaction ink: electric ultramarine — EVERY handle/ring/guide/selection/focus ── */
+    --ink-affordance: #1B4DE4;
+    --ink-soft: rgba(27,77,228,.09);  /* selected / hover surface */
+    --ink-ring: rgba(27,77,228,.22);  /* focus ring */
+    /* ── zine furniture (NEVER text, NEVER an affordance) ── */
+    --zine-blue: #1B4DE4;      /* masthead band */
+    --zine-lime: #C8F230;      /* neon highlighter — swipes / tape / sparkle only */
+    --zine-lime-deep: #9FBE00;
+    --grid-line: rgba(27,77,228,.06);
+    /* ── accent = COMMIT / VERB ONLY (download / print / hand-over / snap-confirm) — UNCHANGED ── */
     --accent: #d6336c; --accent-2: #f06595; --accent-soft: #ffe3ef; --accent-ring: rgba(214,51,108,.26);
     /* ── type ── */
-    --font-ui: 'Quicksand','Noto Sans TC', system-ui, -apple-system, 'Segoe UI', 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+    --font-display: 'Anton', 'Noto Sans TC', sans-serif; /* ultra-condensed; Latin/numerals — CJK falls back */
+    --font-ui: 'Archivo', 'Noto Sans TC', system-ui, -apple-system, 'Segoe UI', 'PingFang TC', 'Microsoft JhengHei', sans-serif;
     --font-label: 'Space Mono', 'Sarasa Mono TC', ui-monospace, 'Noto Sans TC', monospace;
     --ls-label: .04em;
     /* ── radius ── */
@@ -52,40 +59,49 @@
     --shadow-panel: 0 1px 2px rgba(22,22,30,.05), 0 6px 16px -10px rgba(22,22,30,.18);
     --shadow-float: 0 2px 8px rgba(22,22,30,.07), 0 18px 42px -14px rgba(22,22,30,.26);
     --shadow-paper: 0 1px 2px rgba(22,22,30,.12), 0 26px 50px -18px rgba(22,22,30,.34);
-    /* ── motion: ONE timing scale, consumed by every later animation ── */
+    /* ── motion: ONE timing scale ── */
     --ease-out: cubic-bezier(.2,.7,.3,1); --dur-tap: 120ms; --dur-settle: 240ms; --dur-feed: 900ms;
   }
   * { box-sizing: border-box; }
-  html, body { margin: 0; }
+  html, body { margin: 0; } /* no global overflow-x:hidden — it would clip a right-edge sticker's delete handle */
   body {
     background:
-      radial-gradient(1200px 560px at 50% -10%, rgba(255,255,255,.85), transparent 60%),
+      repeating-linear-gradient(0deg, var(--grid-line) 0 1px, transparent 1px 24px),
+      repeating-linear-gradient(90deg, var(--grid-line) 0 1px, transparent 1px 24px),
       linear-gradient(180deg, var(--desk), var(--desk-2));
     background-attachment: fixed;
     color: var(--ink);
     font-family: var(--font-ui);
     min-height: 100vh; padding: env(safe-area-inset-top) 0 0;
   }
-  header { max-width: 1080px; margin: 0 auto; color: var(--ink); padding: 22px 18px 6px;
+  /* ── THE TORN MASTHEAD BAND (signature) ── */
+  header { position: relative; isolation: isolate; max-width: 1080px; margin: 0 auto; color: #fff; padding: 24px 18px 26px;
     display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
-  .brand-block { min-width: 0; }
+  /* electric-blue band with a hand-torn bottom edge (irregular polygon — never a straight line) */
+  header::before { content: ''; position: absolute; left: 0; right: 0; top: 0; bottom: -7px; z-index: -1;
+    background: var(--zine-blue);
+    clip-path: polygon(0 0,100% 0,100% 84%,96% 92%,92% 84%,88% 93%,83% 85%,79% 95%,74% 86%,70% 95%,65% 87%,61% 95%,56% 88%,50% 95%,45% 87%,40% 95%,35% 88%,30% 94%,25% 85%,20% 93%,15% 85%,11% 92%,7% 84%,3% 91%,0 85%); }
+  /* neon-lime sparkle punching off the top-right (furniture, clipped to viewport) */
+  header::after { content: '✳'; position: absolute; top: 4px; right: 12px; z-index: 1; color: var(--zine-lime);
+    font-size: 36px; line-height: 1; transform: rotate(10deg); pointer-events: none; text-shadow: 1px 1px 0 rgba(0,0,0,.18); }
+  .brand-block { min-width: 0; position: relative; z-index: 1; }
   .brand { display: flex; align-items: center; gap: 11px; }
-  .brand .mark { position: relative; width: 25px; height: 33px; flex: none;
-    background: linear-gradient(180deg, #fff, #eef0f4); box-shadow: 0 2px 7px rgba(22,22,30,.20);
-    border-radius: 4px 4px 0 0;
-    clip-path: polygon(0 0,100% 0,100% 100%,86% 90%,72% 100%,58% 90%,44% 100%,30% 90%,16% 100%,0 90%); }
-  .brand .mark::before { content: ''; position: absolute; left: 5px; right: 5px; top: 8px; height: 2px; border-radius: 2px;
-    background: var(--accent); box-shadow: 0 5px 0 var(--accent), 0 10px 0 rgba(31,36,48,.22); }
-  header h1 { margin: 0; font-family: var(--font-label); font-size: 22px; font-weight: 700; letter-spacing: -.01em; }
-  header p { margin: 7px 0 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
-  .lang { display: flex; gap: 3px; background: rgba(255,255,255,.7); border: 1px solid var(--line);
-    border-radius: 999px; padding: 3px; flex: none; box-shadow: var(--shadow-panel); }
-  .lang button { font: inherit; font-size: 12px; font-weight: 600; color: var(--muted); background: transparent;
-    border: none; border-radius: 999px; padding: 5px 11px; cursor: pointer; white-space: nowrap; transition: color var(--dur-tap), background var(--dur-tap); }
-  .lang button:hover { color: var(--ink); }
-  .lang button.on { background: var(--ink-affordance); color: #fff; }
+  .brand .mark { display: none; } /* the Anton wordmark is the brand on the band */
+  header h1 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: clamp(36px, 11vw, 56px);
+    line-height: .88; letter-spacing: .01em; text-transform: uppercase; color: #fff;
+    transform: rotate(-1.5deg); transform-origin: left center; }
+  header p { margin: 9px 0 0; color: rgba(255,255,255,.84); font-size: 13px; line-height: 1.5; }
+  .lang { position: relative; z-index: 1; display: flex; gap: 2px; background: transparent; border: none;
+    border-radius: 0; padding: 0; flex: none; box-shadow: none; }
+  .lang button { font-family: var(--font-display); font-weight: 400; font-size: 16px; letter-spacing: .03em;
+    color: rgba(255,255,255,.86); background: transparent; border: none; border-radius: 0; padding: 3px 9px;
+    position: relative; cursor: pointer; white-space: nowrap; transition: color var(--dur-tap); }
+  .lang button:hover { color: #fff; }
+  .lang button.on { color: var(--ink); }
+  .lang button.on::after { content: ''; position: absolute; inset: 1px -2px; z-index: -1;
+    background: var(--zine-lime); transform: skewX(-12deg); } /* highlighter swipe, never a pill */
   @media (max-width: 560px) {
-    header { padding: 16px 16px 4px; gap: 12px; }
+    header { padding: 18px 16px 24px; gap: 10px; }
     .brand-block { flex: 1 1 100%; }
   }
 
@@ -142,14 +158,19 @@
   .canvas-tools button:disabled { opacity: .4; cursor: default; box-shadow: none; }
   .canvas-tools .icon-btn { padding: 6px 11px; font-size: 14px; line-height: 1; }
 
-  .controls { display: grid; gap: 22px; }
+  .controls { display: grid; gap: 22px; overflow-x: hidden; } /* contains the card-tilt sub-pixel overflow */
   .group { display: grid; gap: 12px; }
   /* "machine voice": mono + letter-spacing, CJK-safe (no uppercase reliance), de-emoji'd */
-  .group-title { color: var(--ink); font-family: var(--font-label); font-size: 11px; font-weight: 700; letter-spacing: var(--ls-label);
-    margin: 0 4px -2px; display: flex; align-items: center; gap: 8px; }
+  /* ── chapter heads: a big Anton number hangs in the gutter, a lime swipe under the title ── */
+  .group-title { color: var(--ink); font-family: var(--font-ui); font-size: 14px; font-weight: 700; letter-spacing: 0;
+    margin: 2px 0 2px; display: flex; align-items: baseline; gap: 10px; }
+  .group-title .chap-no { font-family: var(--font-display); font-weight: 400; font-size: 30px; line-height: .7;
+    color: var(--ink); letter-spacing: .02em; flex: none; transform: translateY(2px); }
   .group-title .ico { display: none; }
-  .group-title::after { content: ''; flex: 1; height: 1px;
-    background: linear-gradient(90deg, var(--line), transparent); }
+  .group-title > span:last-child { position: relative; z-index: 0; }
+  .group-title > span:last-child::before { content: ''; position: absolute; left: -2px; right: -3px; bottom: 0; height: 9px;
+    z-index: -1; background: var(--zine-lime); transform: skewX(-12deg); }
+  .group-title::after { content: ''; align-self: center; flex: 1; height: 2px; background: var(--ink); opacity: .82; }
   .sub-label { font-family: var(--font-label); font-size: 10px; color: var(--muted); font-weight: 700; letter-spacing: var(--ls-label); margin: 14px 0 4px;
     display: flex; align-items: center; gap: 8px; }
   .sub-label::after { content: ''; flex: 1; height: 1px; background: var(--line); }
@@ -159,10 +180,14 @@
   details.sub > summary::after { content: '›'; font-size: 15px; color: var(--muted); margin-left: auto; transition: transform .18s; }
   details.sub[open] > summary::after { transform: rotate(90deg); }
   details.sub > *:not(summary) { margin-top: 8px; }
-  .card { background: var(--panel); border-radius: var(--r-md); padding: 13px 14px 15px; box-shadow: var(--shadow-panel);
-    transition: box-shadow var(--dur-settle), transform var(--dur-settle); }
+  /* ── cards as pasted paper scraps: ink left-rule, closed tabs tilt + sticker shadow, open snaps straight ── */
+  .card { background: var(--panel); border-radius: 0 var(--r-md) var(--r-md) 0; border-left: 3px solid var(--ink);
+    padding: 13px 14px 15px; box-shadow: var(--shadow-panel);
+    transition: box-shadow var(--dur-settle), transform var(--dur-settle); transform-origin: left center; }
   .card:hover { box-shadow: var(--shadow-float); }
-  details.card[open] { box-shadow: var(--shadow-float); }
+  details.card:not([open]) { transform: rotate(-.4deg); box-shadow: 3px 3px 0 rgba(20,20,15,.13), var(--shadow-panel); }
+  details.card:not([open]):nth-of-type(even) { transform: rotate(.5deg); }
+  details.card[open] { transform: rotate(0); box-shadow: var(--shadow-float); }
   .card > h2 { margin: 0 0 9px; font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
   .card > h2 .hint { font-weight: 500; color: var(--muted); font-size: 11px; }
   details.card > summary { font-size: 13px; font-weight: 700; cursor: pointer; list-style: none; display: flex; align-items: center; gap: 6px; }
@@ -408,6 +433,37 @@
   .handoff-act { font: inherit; font-size: 15px; font-weight: 700; cursor: pointer; border-radius: 999px;
     border: 1px solid var(--line); background: var(--panel); color: var(--ink); padding: 12px 22px; box-shadow: var(--shadow-float); }
   .handoff-act.primary { background: linear-gradient(180deg, var(--accent-2), var(--accent)); color: #fff; border-color: transparent; }
+
+  /* ── BLUE STORE PRESS — spec chips, sticker buttons, "the press runs" load ── */
+  .spec-cap { font-family: var(--font-label); font-size: 11px; letter-spacing: .04em; color: var(--muted);
+    text-align: center; font-variant-numeric: tabular-nums; margin-bottom: 2px; }
+  .spec-cap #spec-readout { color: var(--ink); font-weight: 700; }
+  .export-label { font-family: var(--font-label); font-size: 11px; letter-spacing: .14em; color: var(--muted);
+    text-align: center; margin: 8px 0 -2px; }
+  /* commit buttons -> pasted stickers (pink stays; pink glow -> flat ink sticker shadow) */
+  .dl button { border-radius: 7px; }
+  .dl button:first-child, .dl button:first-child:hover { border-radius: 7px; box-shadow: 3px 3px 0 var(--ink); }
+  .handoff-enter, .handoff-enter:hover { border-radius: 8px; box-shadow: 3px 3px 0 var(--ink); }
+  /* washi tape — a taped-on toolbar (furniture ONLY; sits above #paper, never over it) */
+  .canvas-tools { position: relative; }
+  .canvas-tools::before { content: ''; position: absolute; left: -7px; top: -10px; width: 54px; height: 17px; z-index: 3;
+    background: rgba(200,242,48,.62); transform: rotate(-7deg); box-shadow: 0 1px 3px rgba(0,0,0,.14);
+    border-left: 1px dashed rgba(0,0,0,.07); border-right: 1px dashed rgba(0,0,0,.07); pointer-events: none; }
+  .canvas-tools::after { content: ''; position: absolute; right: -9px; top: -7px; width: 46px; height: 16px; z-index: 3;
+    background: rgba(27,77,228,.4); transform: rotate(6deg); box-shadow: 0 1px 3px rgba(0,0,0,.14); pointer-events: none; }
+  @media (prefers-reduced-motion: no-preference) {
+    header { animation: bsp-mast .42s var(--ease-out) both; }
+    header::after { animation: bsp-pop .32s var(--ease-out) .16s both; }
+    .controls > .group { animation: bsp-rise .5s var(--ease-out) both; }
+    .controls > .group:nth-child(1) { animation-delay: .12s; }
+    .controls > .group:nth-child(2) { animation-delay: .20s; }
+    .controls > .group:nth-child(3) { animation-delay: .28s; }
+    .stage { animation: bsp-fade .55s var(--ease-out) .26s both; } /* opacity ONLY — never transforms #paper */
+  }
+  @keyframes bsp-mast { from { transform: translateY(-100%); } to { transform: translateY(0); } }
+  @keyframes bsp-pop { from { opacity: 0; transform: rotate(10deg) scale(.4); } to { opacity: 1; transform: rotate(10deg) scale(1); } }
+  @keyframes bsp-rise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes bsp-fade { from { opacity: 0; } to { opacity: 1; } }
 </style>
 </head>
 <body>
@@ -430,7 +486,7 @@
 
     <!-- ===== Group 1 · 外觀與版面(長相) ===== -->
     <section class="group">
-      <div class="group-title"><span class="ico" aria-hidden="true">🎨</span><span data-i18n="group.appearance">外觀與版面</span></div>
+      <div class="group-title"><span class="chap-no" aria-hidden="true">01</span><span class="ico" aria-hidden="true">🎨</span><span data-i18n="group.appearance">外觀與版面</span></div>
 
       <details class="card" open><summary><span data-i18n="panel.style.title">風格與顏色字體</span> <span class="hint" data-i18n="panel.style.hint">主題 / 範例 / 顏色 / 字體</span></summary>
         <div class="seg" id="theme-seg">
@@ -527,7 +583,7 @@
 
     <!-- ===== Group 2 · 收據內容(寫什麼) ===== -->
     <section class="group">
-      <div class="group-title"><span class="ico" aria-hidden="true">🧾</span><span data-i18n="group.content">收據內容</span></div>
+      <div class="group-title"><span class="chap-no" aria-hidden="true">02</span><span class="ico" aria-hidden="true">🧾</span><span data-i18n="group.content">收據內容</span></div>
 
       <details class="card"><summary><span data-i18n="panel.shopName.title">店名 / 標語</span> <span class="hint" data-i18n="panel.shopName.hint">商標在「商標 / 背景」</span></summary>
         <label class="field"><span data-i18n="field.shopName">店名</span> <span class="hint" data-i18n="field.shopName.hint">留空 → 用 LOGO 當招牌</span></label>
@@ -591,7 +647,7 @@
 
     <!-- ===== Group 3 · 存檔 / 匯入 ===== -->
     <section class="group">
-      <div class="group-title"><span class="ico" aria-hidden="true">💾</span><span data-i18n="group.saveImport">存檔 / 匯入</span></div>
+      <div class="group-title"><span class="chap-no" aria-hidden="true">03</span><span class="ico" aria-hidden="true">💾</span><span data-i18n="group.saveImport">存檔 / 匯入</span></div>
 
       <details class="card"><summary><span data-i18n="panel.saveImport.title">存檔 / 匯入</span> <span class="hint" data-i18n="panel.saveImport.hint">設定檔 · 進階 JSON</span></summary>
         <div class="row2">
@@ -619,10 +675,12 @@
       <button id="redo" data-i18n-title="nav.redo" title="下一步" disabled><span aria-hidden="true">↷</span> <span data-i18n="nav.redo">下一步</span></button>
       <button id="mute-toggle" class="icon-btn" data-i18n-title="sound.toggle" title="音效開關" aria-pressed="false" style="margin-left:auto">🔇</button>
     </div>
+    <div class="spec-cap"><span>[ SPECIMEN&nbsp;№ ]</span> · <span id="spec-readout">—</span></div>
     <div id="paper"><div id="svg-host"></div><div id="sticker-overlay"></div></div>
     <div class="canvas-hint" data-i18n="canvas.hint">點文字改內容/字體 · 拖貼紙縮放旋轉 · 拖邊界改尺寸 · 拖區塊排順序</div>
     <label class="dl-clean"><input type="checkbox" id="dl-clean" /> <span data-i18n="export.clean">去背景 PNG(保留卡片)</span> <span class="hint" data-i18n="export.cleanHint">只去掉卡片後面的頁面底色,保留卡片的形狀與顏色,適合印製</span></label>
     <label class="dl-clean"><input type="checkbox" id="fast-print" /> <span data-i18n="export.fastPrint">快速匯出(略過列印動畫)</span></label>
+    <div class="export-label">[ EXPORT ]</div>
     <button id="handoff-enter" class="handoff-enter" data-i18n="handoff.enter">交給客人</button>
     <div class="dl">
       <button id="dl-png" data-i18n="btn.downloadPng">下載 PNG</button>

@@ -80,5 +80,12 @@ export function render(): void {
   positionEdgeHandles()
   renderOrderPanel()
   ;($('json') as HTMLTextAreaElement).value = JSON.stringify(state.receipt, null, 2)
+  // live [SPECIMEN №] readout — true export W×H, written into a sibling chip (never into #paper)
+  const sv = $('svg-host').querySelector('svg') as SVGSVGElement | null
+  const cap = document.getElementById('spec-readout')
+  if (sv && cap) {
+    const vb = sv.viewBox.baseVal
+    cap.textContent = `${Math.round(vb.width)} × ${Math.round(vb.height)}`
+  }
   scheduleHistory()
 }
