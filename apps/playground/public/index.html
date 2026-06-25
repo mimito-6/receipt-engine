@@ -400,6 +400,11 @@
     from { clip-path: inset(0 0 100% 0); transform: translateY(-6px); }
     to   { clip-path: inset(0 0 0 0);    transform: translateY(0); } }
   .print-skip { margin-top: 18px; font-size: 11px; color: var(--ink); opacity: .8; }
+  /* warming beat: the mouth breathes before the feed so it reads as a machine spinning up */
+  @media (prefers-reduced-motion: no-preference) {
+    .print-stage.in:not(.feeding) .print-mouth { animation: mouth-ready .5s var(--ease-out) infinite alternate; }
+  }
+  @keyframes mouth-ready { from { transform: translateY(0); } to { transform: translateY(-1.5px); } }
 
   /* ---- "restore your last design?" boot banner (autosave) ---- */
   .re-restore { position: fixed; left: 50%; bottom: calc(16px + env(safe-area-inset-bottom)); transform: translateX(-50%);

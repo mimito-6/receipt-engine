@@ -15,14 +15,50 @@ export function clearError(): void {
   $('err').style.display = 'none'
 }
 
-/** Read a File as a data URL; warns (non-blocking) when it's large. */
+/**
+ * Read a File as a data URL. Raster images (PNG/JPEG/WebP) are DOWNSCALED to a sane max
+ * dimension before producing the data URI, so a phone-camera photo can't bloat localStorage
+ * (quota) or overflow the PNG-export canvas. Vector/other types pass through (with a soft
+ * warning if huge).
+ */
+const MAX_IMG_DIM = 1600
 export function readFile(file: File | undefined, cb: (dataUrl: string) => void): void {
-  if (file && file.size > 2 * 1024 * 1024) {
-    showError(t('error.imageTooLarge'))
-  }
   if (!file) return
   const fr = new FileReader()
-  fr.onload = () => cb(String(fr.result))
+  fr.onload = () => {
+    const url = String(fr.result)
+    if (!/^data:image\/(png|jpe?g|webp|bmp)/i.test(url)) {
+      if (file.size > 2 * 1024 * 1024) showError(t('error.imageTooLarge')) // can't downscale a non-raster here
+      cb(url)
+      return
+    }
+    const img = new Image()
+    img.onload = () => {
+      const w = img.naturalWidth
+      const h = img.naturalHeight
+      if (Math.max(w, h) <= MAX_IMG_DIM) {
+        cb(url)
+        return
+      }
+      const s = MAX_IMG_DIM / Math.max(w, h)
+      const cv = document.createElement('canvas')
+      cv.width = Math.round(w * s)
+      cv.height = Math.round(h * s)
+      const cx = cv.getContext('2d')
+      if (!cx) {
+        cb(url)
+        return
+      }
+      cx.drawImage(img, 0, 0, cv.width, cv.height)
+      try {
+        cb(cv.toDataURL(/jpe?g/i.test(url) ? 'image/jpeg' : 'image/png', 0.9))
+      } catch {
+        cb(url) // tainted (shouldn't happen for a same-origin data URI) — keep the original
+      }
+    }
+    img.onerror = () => cb(url)
+    img.src = url
+  }
   fr.readAsDataURL(file)
 }
 
