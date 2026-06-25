@@ -7,6 +7,7 @@ import { getTheme } from '@receipt-engine/themes'
 import { dl } from './dom'
 import { currentTheme, renderOpts } from './render'
 import { type Draft, type Look, type Pad, type ThemeName, deepClone, isImg, state } from './state'
+import { toast } from './feel'
 import { t } from './i18n'
 
 export function defaultPad(theme: ThemeName): Pad {
@@ -86,12 +87,14 @@ export function currentSvg(): string {
 
 export function downloadSvg(): void {
   dl('receipt.svg', new Blob([currentSvg()], { type: 'image/svg+xml' }))
+  toast(t('toast.svg'))
 }
 export function downloadHtml(): void {
   dl(
     'receipt.html',
     new Blob([renderReceiptToHtml(state.receipt as never, exportOpts() as never)], { type: 'text/html' }),
   )
+  toast(t('toast.html'))
 }
 
 // ---------- config file (save / restore the whole design) ----------

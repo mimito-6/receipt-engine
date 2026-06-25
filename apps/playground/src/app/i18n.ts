@@ -52,6 +52,10 @@ const EXTRA: Record<string, { zh: string; ja: string; en: string }> = {
     ja: '画像を保存しました(iPhone は長押しで保存)',
     en: 'Saved (on iPhone, long-press the image to save)',
   },
+  // ── export result toasts (Phase C) ──
+  'toast.png': { zh: '已下載 PNG ✓', ja: 'PNG を保存しました ✓', en: 'PNG saved ✓' },
+  'toast.svg': { zh: '已下載 SVG ✓', ja: 'SVG を保存しました ✓', en: 'SVG saved ✓' },
+  'toast.html': { zh: '已下載 HTML ✓', ja: 'HTML を保存しました ✓', en: 'HTML saved ✓' },
 }
 const TABLE: Record<string, { zh: string; ja: string; en: string }> = { ...DICT, ...EXTRA }
 

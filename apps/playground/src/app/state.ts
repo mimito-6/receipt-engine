@@ -196,12 +196,12 @@ export const examples: Record<string, { receipt: Draft; custom: Look }> = {
       ],
     } as Draft,
     custom: {
-      primary: '#d6336c',
-      bg: '#fff0f6',
-      surface: '#fffdfb',
-      text: '#5b3256',
-      latinFont: 'quicksand',
-      cjkFont: 'noto',
+      primary: '#1B4DE4',
+      bg: '#E9EEFC',
+      surface: '#FFFFFF',
+      text: '#1A1E2E',
+      latinFont: 'spacemono',
+      cjkFont: 'sarasa',
     },
   },
   market: {

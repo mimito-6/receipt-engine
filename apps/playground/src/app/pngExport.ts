@@ -8,6 +8,7 @@ import { renderReceiptToSvg } from '@receipt-engine/render-svg'
 import { $, dl, showError, svgEl } from './dom'
 import { curLook, fontStack, state } from './state'
 import { exportOpts } from './io'
+import { toast } from './feel'
 import { t } from './i18n'
 
 interface FontSrc {
@@ -151,6 +152,7 @@ export async function downloadPng(): Promise<void> {
   }
   try {
     dl('receipt.png', await receiptPngBlob())
+    toast(t('toast.png'))
   } catch {
     showError(t('error.pngFailed'))
   } finally {

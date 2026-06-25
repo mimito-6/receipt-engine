@@ -8,7 +8,7 @@ import { $, dl } from './dom'
 import { esc, state } from './state'
 import { exportOpts } from './io'
 import { receiptPngBlob } from './pngExport'
-import { announce, prefersReducedMotion, releaseFocus, trapFocus } from './feel'
+import { announce, prefersReducedMotion, releaseFocus, toast, trapFocus } from './feel'
 import { playDing, playWhir, primeAudio } from './sound'
 import { t } from './i18n'
 
@@ -18,7 +18,7 @@ async function saveReceipt(): Promise<void> {
   primeAudio()
   try {
     dl('receipt.png', await receiptPngBlob())
-    announce(t('handoff.savedHint'))
+    toast(t('handoff.savedHint'))
   } catch {
     /* ignore (e.g. tainted canvas from a cross-origin image) */
   }
@@ -37,7 +37,7 @@ async function shareReceipt(): Promise<void> {
   if (typeof navigator.share === 'function' && nav.canShare && nav.canShare({ files: [file] })) {
     try {
       await navigator.share({ files: [file], title: t('handoff.shareTitle') })
-      announce(t('handoff.shared'))
+      toast(t('handoff.shared'))
     } catch {
       /* user dismissed the share sheet — no-op */
     }

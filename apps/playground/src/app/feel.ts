@@ -40,6 +40,26 @@ export function announce(msg: string): void {
   })
 }
 
+// --- transient toast (visible confirmation) + always routes through announce() for AT ---
+let _toastT = 0
+export function toast(msg: string): void {
+  announce(msg)
+  let el = document.getElementById('re-toast')
+  if (!el) {
+    el = document.createElement('div')
+    el.id = 're-toast'
+    el.className = 're-toast'
+    el.setAttribute('role', 'status')
+    document.body.appendChild(el)
+  }
+  el.textContent = msg
+  // reflow so the show transition re-fires on rapid repeats
+  void el.offsetWidth
+  el.classList.add('show')
+  window.clearTimeout(_toastT)
+  _toastT = window.setTimeout(() => el && el.classList.remove('show'), 2400)
+}
+
 // --- focus management for modal surfaces (handoff present-mode, etc.) ---
 const FOCUSABLE =
   'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])'
