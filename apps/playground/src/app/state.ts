@@ -113,7 +113,54 @@ export function fontStack(latin: string, cjk: string): string {
   )
 }
 
-export const EMOJIS = ['🎀', '🌸', '✨', '💖', '🐱', '⭐', '🍰', '🎁', '🧁', '☕', '🌟', '💐', '🐰', '🍓']
+// Crisp VECTOR stickers (no emoji): each is an SVG data-URI, rendered as an image sticker
+// on screen and embedded in the export. On-brand zine marks in ink / ultramarine / lime.
+const _ink = '#14140F'
+const _blue = '#1B4DE4'
+const _lime = '#C8F230'
+const vsticker = (inner: string): string =>
+  'data:image/svg+xml,' +
+  encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">${inner}</svg>`)
+
+export const STICKERS: string[] = [
+  // 4-point sparkle (blue)
+  vsticker(`<path d="M50 5C54 35 65 46 95 50C65 54 54 65 50 95C46 65 35 54 5 50C35 46 46 35 50 5Z" fill="${_blue}"/>`),
+  // sparkle pair (ink)
+  vsticker(
+    `<path d="M38 8C41 27 49 35 68 38C49 41 41 49 38 68C35 49 27 41 8 38C27 35 35 27 38 8Z" fill="${_ink}"/>` +
+      `<path d="M76 54C78 65 84 71 95 73C84 75 78 81 76 92C74 81 68 75 57 73C68 71 74 65 76 54Z" fill="${_ink}"/>`,
+  ),
+  // 5-point star (lime + ink outline)
+  vsticker(
+    `<path d="M50 6 61 38 95 39 68 60 78 93 50 73 22 93 32 60 5 39 39 38Z" fill="${_lime}" stroke="${_ink}" stroke-width="5" stroke-linejoin="round"/>`,
+  ),
+  // asterisk (ink)
+  vsticker(
+    `<g stroke="${_ink}" stroke-width="10" stroke-linecap="round"><path d="M50 12V88"/><path d="M19 30 81 70"/><path d="M81 30 19 70"/></g>`,
+  ),
+  // bold arrow (blue)
+  vsticker(
+    `<path d="M12 50H76M54 28 84 50 54 72" fill="none" stroke="${_blue}" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>`,
+  ),
+  // heart outline (lime + ink)
+  vsticker(
+    `<path d="M50 86C16 62 10 40 25 28 38 18 50 30 50 37 50 30 62 18 75 28 90 40 84 62 50 86Z" fill="${_lime}" stroke="${_ink}" stroke-width="5" stroke-linejoin="round"/>`,
+  ),
+  // lightning (lime + ink)
+  vsticker(
+    `<path d="M58 6 26 56H46L40 94 76 40H54Z" fill="${_lime}" stroke="${_ink}" stroke-width="4" stroke-linejoin="round"/>`,
+  ),
+  // plus (blue)
+  vsticker(`<path d="M50 16V84M16 50H84" stroke="${_blue}" stroke-width="13" stroke-linecap="round"/>`),
+  // stamp ring (ink + lime core)
+  vsticker(
+    `<circle cx="50" cy="50" r="38" fill="none" stroke="${_ink}" stroke-width="8"/><circle cx="50" cy="50" r="10" fill="${_lime}"/>`,
+  ),
+  // triple slash (blue zine mark)
+  vsticker(
+    `<path d="M34 22 18 78M60 22 44 78M86 22 70 78" stroke="${_blue}" stroke-width="9" stroke-linecap="round"/>`,
+  ),
+]
 export const DEFAULT_W: Record<ThemeName, number> = { custom: 720, thermal: 384 }
 
 // Each theme remembers its OWN look (colors / font / corner stars).
@@ -174,7 +221,7 @@ export const examples: Record<string, { receipt: Draft; custom: Look }> = {
       schemaVersion: '0.1',
       locale: 'zh-TW',
       currency: 'TWD',
-      merchant: { name: 'Mimito Booth', subtitle: '手作 × 插畫 × 小誌', icon: '🎀' },
+      merchant: { name: 'Mimito Booth', subtitle: '手作 × 插畫 × 小誌' },
       event: { name: 'Artist Alley', boothNumber: 'A12', location: 'Taipei', date: '2026-06-01' },
       transaction: { receiptNo: 'AA-A12-018', issuedAt: '2026-06-01T14:30', cashier: 'Mimi' },
       items: [
@@ -191,8 +238,8 @@ export const examples: Record<string, { receipt: Draft; custom: Look }> = {
         footer: 'See you next event!',
       },
       stickers: [
-        { content: '✨', anchor: 'free', x: 610, y: 90, size: 46 },
-        { content: '🎀', anchor: 'free', x: 120, y: 120, size: 46 },
+        { content: STICKERS[0], anchor: 'free', x: 610, y: 88, size: 54 },
+        { content: STICKERS[2], anchor: 'free', x: 118, y: 122, size: 50 },
       ],
     } as Draft,
     custom: {

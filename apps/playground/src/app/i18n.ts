@@ -56,6 +56,12 @@ const EXTRA: Record<string, { zh: string; ja: string; en: string }> = {
   'toast.png': { zh: '已下載 PNG ✓', ja: 'PNG を保存しました ✓', en: 'PNG saved ✓' },
   'toast.svg': { zh: '已下載 SVG ✓', ja: 'SVG を保存しました ✓', en: 'SVG saved ✓' },
   'toast.html': { zh: '已下載 HTML ✓', ja: 'HTML を保存しました ✓', en: 'HTML saved ✓' },
+  // ── de-emoji overrides ──
+  'theme.custom.title': { zh: '自訂彩色', ja: 'カラー', en: 'Custom' },
+  'theme.thermal.title': { zh: '收據機', ja: 'レシート', en: 'Thermal' },
+  'placeholder.icon': { zh: '或一個字當圖示', ja: '1文字をアイコンに', en: 'A letter as icon' },
+  'btn.saveConfig': { zh: '↓ 下載設定檔', ja: '↓ 設定を保存', en: '↓ Save config' },
+  'btn.loadConfig': { zh: '↑ 載入設定檔', ja: '↑ 設定を読込', en: '↑ Load config' },
 }
 const TABLE: Record<string, { zh: string; ja: string; en: string }> = { ...DICT, ...EXTRA }
 

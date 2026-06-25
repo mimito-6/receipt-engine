@@ -6,7 +6,7 @@ import { getTheme, mergeTheme } from '@receipt-engine/themes'
 import { safeValidateReceipt } from '@receipt-engine/core'
 import { $, dl, readFile, showError } from './dom'
 import {
-  EMOJIS,
+  STICKERS,
   THERMAL_LOOK,
   type ThemeName,
   curLook,
@@ -381,12 +381,15 @@ function wire(): void {
     render()
   })
 
-  // stickers
-  EMOJIS.forEach((em) => {
+  // stickers — vector zine marks (no emoji); each button previews its SVG
+  STICKERS.forEach((svg) => {
     const b = document.createElement('button')
     b.type = 'button'
-    b.textContent = em
-    b.onclick = () => addSticker(em)
+    const im = document.createElement('img')
+    im.src = svg
+    im.alt = ''
+    b.appendChild(im)
+    b.onclick = () => addSticker(svg)
     $('emoji-pick').appendChild(b)
   })
   $('f-sticker').addEventListener('change', function (this: HTMLInputElement) {
@@ -415,9 +418,13 @@ function wire(): void {
 
   // sound mute toggle — default muted; the single source of truth for audio
   const muteBtn = $('mute-toggle') as HTMLButtonElement
+  const SPK_ON =
+    '<svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor"/><path d="M16 8.5a4 4 0 0 1 0 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>'
+  const SPK_OFF =
+    '<svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor"/><path d="M16 9l6 6M22 9l-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>'
   const syncMute = (): void => {
     const m = isMuted()
-    muteBtn.textContent = m ? '🔇' : '🔊'
+    muteBtn.innerHTML = m ? SPK_OFF : SPK_ON
     muteBtn.setAttribute('aria-pressed', m ? 'false' : 'true')
   }
   syncMute()

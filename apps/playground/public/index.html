@@ -82,8 +82,10 @@
     background: var(--zine-blue);
     clip-path: polygon(0 0,100% 0,100% 84%,96% 92%,92% 84%,88% 93%,83% 85%,79% 95%,74% 86%,70% 95%,65% 87%,61% 95%,56% 88%,50% 95%,45% 87%,40% 95%,35% 88%,30% 94%,25% 85%,20% 93%,15% 85%,11% 92%,7% 84%,3% 91%,0 85%); }
   /* neon-lime sparkle punching off the top-right (furniture, clipped to viewport) */
-  header::after { content: '✳'; position: absolute; top: 4px; right: 12px; z-index: 1; color: var(--zine-lime);
-    font-size: 36px; line-height: 1; transform: rotate(10deg); pointer-events: none; text-shadow: 1px 1px 0 rgba(0,0,0,.18); }
+  /* lime sparkle (vector, not an emoji) punching off the top-right */
+  header::after { content: ''; position: absolute; top: 7px; right: 13px; z-index: 1; width: 36px; height: 36px;
+    transform: rotate(10deg); pointer-events: none; filter: drop-shadow(1px 2px 0 rgba(0,0,0,.22));
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M50 3C54 36 64 46 97 50C64 54 54 64 50 97C46 64 36 54 3 50C36 46 46 36 50 3Z' fill='%23C8F230'/%3E%3C/svg%3E") no-repeat center / contain; }
   .brand-block { min-width: 0; position: relative; z-index: 1; }
   .brand { display: flex; align-items: center; gap: 11px; }
   .brand .mark { display: none; } /* the Anton wordmark is the brand on the band */
@@ -233,8 +235,10 @@
   .det { font-size: 11px; color: var(--muted); cursor: pointer; margin: 2px 0 8px; }
 
   .emoji-pick { display: flex; flex-wrap: wrap; gap: 5px; }
-  .emoji-pick button { font-size: 19px; line-height: 1; padding: 6px; border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--panel); cursor: pointer; transition: background var(--dur-tap), border-color var(--dur-tap); }
+  .emoji-pick button { line-height: 1; padding: 6px; border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--panel); cursor: pointer; transition: background var(--dur-tap), border-color var(--dur-tap); }
   .emoji-pick button:hover { background: var(--ink-soft); border-color: var(--ink-affordance); }
+  .emoji-pick button img { width: 23px; height: 23px; display: block; }
+  .canvas-tools .icon-btn svg { display: block; }
   .stk { border: 1px solid var(--line); border-radius: 10px; padding: 8px; margin-top: 8px; }
   .stk-head { display: flex; align-items: center; gap: 8px; }
   .stk-head .glyph { font-size: 22px; width: 28px; text-align: center; }
@@ -507,8 +511,8 @@
 
       <details class="card" open><summary><span data-i18n="panel.style.title">風格與顏色字體</span> <span class="hint" data-i18n="panel.style.hint">主題 / 範例 / 顏色 / 字體</span></summary>
         <div class="seg" id="theme-seg">
-          <button data-theme="custom" class="on"><span class="big" data-i18n="theme.custom.title">🎨 自訂</span><span class="sub" data-i18n="theme.custom.sub">彩色,可改色/字/貼紙</span></button>
-          <button data-theme="thermal"><span class="big" data-i18n="theme.thermal.title">🧾 收據機</span><span class="sub" data-i18n="theme.thermal.sub">黑白等寬,圖自動轉灰</span></button>
+          <button data-theme="custom" class="on"><span class="big" data-i18n="theme.custom.title">自訂彩色</span><span class="sub" data-i18n="theme.custom.sub">彩色,可改色/字/貼紙</span></button>
+          <button data-theme="thermal"><span class="big" data-i18n="theme.thermal.title">收據機</span><span class="sub" data-i18n="theme.thermal.sub">黑白等寬,圖自動轉灰</span></button>
         </div>
         <div class="row2" style="margin-top:10px">
           <div><label class="field" data-i18n="field.startFromSample">從範例開始</label>
@@ -566,7 +570,7 @@
         <label class="field"><span data-i18n="field.logo">商標 / 圖示</span> <span class="hint" data-i18n="field.logo.hint">店名留空時當招牌</span></label>
         <div class="row2">
           <button class="btn ghost upload"><span data-i18n="btn.uploadLogo">上傳商標</span><input type="file" id="f-logo" accept="image/*" /></button>
-          <input type="text" id="f-icon" placeholder="或貼 emoji 🎀" data-i18n-ph="placeholder.icon" />
+          <input type="text" id="f-icon" placeholder="或一個字當圖示" data-i18n-ph="placeholder.icon" />
         </div>
         <div id="logo-status" class="muted-note"></div>
         <div class="sub-label" data-i18n="subLabel.background">底圖 / 背景(透明度・大小・位置)</div>
@@ -668,8 +672,8 @@
 
       <details class="card"><summary><span data-i18n="panel.saveImport.title">存檔 / 匯入</span> <span class="hint" data-i18n="panel.saveImport.hint">設定檔 · 進階 JSON</span></summary>
         <div class="row2">
-          <button class="btn" id="cfg-save" data-i18n="btn.saveConfig">⬇ 下載設定檔</button>
-          <button class="btn ghost upload"><span data-i18n="btn.loadConfig">⬆ 載入設定檔</span><input type="file" id="cfg-load" accept="application/json,.json" /></button>
+          <button class="btn" id="cfg-save" data-i18n="btn.saveConfig">↓ 下載設定檔</button>
+          <button class="btn ghost upload"><span data-i18n="btn.loadConfig">↑ 載入設定檔</span><input type="file" id="cfg-load" accept="application/json,.json" /></button>
         </div>
         <div class="muted-note" data-i18n="note.configContents">含收據內容、主題、中英字體、顏色、上下/左右留白、底圖、貼紙——載回 100% 還原。</div>
         <details class="sub" id="card-json"><summary data-i18n="panel.json.title">進階:JSON(收據 / 訂單)</summary>
@@ -690,7 +694,7 @@
     <div class="canvas-tools">
       <button id="undo" data-i18n-title="nav.undo" title="上一步" disabled><span aria-hidden="true">↶</span> <span data-i18n="nav.undo">上一步</span></button>
       <button id="redo" data-i18n-title="nav.redo" title="下一步" disabled><span aria-hidden="true">↷</span> <span data-i18n="nav.redo">下一步</span></button>
-      <button id="mute-toggle" class="icon-btn" data-i18n-title="sound.toggle" title="音效開關" aria-pressed="false" style="margin-left:auto">🔇</button>
+      <button id="mute-toggle" class="icon-btn" data-i18n-title="sound.toggle" title="音效開關" aria-pressed="false" style="margin-left:auto"></button>
     </div>
     <div class="spec-cap"><span>[ SPECIMEN&nbsp;№ ]</span> · <span id="spec-readout">—</span></div>
     <div id="paper"><div id="svg-host"></div><div id="sticker-overlay"></div></div>
