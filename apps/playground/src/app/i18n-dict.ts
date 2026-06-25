@@ -6,16 +6,6 @@ export const DICT: Record<string, { zh: string; ja: string; en: string }> = {
     "ja": "receipt-engine",
     "en": "receipt-engine"
   },
-  "brand.titleSuffix": {
-    "zh": "試玩場",
-    "ja": "プレイグラウンド",
-    "en": "Playground"
-  },
-  "brand.subtitle": {
-    "zh": "直接在收據上操作:點文字改字、拖貼紙、拖邊界改尺寸、拖區塊排序。全程在你的瀏覽器裡跑,手機也行。",
-    "ja": "レシートを直接さわって編集——文字をタップして打ち替え、ステッカーをドラッグ、ふちをドラッグしてサイズ調整、ブロックをドラッグして並べ替え。すべてブラウザ内で完結するので、スマホでもOK。",
-    "en": "Edit right on the receipt — tap text to retype, drag stickers, drag the edges to resize, drag blocks to reorder. Runs entirely in your browser, on phones too."
-  },
   "group.appearance": {
     "zh": "外觀與版面",
     "ja": "外観とレイアウト",
@@ -371,11 +361,6 @@ export const DICT: Record<string, { zh: string; ja: string; en: string }> = {
     "ja": "ロゴをアップロード",
     "en": "Upload logo"
   },
-  "placeholder.icon": {
-    "zh": "或一個字當圖示",
-    "ja": "1文字をアイコンに",
-    "en": "A letter as icon"
-  },
   "subLabel.background": {
     "zh": "底圖 / 背景(透明度・大小・位置)",
     "ja": "背景画像(透明度・サイズ・位置)",
@@ -610,16 +595,6 @@ export const DICT: Record<string, { zh: string; ja: string; en: string }> = {
     "zh": "See you next event!",
     "ja": "See you next event!",
     "en": "See you next event!"
-  },
-  "btn.saveConfig": {
-    "zh": "⬇ 下載設定檔",
-    "ja": "⬇ 設定ファイルを保存",
-    "en": "⬇ Download config"
-  },
-  "btn.loadConfig": {
-    "zh": "⬆ 載入設定檔",
-    "ja": "⬆ 設定ファイルを読み込む",
-    "en": "⬆ Load config"
   },
   "note.configContents": {
     "zh": "含收據內容、主題、中英字體、顏色、上下/左右留白、底圖、貼紙——載回 100% 還原。",

@@ -5,7 +5,7 @@
 import { $, clientToReceipt, rectOf, scaleFactor, svgEl } from './dom'
 import { clamp, isImg, state } from './state'
 import { snapSticker, type Guide } from './snapping'
-import { prefersReducedMotion, vibrate } from './feel'
+import { announce, prefersReducedMotion, vibrate } from './feel'
 import { t } from './i18n'
 
 // the next layoutOverlay() pops this sticker index in (set by addSticker/addStickerAt)
@@ -126,6 +126,12 @@ function positionFrame(sk: any): void {
   frame.style.width = px + 'px'
   frame.style.height = px + 'px'
   frame.style.transform = 'translate(-50%,-50%) rotate(' + (sk.rotation || 0) + 'deg)'
+  // when the sticker sits at the receipt's right/top edge, the delete(top-right) and
+  // rotate(top) handles would land off-viewport (there is deliberately no horizontal scroll
+  // to chase them) — flip them inward via edge classes (CSS in index.html). rect-safe.
+  const r = frame.getBoundingClientRect()
+  frame.classList.toggle('edge-r', r.right > window.innerWidth - 44)
+  frame.classList.toggle('edge-t', r.top < 52)
 }
 
 function showFrameFor(sk: any): void {
@@ -175,6 +181,12 @@ function showFrameFor(sk: any): void {
       }
       const role = h.dataset.role
       const move = (ev: PointerEvent): void => {
+        // a concurrent render()/layoutOverlay() (theme/example switch mid-drag) can detach this
+        // handle — bail and release so the pointer isn't left captured on a dead node
+        if (!frame || !document.body.contains(h)) {
+          up()
+          return
+        }
         const p = clientToReceipt(ev.clientX, ev.clientY)
         const { cx, cy } = center()
         if (role === 'scale') {
@@ -187,7 +199,10 @@ function showFrameFor(sk: any): void {
         }
         repositionSelected(sk)
       }
+      let upDone = false
       const up = (): void => {
+        if (upDone) return
+        upDone = true
         try {
           h.releasePointerCapture(e.pointerId)
         } catch {
@@ -196,11 +211,13 @@ function showFrameFor(sk: any): void {
         h.removeEventListener('pointermove', move)
         h.removeEventListener('pointerup', up)
         h.removeEventListener('pointercancel', up)
+        h.removeEventListener('lostpointercapture', up)
         onCommit()
       }
       h.addEventListener('pointermove', move)
       h.addEventListener('pointerup', up)
       h.addEventListener('pointercancel', up)
+      h.addEventListener('lostpointercapture', up) // detached node still releases the gesture
     })
   })
 }
@@ -214,6 +231,39 @@ function repositionSelected(sk: any): void {
   positionFrame(sk)
 }
 
+let _nudgeT = 0
+/**
+ * Keyboard arrow-nudge of the selected sticker. Updates the model + reuses the SAME snap pass
+ * as dragging, repositions IN PLACE (so the focused handle survives → repeated presses work),
+ * pulses the guide + haptic on a fresh snap, and announces the position to screen readers.
+ */
+export function nudgeSelected(dx: number, dy: number): void {
+  const arr = (state.receipt as { stickers?: any[] }).stickers
+  const i = state.sel
+  if (!arr || !arr[i]) return
+  const sk = arr[i]
+  const sv = svgEl()
+  if (!sv) return
+  const vb = sv.viewBox.baseVal
+  const rawX = clamp((sk.x || 0) + dx, 0, vb.width)
+  const rawY = clamp((sk.y || 0) + dy, 0, vb.height)
+  const snapped = snapSticker(rawX, rawY, { width: vb.width, height: vb.height, others: others(i) })
+  sk.x = snapped.x
+  sk.y = snapped.y
+  repositionSelected(sk)
+  const fresh = snapped.guides.length > 0
+  drawGuides(snapped.guides, fresh)
+  if (fresh) vibrate(8)
+  window.setTimeout(() => clearGuides(), 240)
+  // keep keyboard focus ON the handle so the next arrow press keeps nudging (was lost when the
+  // whole overlay got rebuilt)
+  $('sticker-overlay').querySelector<HTMLElement>(`.sticker-handle[data-i="${i}"]`)?.focus()
+  // debounced position announce (coords are language-neutral; held keys don't spam the SR)
+  window.clearTimeout(_nudgeT)
+  _nudgeT = window.setTimeout(() => announce(`${Math.round(sk.x)}, ${Math.round(sk.y)}`), 250)
+  onCommit()
+}
+
 // ---------------------------------------------------------------------------
 // Build handles + body drag + pinch
 // ---------------------------------------------------------------------------
@@ -225,7 +275,7 @@ function makeHandle(sk: any, i: number): HandleEl {
   // keyboard-reachable: Tab to a sticker focuses+selects it; arrow keys then nudge it (see main.ts)
   el.tabIndex = 0
   el.setAttribute('role', 'button')
-  el.setAttribute('aria-label', t('panel.stickers.title'))
+  el.setAttribute('aria-label', t('panel.stickers.title') + ' ' + (i + 1)) // distinct + countable by ear
   el.addEventListener('focus', () => {
     if (state.sel !== i) select(i)
   })
@@ -294,6 +344,10 @@ function attachPointer(el: HandleEl, sk: any, i: number): void {
 
     let lastSnap = ''
     const move = (ev: PointerEvent): void => {
+      if (!document.body.contains(el)) {
+        up(ev)
+        return
+      } // handle detached by a mid-drag render() — release instead of leaking the capture
       if (!pts.has(ev.pointerId)) return
       pts.set(ev.pointerId, { x: ev.clientX, y: ev.clientY })
       if (pts.size >= 2 && pinch) {
@@ -340,6 +394,7 @@ function attachPointer(el: HandleEl, sk: any, i: number): void {
         el.removeEventListener('pointermove', move)
         el.removeEventListener('pointerup', up)
         el.removeEventListener('pointercancel', up)
+        el.removeEventListener('lostpointercapture', up)
         clearGuides()
         onCommit()
       }
@@ -347,6 +402,7 @@ function attachPointer(el: HandleEl, sk: any, i: number): void {
     el.addEventListener('pointermove', move)
     el.addEventListener('pointerup', up)
     el.addEventListener('pointercancel', up)
+    el.addEventListener('lostpointercapture', up) // detached node still releases the gesture
   })
 }
 

@@ -110,8 +110,11 @@ function build(): void {
   panel.id = 'inspector'
   panel.className = 'inspector'
   panel.hidden = true
+  // non-modal dialog (no aria-modal/trap — the "tweak then tap another text" flow must stay open)
+  panel.setAttribute('role', 'dialog')
+  panel.setAttribute('aria-labelledby', 'insp-title-label')
   panel.innerHTML =
-    '<div class="insp-head"><span class="insp-title" data-i18n="inspector.title">文字樣式</span>' +
+    '<div class="insp-head"><span class="insp-title" id="insp-title-label" data-i18n="inspector.title">文字樣式</span>' +
     '<button class="insp-x" id="insp-close" data-i18n-title="inspector.close.title" title="關閉">×</button></div>' +
     '<div class="insp-target" id="insp-target"></div>' +
     '<label class="insp-field" id="insp-text-wrap"><span data-i18n="inspector.field.text">文字內容</span><input type="text" id="insp-text" autocomplete="off" /></label>' +
@@ -147,6 +150,9 @@ function build(): void {
       r?.focus()
     }
   })
+  // the soft keyboard shrinks the visual viewport AFTER positionUi ran — re-clear the sheet then
+  window.visualViewport?.addEventListener('resize', clearSheetOverlap)
+  textInp.addEventListener('focus', () => window.setTimeout(clearSheetOverlap, 250))
   textInp.oninput = () => {
     const id = currentId()
     if (!id) return
@@ -204,7 +210,11 @@ function currentId(): string | null {
 function setWeightActive(w: number): void {
   $('insp-weight')
     .querySelectorAll('button')
-    .forEach((b) => b.classList.toggle('on', Number((b as HTMLElement).dataset.w) === w))
+    .forEach((b) => {
+      const on = Number((b as HTMLElement).dataset.w) === w
+      b.classList.toggle('on', on)
+      b.setAttribute('aria-pressed', String(on)) // expose selected weight to AT
+    })
 }
 
 // ---------------------------------------------------------------------------
@@ -292,13 +302,19 @@ export function selectText(id: string): void {
   renderStickerList()
   syncControls(id, el)
   panel!.hidden = false
+  panel!.classList.remove('in') // restart the entrance on each fresh selection
   positionUi(el)
+  const p = panel!
+  window.requestAnimationFrame(() => p.classList.add('in'))
 }
 
 export function clearSelection(): void {
   if (state.selection && state.selection.kind === 'text') state.selection = null
   srcEl = null
-  if (panel) panel.hidden = true
+  if (panel) {
+    panel.hidden = true
+    panel.classList.remove('in')
+  }
   if (box) box.hidden = true
 }
 
@@ -351,6 +367,21 @@ export function onCanvasKeydown(e: KeyboardEvent): void {
   inp.select()
 }
 
+/**
+ * On a phone the bottom sheet (and, once focused, the soft keyboard) can cover the very text
+ * being edited. Scroll it clear using the VISUAL viewport height so the math is correct AFTER
+ * the keyboard opens (visualViewport shrinks; window.innerHeight does not).
+ */
+function clearSheetOverlap(): void {
+  if (!panel || panel.hidden || !panel.classList.contains('as-sheet')) return
+  const id = currentId()
+  const el = id ? findEl(id) : null
+  if (!el) return
+  const vh = window.visualViewport?.height ?? window.innerHeight
+  const overlap = el.getBoundingClientRect().bottom - (vh - (panel.offsetHeight || 0) - 12)
+  if (overlap > 8) window.scrollBy(0, overlap)
+}
+
 function positionUi(el: SVGGraphicsElement): void {
   if (!box || !panel) return
   const rect = el.getBoundingClientRect()
@@ -371,10 +402,7 @@ function positionUi(el: SVGGraphicsElement): void {
   if (sheet) {
     panel.style.left = ''
     panel.style.top = ''
-    // the bottom sheet covers the lower screen — scroll the tapped element clear of it
-    const sheetH = panel.offsetHeight || 0
-    const overlap = rect.bottom - (window.innerHeight - sheetH - 12)
-    if (overlap > 8) window.scrollBy(0, overlap)
+    clearSheetOverlap() // scroll the tapped element clear of the bottom sheet
   } else {
     const pw = panel.offsetWidth || 280
     const ph = panel.offsetHeight || 200

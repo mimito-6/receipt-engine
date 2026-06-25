@@ -48,9 +48,9 @@ const EXTRA: Record<string, { zh: string; ja: string; en: string }> = {
   'handoff.shareTitle': { zh: '我的收據', ja: 'レシート', en: 'My receipt' },
   'handoff.shared': { zh: '已分享', ja: '共有しました', en: 'Shared' },
   'handoff.savedHint': {
-    zh: '已下載圖片(iPhone 可長按圖片儲存)',
-    ja: '画像を保存しました(iPhone は長押しで保存)',
-    en: 'Saved (on iPhone, long-press the image to save)',
+    zh: '已儲存圖片',
+    ja: '画像を保存しました',
+    en: 'Image saved',
   },
   // ── export result toasts (Phase C) ──
   'autosave.quota': {
@@ -63,6 +63,7 @@ const EXTRA: Record<string, { zh: string; ja: string; en: string }> = {
   'toast.html': { zh: '已下載 HTML', ja: 'HTML を保存しました', en: 'HTML saved' },
   // ── de-emoji overrides ──
   'placeholder.icon': { zh: '或一個字當圖示', ja: '1文字をアイコンに', en: 'A letter as icon' },
+  'theme.group.label': { zh: '收據風格', ja: 'レシートのスタイル', en: 'Receipt style' },
   'btn.saveConfig': { zh: '↓ 下載設定檔', ja: '↓ 設定を保存', en: '↓ Save config' },
   'btn.loadConfig': { zh: '↑ 載入設定檔', ja: '↑ 設定を読込', en: '↑ Load config' },
   // ── first-run studio intro (Phase C) ──
@@ -124,6 +125,10 @@ export function applyI18n(): void {
   document.querySelectorAll<HTMLElement>('[data-i18n-title]').forEach((el) => {
     const k = el.getAttribute('data-i18n-title')
     if (k) el.title = t(k)
+  })
+  document.querySelectorAll<HTMLElement>('[data-i18n-aria-label]').forEach((el) => {
+    const k = el.getAttribute('data-i18n-aria-label')
+    if (k) el.setAttribute('aria-label', t(k))
   })
   document.querySelectorAll<HTMLElement>('.lang button[data-lang]').forEach((b) => {
     const on = b.getAttribute('data-lang') === lang

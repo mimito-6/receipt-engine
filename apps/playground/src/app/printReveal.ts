@@ -49,14 +49,22 @@ export function playPrintReveal(): Promise<void> {
   return new Promise<void>((resolve) => {
     const stage = document.createElement('div')
     stage.className = 'print-stage'
-    stage.setAttribute('role', 'status')
-    stage.setAttribute('aria-label', t('print.printing'))
+    // a transient modal (like handoff): announce it, make Esc/tap-to-skip discoverable, and hide
+    // the editor behind it from AT for the ~1.8s it's up
+    stage.setAttribute('role', 'dialog')
+    stage.setAttribute('aria-modal', 'true')
+    stage.tabIndex = -1
+    stage.setAttribute('aria-label', t('print.printing') + ' · ' + t('print.skip'))
     stage.innerHTML =
       `<div class="print-status" id="print-status">${esc(t('print.warming'))}</div>` +
       '<div class="print-machine"><div class="print-mouth"></div>' +
       '<div class="print-paper-wrap"><div class="print-paper"></div></div></div>' +
       `<div class="print-skip">${esc(t('print.skip'))}</div>`
     document.body.appendChild(stage)
+    // hide the editor behind the ceremony from assistive tech (restored in finish())
+    const bgHidden = [document.querySelector('.layout'), document.querySelector('header')]
+    bgHidden.forEach((b) => b?.setAttribute('aria-hidden', 'true'))
+    stage.focus()
     // render the SAME receipt the export/handoff show (WITH stickers) — the editor SVG strips
     // them, so cloning it would "print" a different receipt than the one you download
     const paperEl = stage.querySelector('.print-paper') as HTMLElement
@@ -72,6 +80,7 @@ export function playPrintReveal(): Promise<void> {
       if (done) return
       done = true
       window.removeEventListener('keydown', onKey)
+      bgHidden.forEach((b) => b?.removeAttribute('aria-hidden'))
       stage.classList.add('out')
       announce(t('print.done'))
       window.setTimeout(() => {

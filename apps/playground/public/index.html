@@ -160,7 +160,7 @@
   .group-title { color: var(--ink); font-family: var(--font-ui); font-size: 14px; font-weight: 700; letter-spacing: 0;
     margin: 2px 0 2px; display: flex; align-items: baseline; gap: 10px; }
   .group-title .chap-no { font-family: var(--font-display); font-weight: 400; font-size: 30px; line-height: .7;
-    color: var(--ink); letter-spacing: .02em; flex: none; transform: translateY(2px); }
+    color: var(--ink); letter-spacing: .02em; flex: none; align-self: center; transform: translateY(1px); }
   .group-title .ico { display: none; }
   .group-title > span:last-child { position: relative; z-index: 0; }
   .group-title > span:last-child::before { content: ''; position: absolute; left: -2px; right: -3px; bottom: 0; height: 9px;
@@ -180,9 +180,15 @@
     padding: 13px 14px 15px; box-shadow: var(--shadow-panel);
     transition: box-shadow var(--dur-settle), transform var(--dur-settle); transform-origin: left center; }
   .card:hover { box-shadow: var(--shadow-float); }
-  details.card:not([open]) { transform: rotate(-.4deg); box-shadow: 3px 3px 0 rgba(20,20,15,.13), var(--shadow-panel); }
-  details.card:not([open]):nth-of-type(even) { transform: rotate(.5deg); }
-  details.card[open] { transform: rotate(0); box-shadow: var(--shadow-float); }
+  /* stable per-position paste angles (4-cycle) so opening a middle card never leaves two closed
+     neighbours tilting the same way — the parity no longer re-seeds on open/close */
+  details.card:not([open]) { box-shadow: 3px 3px 0 rgba(20,20,15,.13), var(--shadow-panel); }
+  details.card:not([open]):nth-of-type(4n+1) { transform: rotate(-.5deg); }
+  details.card:not([open]):nth-of-type(4n+2) { transform: rotate(.6deg); }
+  details.card:not([open]):nth-of-type(4n+3) { transform: rotate(-.3deg); }
+  details.card:not([open]):nth-of-type(4n) { transform: rotate(.4deg); }
+  /* open = pressed flat (hard 1px), keeping one hard-shadow elevation story closed→hover→open */
+  details.card[open] { transform: rotate(0); box-shadow: 1px 1px 0 rgba(20,20,15,.13), var(--shadow-panel); }
   .card > h2 { margin: 0 0 9px; font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
   .card > h2 .hint { font-weight: 500; color: var(--muted); font-size: 11px; }
   details.card > summary { font-size: 13px; font-weight: 700; cursor: pointer; list-style: none; display: flex; align-items: center; gap: 6px; }
@@ -236,7 +242,8 @@
   /* drag-from-tray ghost: a sticker floating under the finger, drops onto the receipt */
   .re-sticker-ghost { position: fixed; z-index: 130; width: 54px; height: 54px; margin: -27px 0 0 -27px;
     pointer-events: none; transform: rotate(-7deg); opacity: .92; filter: drop-shadow(0 6px 10px rgba(22,22,30,.32));
-    transition: transform var(--dur-tap); }
+    transition: transform var(--dur-tap), opacity var(--dur-tap); }
+  .re-sticker-ghost.birth { transform: rotate(-7deg) scale(.55); opacity: 0; } /* lifts off the tray instead of teleporting */
   .re-sticker-ghost.over { transform: rotate(0) scale(1.1); }
   .re-sticker-ghost.land { transition: transform var(--dur-settle) var(--ease-out), opacity var(--dur-settle); transform: rotate(0) scale(.55); opacity: 0; }
   .stk { border: 1px solid var(--line); border-radius: 10px; padding: 8px; margin-top: 8px; }
@@ -278,6 +285,15 @@
     .inspector { background: rgba(255,255,255,.78); -webkit-backdrop-filter: blur(12px) saturate(1.2); backdrop-filter: blur(12px) saturate(1.2); }
   }
   .inspector[hidden] { display: none; }
+  /* entrance: the most-used surface gets the same crafted reveal as every other (toast/intro/sticker) */
+  @media (prefers-reduced-motion: no-preference) {
+    .inspector { opacity: 0; transform: translateY(6px); transition: opacity var(--dur-settle) var(--ease-out), transform var(--dur-settle) var(--ease-out); }
+    .inspector.in { opacity: 1; transform: translateY(0); }
+    .inspector.as-sheet { transform: translateY(12px); }
+    .inspector.as-sheet.in { transform: translateY(0); }
+    #re-sel-box:not([hidden]) { animation: sel-box-in var(--dur-tap) var(--ease-out); }
+  }
+  @keyframes sel-box-in { from { opacity: .3; } to { opacity: 1; } }
   .insp-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
   .insp-title { font-family: var(--font-label); font-size: 13px; font-weight: 700; letter-spacing: var(--ls-label); }
   .insp-x { margin-left: auto; border: none; background: #f1f1f4; color: var(--muted); width: 26px; height: 26px;
@@ -306,7 +322,7 @@
   .insp-reset:hover { border-color: var(--ink-affordance); color: var(--ink); }
   .inspector.as-sheet { left: 0; right: 0; bottom: 0; top: auto; width: auto; border-radius: 16px 16px 0 0;
     padding-bottom: calc(13px + env(safe-area-inset-bottom)); box-shadow: 0 -10px 30px rgba(22,22,30,.18);
-    max-height: 72vh; overflow-y: auto; -webkit-overflow-scrolling: touch; } /* on-screen keyboard must not hide lower controls */
+    max-height: min(72vh, calc(100dvh - 120px)); overflow-y: auto; -webkit-overflow-scrolling: touch; } /* never fully eclipse the receipt; keyboard must not hide lower controls */
 
   /* ---- sticker PS-style transform frame + alignment guides ---- */
   .re-guide { position: absolute; pointer-events: none; z-index: 5; }
@@ -329,6 +345,14 @@
   .re-stem { position: absolute; left: 50%; top: 0; width: 0; height: 28px; transform: translate(-50%, -100%);
     border-left: 1.5px dashed var(--ink-affordance); pointer-events: none; }
   #paper.thermal .re-frame, #paper.thermal .re-h, #paper.thermal .re-stem, #paper.thermal .re-guide { filter: none; }
+  /* edge-aware handle flips: keep the delete/rotate affordances on-screen when the sticker hugs
+     the receipt's right/top edge (classes toggled by overlay.positionFrame) — there is no
+     horizontal scroll to chase an off-viewport handle */
+  .re-frame.edge-r .re-del { right: auto; left: 0; transform: translate(-50%, -50%) translate(-20px, -20px); }
+  .re-frame.edge-t .re-rot { top: auto; bottom: 0; transform: translate(-50%, 28px); }
+  .re-frame.edge-t .re-stem { top: auto; bottom: 0; transform: translate(-50%, 100%); }
+  .re-frame.edge-t .re-del { top: auto; bottom: 0; transform: translate(50%, 50%) translate(20px, 20px); }
+  .re-frame.edge-t.edge-r .re-del { right: auto; left: 0; top: auto; bottom: 0; transform: translate(-50%, 50%) translate(-20px, 20px); }
   /* Bigger, comfier touch targets on phones/tablets (coarse pointers). */
   @media (pointer: coarse) {
     .re-h { width: 22px; height: 22px; }
@@ -387,7 +411,8 @@
   .print-machine { width: min(340px, 84vw); display: flex; flex-direction: column; align-items: center; }
   .print-mouth { position: relative; z-index: 2; width: 105%; height: 26px; border-radius: 8px;
     background: linear-gradient(180deg, #45454e, #25252c);
-    box-shadow: 0 8px 18px rgba(22,22,30,.3), inset 0 -2px 4px rgba(0,0,0,.4); }
+    box-shadow: 0 8px 18px rgba(22,22,30,.3), inset 0 -2px 4px rgba(0,0,0,.4);
+    transition: transform var(--dur-tap) var(--ease-out); } /* ease back to rest when the breathe loop stops, no hitch */
   .print-mouth::after { content: ''; position: absolute; left: 8%; right: 8%; bottom: 5px; height: 4px; border-radius: 3px;
     background: #0b0b10; box-shadow: 0 -1px 0 rgba(255,255,255,.12); }
   .print-paper-wrap { position: relative; z-index: 1; width: 100%; margin-top: -7px; overflow: hidden;
@@ -448,7 +473,7 @@
 
   /* ── BLUE STORE PRESS — spec chips, sticker buttons, "the press runs" load ── */
   .spec-cap { font-family: var(--font-label); font-size: 11px; letter-spacing: .04em; color: var(--muted);
-    text-align: center; font-variant-numeric: tabular-nums; margin: 6px 0 -4px; } /* hug the specimen below, not the toolbar above */
+    text-align: center; font-variant-numeric: tabular-nums; margin: 14px 0 6px; } /* float in clear space over the specimen, not crowded onto the toolbar/paper */
   .spec-cap #spec-readout { color: var(--ink); font-weight: 700; }
   .export-label { font-family: var(--font-label); font-size: 11px; letter-spacing: .14em; color: var(--muted);
     text-align: center; margin: 8px 0 -2px; }
@@ -508,9 +533,9 @@
   .re-intro-title { font-family: var(--font-display); font-weight: 400; font-size: clamp(30px, 9vw, 42px); line-height: .95; color: var(--ink); margin-top: 6px; }
   .re-intro-tag { margin: 12px 0 0; color: var(--muted); font-size: 13.5px; line-height: 1.55; }
   .re-intro-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+  /* one marker, one hand: all lime swipes lean the house -12° (no opposite sign-flip) */
   .re-intro-chips span { font-size: 12px; font-weight: 700; color: var(--ink); background: var(--zine-lime);
-    padding: 5px 11px; border-radius: 4px; transform: skewX(-8deg); }
-  .re-intro-chips span:nth-child(2) { transform: skewX(7deg); }
+    padding: 5px 11px; border-radius: 4px; transform: skewX(-12deg); }
   .re-intro-go { margin-top: 20px; width: 100%; font: inherit; font-weight: 700; font-size: 15px; cursor: pointer;
     color: #fff; background: var(--zine-blue); border: none; border-radius: 10px; padding: 13px; box-shadow: 3px 3px 0 var(--ink); }
   .re-intro-go:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--ink); }
@@ -556,9 +581,9 @@
       <div class="group-title"><span class="chap-no" aria-hidden="true">01</span><span data-i18n="group.appearance">外觀與版面</span></div>
 
       <details class="card" open><summary><span data-i18n="panel.style.title">風格與顏色字體</span> <span class="hint" data-i18n="panel.style.hint">主題 / 範例 / 顏色 / 字體</span></summary>
-        <div class="seg" id="theme-seg">
-          <button data-theme="custom" class="on"><span class="big" data-i18n="theme.custom.title">自訂彩色</span><span class="sub" data-i18n="theme.custom.sub">彩色,可改色/字/貼紙</span></button>
-          <button data-theme="thermal"><span class="big" data-i18n="theme.thermal.title">收據機</span><span class="sub" data-i18n="theme.thermal.sub">黑白等寬,圖自動轉灰</span></button>
+        <div class="seg" id="theme-seg" role="group" data-i18n-aria-label="theme.group.label" aria-label="收據風格">
+          <button type="button" data-theme="custom" class="on" aria-pressed="true"><span class="big" data-i18n="theme.custom.title">自訂彩色</span><span class="sub" data-i18n="theme.custom.sub">彩色,可改色/字/貼紙</span></button>
+          <button type="button" data-theme="thermal" aria-pressed="false"><span class="big" data-i18n="theme.thermal.title">收據機</span><span class="sub" data-i18n="theme.thermal.sub">黑白等寬,圖自動轉灰</span></button>
         </div>
         <div class="row2" style="margin-top:10px">
           <div><label class="field" data-i18n="field.startFromSample">從範例開始</label>

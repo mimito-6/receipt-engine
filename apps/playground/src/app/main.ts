@@ -29,7 +29,7 @@ import {
   normalize,
 } from './io'
 import { downloadPng } from './pngExport'
-import { layoutOverlay, setStickerCommit, setStickerDelete, setStickerSelect } from './overlay'
+import { layoutOverlay, nudgeSelected, setStickerCommit, setStickerDelete, setStickerSelect } from './overlay'
 import { clearSelection, onCanvasDblClick, onCanvasKeydown, refreshInspector } from './inspector'
 import { installEdgeHandles } from './resize'
 import { beginCanvasGesture } from './reorder'
@@ -58,7 +58,11 @@ function setTheme(t: ThemeName): void {
   state.theme = t
   $('theme-seg')
     .querySelectorAll('button')
-    .forEach((b) => b.classList.toggle('on', (b as HTMLElement).dataset.theme === t))
+    .forEach((b) => {
+      const on = (b as HTMLElement).dataset.theme === t
+      b.classList.toggle('on', on)
+      b.setAttribute('aria-pressed', String(on)) // expose selected state to AT (colour alone fails WCAG)
+    })
   syncFormFromState()
   render()
   // quick opacity swap so a theme change reads as a fresh "print" (opacity only — rect-safe)
@@ -141,8 +145,10 @@ function attachStickerDrag(btn: HTMLButtonElement, content: string): void {
       if (!ghost) {
         ghost = document.createElement('img')
         ghost.src = content
-        ghost.className = 're-sticker-ghost'
+        ghost.className = 're-sticker-ghost birth'
         document.body.appendChild(ghost)
+        const g = ghost
+        window.requestAnimationFrame(() => g.classList.remove('birth')) // lift off the tray
       }
       ghost.style.left = ev.clientX + 'px'
       ghost.style.top = ev.clientY + 'px'
@@ -229,15 +235,11 @@ function wire(): void {
     }
     const d = delta[e.key]
     if (!d) return
-    const stk = (state.receipt as unknown as { stickers?: Array<{ x?: number; y?: number }> }).stickers?.[sel.index]
-    if (!stk) return
     e.preventDefault()
     const step = e.shiftKey ? 12 : 2
-    const vb = svgEl()?.viewBox.baseVal
-    stk.x = Math.round(Math.max(0, Math.min(vb ? vb.width : 9999, (stk.x || 0) + d[0] * step)))
-    stk.y = Math.round(Math.max(0, Math.min(vb ? vb.height : 9999, (stk.y || 0) + d[1] * step)))
-    layoutOverlay()
-    ;($('json') as HTMLTextAreaElement).value = JSON.stringify(state.receipt, null, 2)
+    // nudgeSelected updates in place (focus survives → repeated presses work), snaps + pulses +
+    // announces, and syncs #json via the commit callback
+    nudgeSelected(d[0] * step, d[1] * step)
   })
 
   // theme + example
@@ -746,9 +748,11 @@ try {
 const AUTOSAVE_KEY = 're-autosave'
 let _saveT = 0
 let quotaWarned = false
+let dirty = false // unsaved edits since the last successful write
 function autosaveNow(): void {
   try {
     localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(buildConfig()))
+    dirty = false
   } catch {
     // quota exceeded (a large data-URI image) or storage blocked: drop any older snapshot so
     // the boot prompt never offers a STALE design as "your last design"
@@ -766,6 +770,7 @@ function autosaveNow(): void {
   }
 }
 function scheduleAutosave(): void {
+  dirty = true
   window.clearTimeout(_saveT)
   _saveT = window.setTimeout(autosaveNow, 900)
 }
@@ -773,18 +778,23 @@ function scheduleAutosave(): void {
 document.addEventListener('input', scheduleAutosave, true)
 document.addEventListener('change', scheduleAutosave, true)
 // save on hide (covers tab-close / app-switch) — NOT beforeunload, whose synchronous stringify
-// of multi-MB base64 images would stall the close on a low-end phone
+// of multi-MB base64 images would stall the close on a low-end phone. Only when DIRTY, so an
+// idle tab-switch / screen-lock doesn't re-serialize a multi-MB design the 900ms debounce
+// already saved.
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'hidden') autosaveNow()
+  if (document.visibilityState === 'hidden' && dirty) autosaveNow()
 })
 
 function offerRestore(cfg: unknown): void {
   const bar = document.createElement('div')
   bar.className = 're-restore'
-  // a transient suggestion, not a modal — role=status (a false role=dialog would demand a focus trap)
-  bar.setAttribute('role', 'status')
-  bar.setAttribute('aria-label', t('restore.prompt'))
+  // a NON-blocking dialog (aria-modal=false, no focus trap): role=status flattens its buttons
+  // for some screen readers, so the only "restore my work" action becomes unreachable
+  bar.setAttribute('role', 'dialog')
+  bar.setAttribute('aria-modal', 'false')
+  bar.setAttribute('aria-labelledby', 're-restore-msg')
   const msg = document.createElement('span')
+  msg.id = 're-restore-msg'
   msg.textContent = t('restore.prompt')
   const yes = document.createElement('button')
   yes.type = 'button'
@@ -795,6 +805,7 @@ function offerRestore(cfg: unknown): void {
   no.textContent = t('restore.no')
   bar.append(msg, yes, no)
   document.body.appendChild(bar)
+  yes.focus() // land focus on the prompt so a keyboard/SR user can act without blind-Tabbing the page
   const close = (): void => bar.remove()
   yes.addEventListener('click', () => {
     applyConfig(cfg)
