@@ -38,7 +38,7 @@ import { applyI18n, setLang, t, type Lang } from './i18n'
 import { fastPrint, playPrintReveal, setFastPrint } from './printReveal'
 import { isMuted, primeAudio, setMuted } from './sound'
 import { isHandoffOpen, openHandoff } from './handoff'
-import { releaseFocus, trapFocus } from './feel'
+import { releaseFocus, toast, trapFocus } from './feel'
 
 // Expose the engine under the historical global so embedders/docs keep working.
 ;(window as unknown as Record<string, unknown>).ReceiptEngine = {
@@ -745,6 +745,7 @@ try {
 // restore it once at boot. Reuses buildConfig()/applyConfig() — no new serialization.
 const AUTOSAVE_KEY = 're-autosave'
 let _saveT = 0
+let quotaWarned = false
 function autosaveNow(): void {
   try {
     localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(buildConfig()))
@@ -755,6 +756,12 @@ function autosaveNow(): void {
       localStorage.removeItem(AUTOSAVE_KEY)
     } catch {
       /* ignore */
+    }
+    // tell the user ONCE that auto-restore has stopped — don't fail silently on the heavy
+    // image-laden designs most worth saving
+    if (!quotaWarned) {
+      quotaWarned = true
+      toast(t('autosave.quota'))
     }
   }
 }
@@ -780,8 +787,10 @@ function offerRestore(cfg: unknown): void {
   const msg = document.createElement('span')
   msg.textContent = t('restore.prompt')
   const yes = document.createElement('button')
+  yes.type = 'button'
   yes.textContent = t('restore.yes')
   const no = document.createElement('button')
+  no.type = 'button'
   no.className = 'ghost'
   no.textContent = t('restore.no')
   bar.append(msg, yes, no)
@@ -792,8 +801,8 @@ function offerRestore(cfg: unknown): void {
     close()
   })
   no.addEventListener('click', close)
-  const autoT = window.setTimeout(close, 12000)
-  bar.addEventListener('focusin', () => window.clearTimeout(autoT)) // don't cut an AT user off mid-read
+  // no auto-dismiss timer: both buttons dismiss it, and a 12s timeout could pull the only
+  // "restore my work" affordance before a screen-reader / keyboard user reaches it
 }
 
 // only at boot, before any interaction, so a returning visitor can pick their work back up

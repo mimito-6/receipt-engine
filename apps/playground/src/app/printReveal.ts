@@ -96,9 +96,18 @@ export function playPrintReveal(): Promise<void> {
         playWhir(1.05)
       }, 420)
     })
-    // a soft completion ding when the feed finishes (a skipped run won't ding)
+    // feed finished: a soft ding + a tiny tear-off settle (WAAPI so it composes over, not
+    // fights, the CSS feed animation) so the ceremony lands instead of trailing into dead air
     window.setTimeout(() => {
-      if (!done) playDing()
+      if (done) return
+      playDing()
+      vibrate(12)
+      if (!prefersReducedMotion() && typeof paperEl.animate === 'function') {
+        paperEl.animate(
+          [{ transform: 'translateY(0)' }, { transform: 'translateY(3px)' }, { transform: 'translateY(0)' }],
+          { duration: 200, easing: 'cubic-bezier(.2,.7,.3,1)' },
+        )
+      }
     }, 1480)
     // resolve after warming (420) + feed (1050) + settle (330)
     window.setTimeout(finish, 1800)
