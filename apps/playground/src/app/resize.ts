@@ -75,6 +75,7 @@ function dragWidth(el: HTMLElement): void {
       el.removeEventListener('pointermove', move)
       el.removeEventListener('pointerup', up)
       el.removeEventListener('pointercancel', up)
+      if (active) document.dispatchEvent(new Event('re:edit')) // persist the new width via autosave
     }
     el.addEventListener('pointermove', move)
     el.addEventListener('pointerup', up)
@@ -122,6 +123,7 @@ function dragPad(el: HTMLElement, which: 'top' | 'bottom'): void {
       el.removeEventListener('pointermove', move)
       el.removeEventListener('pointerup', up)
       el.removeEventListener('pointercancel', up)
+      if (active) document.dispatchEvent(new Event('re:edit')) // persist the new padding via autosave
     }
     el.addEventListener('pointermove', move)
     el.addEventListener('pointerup', up)

@@ -79,6 +79,7 @@ function blockRects(): BlockRect[] {
 function applyOrder(keys: string[]): void {
   ;(state.receipt as any).blockOrder = keys
   render()
+  document.dispatchEvent(new Event('re:edit')) // persist via autosave (no input/change fires here)
 }
 
 // ---------------------------------------------------------------------------
@@ -198,33 +199,43 @@ export function beginCanvasGesture(e: PointerEvent): void {
     // dragged) so the line shows exactly where it will land — no off-by-one.
     positionLine(ev.clientY, blockRects().filter((r) => r.key !== blockKey))
   }
-  const up = (ev: PointerEvent): void => {
+  const cleanup = (ev: PointerEvent): void => {
     host.removeEventListener('pointermove', move)
     host.removeEventListener('pointerup', up)
-    host.removeEventListener('pointercancel', up)
+    host.removeEventListener('pointercancel', cancel)
+    host.removeEventListener('lostpointercapture', cancel)
     try {
       host.releasePointerCapture(ev.pointerId)
     } catch {
       /* ignore */
     }
     if (started && blockKey) {
-      const others = blockRects().filter((r) => r.key !== blockKey)
-      const idx = insertionIndex(ev.clientY, others)
       hideLine()
       hideDragFrame()
       dimBlock(blockKey, false)
+    }
+  }
+  const up = (ev: PointerEvent): void => {
+    const wasStarted = started
+    cleanup(ev)
+    if (wasStarted && blockKey) {
+      const others = blockRects().filter((r) => r.key !== blockKey)
+      const idx = insertionIndex(ev.clientY, others)
       const order = domOrder().filter((k) => k !== blockKey)
       order.splice(idx, 0, blockKey)
       applyOrder(order)
-    } else {
-      // a tap: style the text, or deselect on a gap
+    } else if (!wasStarted) {
+      // a tap (never a drag): style the text, or deselect on a gap
       if (textId) selectText(textId)
       else clearSelection()
     }
   }
+  // a cancelled gesture (browser/app-switch, capture loss) must NOT commit a reorder or fire a tap
+  const cancel = (ev: PointerEvent): void => cleanup(ev)
   host.addEventListener('pointermove', move)
   host.addEventListener('pointerup', up)
-  host.addEventListener('pointercancel', up)
+  host.addEventListener('pointercancel', cancel)
+  host.addEventListener('lostpointercapture', cancel)
 }
 
 // ---------------------------------------------------------------------------

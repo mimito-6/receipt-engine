@@ -222,6 +222,7 @@ export function addSticker(content: string): void {
   popSticker(state.sel)
   renderStickerList()
   render()
+  document.dispatchEvent(new Event('re:edit')) // canvas edit → persist via autosave (no input fires)
   // on a phone the tray sits a full scroll above #paper — bring the receipt (and the new sticker,
   // now draggable on it) into view so the tap-to-add path lands visibly
   if (window.matchMedia?.('(pointer: coarse)').matches) {
@@ -251,6 +252,7 @@ export function addStickerAt(content: string, x: number, y: number): void {
   popSticker(state.sel)
   renderStickerList()
   render()
+  document.dispatchEvent(new Event('re:edit')) // canvas edit → persist via autosave
 }
 
 function val(id: string, v: unknown): void {

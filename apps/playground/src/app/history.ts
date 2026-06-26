@@ -122,6 +122,7 @@ export function undo(): void {
 }
 
 export function redo(): void {
+  flushPending() // commit any pending edit first (else a fast edit-after-undo is overwritten by redo)
   if (index < timeline.length - 1) {
     index++
     apply(timeline[index]!, 'redo')

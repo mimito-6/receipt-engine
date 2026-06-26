@@ -95,6 +95,7 @@ function loadExample(key: string): void {
   state.mono = { custom: false, thermal: true }
   state.edges = { custom: false, thermal: true }
   state.cleanExport = false
+  resetAutosave() // a fresh, likely-smaller design — give autosave another chance if it had latched off
   syncFormFromState()
   render()
   replayPrint() // same crafted re-print as the theme toggle (was a hard pop)
@@ -134,6 +135,7 @@ function applyConfig(cfg: any): void {
   if (typeof cfg.cleanExport === 'boolean') state.cleanExport = cfg.cleanExport
   state.sel = -1
   state.selection = null
+  resetAutosave() // loaded design may be smaller — re-arm autosave if a prior quota fail latched it off
   setTheme(cfg.theme === 'thermal' ? 'thermal' : 'custom')
   resetHistory()
 }
@@ -226,6 +228,7 @@ function wire(): void {
   setStickerCommit(() => {
     ;($('json') as HTMLTextAreaElement).value = JSON.stringify(state.receipt, null, 2)
     renderStickerList()
+    scheduleAutosave() // canvas edits don't fire input/change — mark dirty so they persist
   })
   setStickerSelect(() => {
     clearSelection() // selecting a sticker closes the text inspector
@@ -234,6 +237,7 @@ function wire(): void {
   setStickerDelete(() => {
     renderStickerList()
     render()
+    scheduleAutosave()
   })
 
   // canvas: tap text to style it; drag a section to reorder it; double-tap to edit text
@@ -549,6 +553,9 @@ function wire(): void {
       showError(t('error.receiptIncomplete'))
       return
     }
+    // the boot restore prompt lives outside .layout, so the export-time inert doesn't freeze it —
+    // dismiss it so a click-Restore mid-font-fetch can't swap the receipt out from under the export
+    document.querySelector('.re-restore')?.remove()
     if (trigger) stampPress(trigger) // instant press-confirm — the ceremony only spins up ~1 frame later
     exporting = true
     primeAudio()
@@ -825,13 +832,15 @@ let _saveT = 0
 let quotaWarned = false
 let autosaveDisabled = false // stop re-serializing multi-MB designs once storage is full
 let dirty = false // unsaved edits since the last successful write
-let _lastSerialized = '' // most recent successful blob, reused on tab-hide to skip a re-stringify
+/** Re-arm autosave after a load/example-swap (a quota latch shouldn't outlive the heavy design that tripped it). */
+function resetAutosave(): void {
+  autosaveDisabled = false
+  quotaWarned = false
+}
 function autosaveNow(): void {
   if (autosaveDisabled) return
   try {
-    const s = JSON.stringify(buildConfig())
-    localStorage.setItem(AUTOSAVE_KEY, s)
-    _lastSerialized = s
+    localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(buildConfig()))
     dirty = false
   } catch {
     // quota exceeded (a large data-URI image) or storage blocked: drop any older snapshot so
@@ -859,24 +868,17 @@ function scheduleAutosave(): void {
 // form edits fire input/change; canvas gestures don't, so also save on leave/hide
 document.addEventListener('input', scheduleAutosave, true)
 document.addEventListener('change', scheduleAutosave, true)
+// canvas-only mutations (block reorder, edge resize) dispatch this since they fire no input/change
+document.addEventListener('re:edit', () => scheduleAutosave())
 // save on hide (covers tab-close / app-switch) — NOT beforeunload, whose synchronous stringify
 // of multi-MB base64 images would stall the close on a low-end phone. Only when DIRTY, so an
 // idle tab-switch / screen-lock doesn't re-serialize a multi-MB design the 900ms debounce
 // already saved.
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState !== 'hidden' || !dirty || autosaveDisabled) return
-  // for a heavy design, write the recently-cached blob (the 900ms debounce already produced one)
-  // instead of synchronously re-stringifying several MB of base64 on the hide event
-  if (_lastSerialized && _lastSerialized.length > 1e6) {
-    try {
-      localStorage.setItem(AUTOSAVE_KEY, _lastSerialized)
-      dirty = false
-    } catch {
-      autosaveDisabled = true
-    }
-  } else {
-    autosaveNow()
-  }
+  // serialize the CURRENT design when dirty — reusing the last cached blob (a former optimization)
+  // could drop an edit made within the 900ms debounce window right before hide. dirty is usually
+  // already false here (the debounce saved it), so the sync stringify is rare.
+  if (document.visibilityState === 'hidden' && dirty) autosaveNow()
 })
 
 function offerRestore(cfg: unknown): void {
