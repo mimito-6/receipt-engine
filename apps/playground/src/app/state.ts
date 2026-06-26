@@ -198,7 +198,7 @@ export const examples: Record<string, { receipt: Draft; custom: Look }> = {
       items: [{ name: '商品 1', quantity: 1, unitPrice: 100 }],
       message: { title: 'Thank you!' },
     } as Draft,
-    custom: { primary: '#2b2b33', bg: '#ffffff', surface: '#ffffff', text: '#2b2b33', latinFont: 'poppins', cjkFont: 'noto' },
+    custom: { primary: '#2b2b33', bg: '#eef0f3', surface: '#ffffff', text: '#2b2b33', latinFont: 'poppins', cjkFont: 'noto' },
   },
   // ── 同人攤位: cheerful pink, rounded playful font, corner stars ──
   cute: {
@@ -223,7 +223,7 @@ export const examples: Record<string, { receipt: Draft; custom: Look }> = {
         { content: STICKERS[3], anchor: 'free', x: 612, y: 92, size: 50 },
       ],
     } as Draft,
-    custom: { primary: '#ef5b9c', bg: '#ffffff', surface: '#ffffff', text: '#3a2733', latinFont: 'fredoka', cjkFont: 'noto', stars: true },
+    custom: { primary: '#ef5b9c', bg: '#fbe9f1', surface: '#ffffff', text: '#3a2733', latinFont: 'fredoka', cjkFont: 'noto', stars: true },
   },
   // ── 印刷所: the BLUE STORE PRESS zine look — blue + warm cream paper, mono ──
   zine: {
@@ -243,7 +243,7 @@ export const examples: Record<string, { receipt: Draft; custom: Look }> = {
       message: { title: 'PRINTED FOR YOU', footer: 'KEEP THE RECEIPT' },
       stickers: [{ content: STICKERS[0], anchor: 'free', x: 612, y: 96, size: 52 }],
     } as Draft,
-    custom: { primary: '#1B4DE4', bg: '#FBF8EF', surface: '#FBF8EF', text: '#14140F', latinFont: 'spacemono', cjkFont: 'sarasa' },
+    custom: { primary: '#1B4DE4', bg: '#EFE9D6', surface: '#FBF8EF', text: '#14140F', latinFont: 'spacemono', cjkFont: 'sarasa' },
   },
   // ── 咖啡店: warm espresso on cream ──
   coffee: {
@@ -261,7 +261,7 @@ export const examples: Record<string, { receipt: Draft; custom: Look }> = {
       qr: { value: 'https://corner.coffee/r/0042', label: 'View online' },
       message: { title: 'Thank you!', body: 'Have a lovely day.' },
     } as Draft,
-    custom: { primary: '#7a4a24', bg: '#fffaf3', surface: '#fffaf3', text: '#4a3526', latinFont: 'poppins', cjkFont: 'noto' },
+    custom: { primary: '#7a4a24', bg: '#f3e9da', surface: '#fffaf3', text: '#4a3526', latinFont: 'poppins', cjkFont: 'noto' },
   },
   // ── 手作市集: botanical green ──
   market: {
@@ -282,7 +282,7 @@ export const examples: Record<string, { receipt: Draft; custom: Look }> = {
       qr: { value: 'https://glow.example/feedback', label: '填回饋拿小禮' },
       message: { body: '手工製作,每件都獨一無二。', footer: '下次市集見' },
     } as Draft,
-    custom: { primary: '#2f7a55', bg: '#ffffff', surface: '#ffffff', text: '#2c3a32', latinFont: 'nunito', cjkFont: 'noto' },
+    custom: { primary: '#2f7a55', bg: '#e8f0ea', surface: '#ffffff', text: '#2c3a32', latinFont: 'nunito', cjkFont: 'noto' },
   },
   // ── 像素遊戲: pixel font + retro teal on cream ──
   pixel: {
@@ -302,7 +302,7 @@ export const examples: Record<string, { receipt: Draft; custom: Look }> = {
       message: { title: 'PLAYER 1 · THANKS', footer: 'INSERT COIN TO CONTINUE' },
       stickers: [{ content: STICKERS[12], anchor: 'free', x: 120, y: 118, size: 50 }],
     } as Draft,
-    custom: { primary: '#17a398', bg: '#fff8e8', surface: '#fff8e8', text: '#222222', latinFont: 'cubic', cjkFont: 'cubic' },
+    custom: { primary: '#17a398', bg: '#f0e6cb', surface: '#fff8e8', text: '#222222', latinFont: 'cubic', cjkFont: 'cubic' },
   },
   // ── 精品手帳: elegant muted gold on ivory ──
   boutique: {
@@ -321,7 +321,7 @@ export const examples: Record<string, { receipt: Draft; custom: Look }> = {
       qr: { value: 'https://ateliernoir.example', label: '會員專屬' },
       message: { title: 'Merci', body: '謝謝您的選購,願文字陪伴您每一天。' },
     } as Draft,
-    custom: { primary: '#b08948', bg: '#faf8f4', surface: '#faf8f4', text: '#3a3631', latinFont: 'poppins', cjkFont: 'noto' },
+    custom: { primary: '#b08948', bg: '#ece6da', surface: '#faf8f4', text: '#3a3631', latinFont: 'poppins', cjkFont: 'noto' },
   },
   // ── 夜間霓虹: full dark receipt, neon-lime accent ──
   night: {
@@ -341,7 +341,7 @@ export const examples: Record<string, { receipt: Draft; custom: Look }> = {
       message: { title: 'STAY UP, STAY FED', footer: 'SEE YOU AFTER DARK' },
       stickers: [{ content: STICKERS[4], anchor: 'free', x: 612, y: 96, size: 52 }],
     } as Draft,
-    custom: { primary: '#C8F230', bg: '#16161e', surface: '#16161e', text: '#e8e8ee', latinFont: 'spacemono', cjkFont: 'sarasa', stars: true },
+    custom: { primary: '#C8F230', bg: '#0d0d13', surface: '#1b1b24', text: '#e8e8ee', latinFont: 'spacemono', cjkFont: 'sarasa', stars: true },
   },
 }
 
