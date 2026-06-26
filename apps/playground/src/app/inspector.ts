@@ -16,6 +16,8 @@ let panel: HTMLDivElement | null = null
 let box: HTMLDivElement | null = null
 // the receipt text element that opened the inspector — focus returns here on Escape/close
 let srcEl: HTMLElement | null = null
+// page scrollY before the bottom sheet's scroll-to-clear ran — restored when the sheet closes
+let _preScrollY: number | null = null
 
 // ---------------------------------------------------------------------------
 // styleOverrides helpers
@@ -303,6 +305,9 @@ export function selectText(id: string): void {
   document.querySelectorAll('.sticker-handle.sel').forEach((h) => h.classList.remove('sel'))
   renderStickerList()
   syncControls(id, el)
+  // remember the pre-open scroll so closing the sheet returns the user to where they tapped
+  // (only on the mobile sheet, and only on a FRESH entry so re-tapping another text keeps it)
+  if (_preScrollY === null && window.innerWidth < 900) _preScrollY = window.scrollY
   panel!.hidden = false
   panel!.classList.remove('in') // restart the entrance on each fresh selection
   positionUi(el)
@@ -318,6 +323,10 @@ export function clearSelection(): void {
     panel.classList.remove('in')
   }
   if (box) box.hidden = true
+  if (_preScrollY !== null) {
+    window.scrollTo({ top: _preScrollY, behavior: 'auto' }) // return to where the user was before the sheet
+    _preScrollY = null
+  }
 }
 
 /** After a re-render the SVG is rebuilt — re-find the element and reposition. */

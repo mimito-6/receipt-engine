@@ -319,7 +319,7 @@
   .insp-reset:hover { border-color: var(--ink-affordance); color: var(--ink); }
   .inspector.as-sheet { left: 0; right: 0; bottom: 0; top: auto; width: auto; border-radius: 16px 16px 0 0;
     padding-bottom: calc(13px + env(safe-area-inset-bottom)); box-shadow: 0 -10px 30px rgba(22,22,30,.18);
-    max-height: min(72vh, calc(100dvh - 120px)); overflow-y: auto; -webkit-overflow-scrolling: touch; } /* never fully eclipse the receipt; keyboard must not hide lower controls */
+    max-height: min(66vh, calc(100dvh - 150px)); overflow-y: auto; -webkit-overflow-scrolling: touch; } /* keep the receipt partly visible on short phones; sheet scrolls internally if needed */
 
   /* ---- sticker PS-style transform frame + alignment guides ---- */
   .re-guide { position: absolute; pointer-events: none; z-index: 5; }
