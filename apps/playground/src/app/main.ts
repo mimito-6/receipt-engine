@@ -45,7 +45,7 @@ import { applyI18n, setLang, t, type Lang } from './i18n'
 import { fastPrint, playPrintReveal, setFastPrint } from './printReveal'
 import { isMuted, primeAudio, setMuted } from './sound'
 import { isHandoffOpen, openHandoff } from './handoff'
-import { releaseFocus, setEditorInert, stampPress, toast, trapFocus } from './feel'
+import { prefersReducedMotion, releaseFocus, setEditorInert, stampPress, toast, trapFocus } from './feel'
 
 // Expose the engine under the historical global so embedders/docs keep working.
 ;(window as unknown as Record<string, unknown>).ReceiptEngine = {
@@ -143,6 +143,12 @@ function attachStickerDrag(btn: HTMLButtonElement, content: string): void {
   btn.addEventListener('pointerdown', (e: PointerEvent) => {
     if (e.button > 0) return
     e.preventDefault()
+    // on a phone the tray sits a full scroll below #paper, so a drag-to-paper is physically
+    // impossible — just centre-add (addSticker scrolls the receipt into view). Desktop keeps drag.
+    if (window.matchMedia?.('(pointer: coarse)').matches) {
+      addSticker(content)
+      return
+    }
     const sx = e.clientX
     const sy = e.clientY
     let ghost: HTMLImageElement | null = null
@@ -209,7 +215,8 @@ function wire(): void {
   // on open/close. Cards are static markup, so this one pass suffices.
   document.querySelectorAll<HTMLElement>('details.card').forEach((c, i) => {
     c.style.setProperty('--tilt', i % 2 ? '1deg' : '-1deg') // reads as a pasted scrap without colliding neighbours
-    c.style.setProperty('--shadow-x', i % 2 ? '3px' : '-3px') // shadow falls toward the scrap's low edge
+    c.style.setProperty('--shadow-x', i % 2 ? '3px' : '-3px') // closed shadow falls toward the scrap's low edge
+    c.style.setProperty('--shadow-open-x', i % 2 ? '1px' : '-1px') // open keeps the same light direction
   })
   // render() skips the #json write while the panel is collapsed (perf) — refresh it on open
   $('card-json').addEventListener('toggle', function (this: HTMLDetailsElement) {
@@ -719,6 +726,9 @@ wire()
 installEdgeHandles()
 loadExample('cute')
 setTheme('custom')
+// first impression should PRINT like every later swap — the boot replayPrint (t=0) is masked by the
+// masthead/stage entrance animations, so replay it once they've landed
+if (!prefersReducedMotion()) window.setTimeout(replayPrint, 320)
 
 // language switcher: persist + translate the static chrome, then rebuild the
 // dynamically-generated UI (form rows, sticker list, order panel) so its t() strings refresh.

@@ -55,8 +55,8 @@ const EXTRA: Record<string, { zh: string; ja: string; en: string }> = {
   // ── export result toasts (Phase C) ──
   'autosave.quota': {
     zh: '圖片太大,自動備份已停止——記得手動「下載設定檔」保存。',
-    ja: '画像が大きく自動バックアップを停止しました——「設定ファイルを保存」で手動保存してください。',
-    en: 'Image too large — autosave stopped. Use “Download config” to save manually.',
+    ja: '画像が大きく自動バックアップを停止しました——「設定を保存」で手動保存してください。',
+    en: 'Image too large — autosave stopped. Use “Save config” to save manually.',
   },
   'toast.png': { zh: '已下載 PNG', ja: 'PNG を保存しました', en: 'PNG saved' },
   'toast.svg': { zh: '已下載 SVG', ja: 'SVG を保存しました', en: 'SVG saved' },

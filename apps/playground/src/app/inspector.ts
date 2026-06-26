@@ -162,7 +162,11 @@ function build(): void {
   const sizeInp = $('insp-size') as HTMLInputElement
   const sizeNum = $('insp-size-num') as HTMLInputElement
   const textInp = $('insp-text') as HTMLInputElement
-  ;($('insp-close') as HTMLButtonElement).onclick = () => clearSelection()
+  ;($('insp-close') as HTMLButtonElement).onclick = () => {
+    const r = srcEl // capture before clearSelection() nulls it
+    clearSelection()
+    r?.focus() // return focus to the receipt text (mirrors the Escape path) instead of dropping to <body>
+  }
   // Escape anywhere closes the inspector and returns focus to the receipt text that opened it,
   // so a keyboard/SR user is never trapped after Enter-to-edit (mirrors feel.releaseFocus)
   window.addEventListener('keydown', (e) => {

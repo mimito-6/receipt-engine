@@ -141,13 +141,22 @@ function positionFrame(sk: any): void {
 export function deleteSelectedSticker(): void {
   const arr: any[] = (state.receipt as any).stickers
   if (!arr || state.sel < 0 || state.sel >= arr.length) return
-  arr.splice(state.sel, 1)
+  const removed = state.sel
+  arr.splice(removed, 1)
   if (!arr.length) delete (state.receipt as any).stickers
   state.sel = -1
   state.selection = null
   clearFrame()
   announce(t('sticker.deleted'))
-  onDelete()
+  onDelete() // re-renders (destroys the focused handle/×)
+  // keep keyboard focus on a surviving node instead of dropping to <body> (WCAG 2.4.3): the handle
+  // now at the deleted slot (or the previous one), else the sticker tray
+  const ov = $('sticker-overlay')
+  const next =
+    ov.querySelector<HTMLElement>(`.sticker-handle[data-i="${removed}"]`) ||
+    ov.querySelector<HTMLElement>(`.sticker-handle[data-i="${removed - 1}"]`) ||
+    $('emoji-pick').querySelector<HTMLElement>('button') // no stickers left → the tray
+  next?.focus()
 }
 
 function showFrameFor(sk: any): void {

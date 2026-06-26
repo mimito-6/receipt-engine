@@ -208,7 +208,7 @@
   details.card:not([open]) { transform: rotate(var(--tilt, -.4deg)); box-shadow: var(--shadow-x, 3px) 3px 0 rgba(20,20,15,.13), var(--shadow-panel); }
   /* open = pressed flat (hard 1px) but the HIGHEST soft tier, so rest < hover ≤ open is monotonic
      (opening a card must not read as it sinking below the hover preview) */
-  details.card[open] { transform: rotate(0); box-shadow: 1px 1px 0 rgba(20,20,15,.13), var(--shadow-float); }
+  details.card[open] { transform: rotate(0); box-shadow: var(--shadow-open-x, 1px) 1px 0 rgba(20,20,15,.13), var(--shadow-float); }
   .card > h2 { margin: 0 0 9px; font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
   .card > h2 .hint { font-weight: 500; color: var(--muted); font-size: 11px; }
   details.card > summary { font-size: 13px; font-weight: 700; cursor: pointer; list-style: none; display: flex; align-items: center; gap: 6px; }
@@ -537,7 +537,8 @@
   .canvas-tools::before { content: ''; position: absolute; left: -7px; top: -15px; width: 54px; height: 14px; z-index: 3;
     background: rgba(200,242,48,.62); transform: rotate(-7deg); box-shadow: 0 1px 3px rgba(0,0,0,.14);
     border-left: 1px dashed rgba(0,0,0,.07); border-right: 1px dashed rgba(0,0,0,.07); pointer-events: none; }
-  .canvas-tools::after { content: ''; position: absolute; right: -9px; top: -7px; width: 46px; height: 16px; z-index: 3;
+  /* on the TOP EDGE inboard of the buttons (was clipping off the right edge + over the mute glyph) */
+  .canvas-tools::after { content: ''; position: absolute; left: 88px; top: -13px; width: 42px; height: 14px; z-index: 3;
     background: rgba(27,77,228,.4); transform: rotate(6deg); box-shadow: 0 1px 3px rgba(0,0,0,.14); pointer-events: none; }
   @media (prefers-reduced-motion: no-preference) {
     header { animation: bsp-mast .42s var(--ease-out) both; }
@@ -606,8 +607,8 @@
   @media (pointer: coarse) {
     .lang button { padding: 12px 12px; min-height: 44px; }
     .dl button { padding: 12px 18px; }
-    .canvas-tools button { padding: 10px 14px; }
-    .canvas-tools .icon-btn { padding: 10px 12px; }
+    .canvas-tools button { padding: 10px 14px; min-height: 44px; }
+    .canvas-tools .icon-btn { padding: 10px 12px; min-width: 44px; min-height: 44px; }
     .emoji-pick { gap: 8px; }
     .emoji-pick button { padding: 10px; } /* 23px img + 10px ≈ 43px target */
     /* the row delete ×, reorder ↑↓, and the modal close/reset escaped both coarse blocks → sub-44px */
@@ -813,7 +814,7 @@
       </details>
 
       <details class="card"><summary><span data-i18n="panel.message.title">結尾訊息</span> <span class="hint" data-i18n="panel.message.hint">標題 / 內文 / 頁尾</span></summary>
-        <label class="field" data-i18n="field.messageTitle">標題</label><input type="text" id="m-title" placeholder="Thank you! ♡" data-i18n-ph="placeholder.messageTitle" />
+        <label class="field" data-i18n="field.messageTitle">標題</label><input type="text" id="m-title" placeholder="Thank you!" data-i18n-ph="placeholder.messageTitle" />
         <label class="field" data-i18n="field.messageBody">內文</label><input type="text" id="m-body" placeholder="一句感謝的話" data-i18n-ph="placeholder.messageBody" />
         <label class="field" data-i18n="field.messageFooter">頁尾</label><input type="text" id="m-footer" placeholder="See you next event!" data-i18n-ph="placeholder.messageFooter" />
       </details>
@@ -843,7 +844,7 @@
 
   <!-- ===================== STAGE ===================== -->
   <div class="stage">
-    <div class="err" id="err"></div>
+    <div class="err" id="err" role="alert"></div>
     <div class="canvas-tools">
       <button id="undo" data-i18n-title="nav.undo" title="上一步" disabled><span aria-hidden="true">↶</span> <span data-i18n="nav.undo">上一步</span></button>
       <button id="redo" data-i18n-title="nav.redo" title="下一步" disabled><span aria-hidden="true">↷</span> <span data-i18n="nav.redo">下一步</span></button>

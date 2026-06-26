@@ -572,9 +572,9 @@ export const DICT: Record<string, { zh: string; ja: string; en: string }> = {
     "en": "Title"
   },
   "placeholder.messageTitle": {
-    "zh": "Thank you! ♡",
-    "ja": "Thank you! ♡",
-    "en": "Thank you! ♡"
+    "zh": "Thank you!",
+    "ja": "Thank you!",
+    "en": "Thank you!"
   },
   "field.messageBody": {
     "zh": "內文",

@@ -121,6 +121,13 @@ function svgToPngBlob(svg: string): Promise<Blob> {
         // (~4096px/side, ~16.7M px on iOS Safari) and silently produce a blank/null blob
         const W = img.naturalWidth
         const H = img.naturalHeight
+        // some engines decode an SVG <img> with 0 intrinsic size → sc/canvas math yields a 0×0
+        // canvas + a blank 0-byte PNG; fail into the existing error.pngFailed UX instead
+        if (!W || !H || !isFinite(W) || !isFinite(H)) {
+          URL.revokeObjectURL(url)
+          reject(new Error('svg-size'))
+          return
+        }
         const MAX_SIDE = 4096
         const MAX_AREA = 16e6
         const sc = Math.max(1, Math.min(2, MAX_SIDE / W, MAX_SIDE / H, Math.sqrt(MAX_AREA / (W * H))))
