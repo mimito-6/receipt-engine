@@ -7,6 +7,7 @@ import { $, rectOf } from './dom'
 import { state } from './state'
 import { render } from './render'
 import { clearSelection, selectText } from './inspector'
+import { announce } from './feel'
 import { t } from './i18n'
 
 const THRESHOLD = 7 // px of movement before a press becomes a block drag
@@ -239,21 +240,52 @@ function move(key: string, dir: -1 | 1): void {
   applyOrder(order)
 }
 
+// the panel is rebuilt on every move() (render → renderOrderPanel), which would drop keyboard focus
+// to <body> after a press; remember the just-moved key+dir so we can re-focus its button in the new layout
+let _pendingFocus: { key: string; dir: 'up' | 'down' } | null = null
+
 export function renderOrderPanel(): void {
   const box = $('order-list')
   if (!box) return
   const order = domOrder()
   box.innerHTML = ''
   order.forEach((key, i) => {
+    const label = LABELS[key] ? t(LABELS[key]) : key
     const row = document.createElement('div')
     row.className = 'order-row'
+    row.dataset.key = key
+    // aria-label carries the block name (the glyph alone reads as a bare "button"); the ↑↓ glyph
+    // is decorative so hide it from AT
     row.innerHTML =
-      '<span class="order-name">' + (LABELS[key] ? t(LABELS[key]) : key) + '</span>' +
-      '<button class="order-btn" data-dir="up"' + (i === 0 ? ' disabled' : '') + '>↑</button>' +
-      '<button class="order-btn" data-dir="down"' + (i === order.length - 1 ? ' disabled' : '') + '>↓</button>'
+      '<span class="order-name">' + label + '</span>' +
+      '<button class="order-btn" data-dir="up" aria-label="' + t('order.moveUp', { name: label }) + '"' +
+      (i === 0 ? ' disabled' : '') + '><span aria-hidden="true">↑</span></button>' +
+      '<button class="order-btn" data-dir="down" aria-label="' + t('order.moveDown', { name: label }) + '"' +
+      (i === order.length - 1 ? ' disabled' : '') + '><span aria-hidden="true">↓</span></button>'
     const [upBtn, downBtn] = row.querySelectorAll('button')
-    upBtn.addEventListener('click', () => move(key, -1))
-    downBtn.addEventListener('click', () => move(key, 1))
+    upBtn.addEventListener('click', () => {
+      _pendingFocus = { key, dir: 'up' }
+      move(key, -1)
+    })
+    downBtn.addEventListener('click', () => {
+      _pendingFocus = { key, dir: 'down' }
+      move(key, 1)
+    })
     box.appendChild(row)
   })
+  // restore keyboard focus to the moved row after the rebuild (fall back to the other arrow if the
+  // preferred one is now disabled at an end), and announce the move
+  if (_pendingFocus) {
+    const { key, dir } = _pendingFocus
+    _pendingFocus = null
+    const row = box.querySelector<HTMLElement>(`.order-row[data-key="${key}"]`)
+    if (row) {
+      const pref = row.querySelector<HTMLButtonElement>(`button[data-dir="${dir}"]`)
+      const alt = row.querySelector<HTMLButtonElement>(`button[data-dir="${dir === 'up' ? 'down' : 'up'}"]`)
+      const target = pref && !pref.disabled ? pref : alt
+      target?.focus()
+      const name = row.querySelector('.order-name')?.textContent || key
+      announce(t('order.moved', { name }))
+    }
+  }
 }

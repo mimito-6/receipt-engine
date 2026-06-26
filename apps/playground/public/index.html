@@ -47,7 +47,7 @@
     --zine-lime-deep: #9FBE00;
     --grid-line: rgba(27,77,228,.06);
     /* ── accent = COMMIT / VERB ONLY (download / print / hand-over / snap-confirm) — UNCHANGED ── */
-    --accent: #d6336c; --accent-2: #f06595; --accent-soft: #ffe3ef; --accent-ring: rgba(214,51,108,.26);
+    --accent: #d6336c; --accent-2: #cf2f68; --accent-soft: #ffe3ef; --accent-ring: rgba(214,51,108,.26); /* top stop = slightly darker than --accent so white labels clear AA (4.5:1) across the whole gradient */
     /* ── type ── */
     --font-display: 'Anton', 'Noto Sans TC', sans-serif; /* ultra-condensed; Latin/numerals — CJK falls back */
     --font-ui: 'Archivo', 'Noto Sans TC', system-ui, -apple-system, 'Segoe UI', 'PingFang TC', 'Microsoft JhengHei', sans-serif;
@@ -84,9 +84,10 @@
   header { position: relative; isolation: isolate; max-width: 1080px; margin: 0 auto; color: #fff; padding: 24px 18px 26px;
     display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
   /* electric-blue band with a hand-torn bottom edge (irregular polygon — never a straight line) */
-  header::before { content: ''; position: absolute; left: 0; right: 0; top: 0; bottom: -7px; z-index: -1;
-    background: var(--zine-blue);
-    clip-path: polygon(0 0,100% 0,100% 84%,96% 92%,92% 84%,88% 93%,83% 85%,79% 95%,74% 86%,70% 95%,65% 87%,61% 95%,56% 88%,50% 95%,45% 87%,40% 95%,35% 88%,30% 94%,25% 85%,20% 93%,15% 85%,11% 92%,7% 84%,3% 91%,0 85%); }
+  header::before { content: ''; position: absolute; left: 0; right: 0; top: 0; bottom: -13px; z-index: -1;
+    background: var(--zine-blue); filter: drop-shadow(0 1px 0 rgba(0,0,0,.09)); /* hairline shadow → torn paper lifts off the cream */
+    /* deeper + irregular tear: tips reach 100%, rips climb to ~79-84%, uneven spacing (not a saw) */
+    clip-path: polygon(0 0,100% 0,100% 80%,97% 100%,93% 82%,88% 98%,84% 79%,79% 100%,75% 84%,70% 96%,66% 80%,61% 99%,57% 83%,51% 100%,46% 81%,42% 97%,37% 82%,32% 100%,27% 79%,23% 98%,18% 83%,14% 100%,9% 80%,5% 97%,2% 82%,0 99%); }
   /* neon-lime sparkle punching off the top-right (furniture, clipped to viewport) */
   /* lime sparkle (vector, not an emoji) punching off the top-right */
   header::after { content: ''; position: absolute; top: 6px; right: clamp(16px, 5vw, 28px); z-index: 1; width: 36px; height: 36px;
@@ -449,8 +450,11 @@
   @media (prefers-reduced-motion: no-preference) {
     /* punchier + faster so the spin-up beat actually reads inside the ~420ms warming window */
     .print-stage.in:not(.feeding) .print-mouth { animation: mouth-ready .32s var(--ease-out) infinite alternate; }
+    /* during the feed the mouth tremors so the press reads as a running motor (matches the whir) */
+    .print-stage.feeding .print-mouth { animation: mouth-feed .12s linear infinite; }
   }
   @keyframes mouth-ready { from { transform: translateY(0); } to { transform: translateY(-3px); } }
+  @keyframes mouth-feed { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-1px); } }
 
   /* ---- "restore your last design?" boot banner (autosave) ---- */
   .re-restore { position: fixed; left: 50%; bottom: calc(16px + env(safe-area-inset-bottom)); transform: translateX(-50%);
@@ -502,7 +506,8 @@
     text-align: center; margin: 8px 0 -2px; }
   /* commit buttons -> pasted stickers (pink stays; pink glow -> flat ink sticker shadow) */
   .dl button { border-radius: 7px; }
-  .dl button:first-child, .dl button:first-child:hover { border-radius: 7px; box-shadow: 3px 3px 0 var(--ink); }
+  /* the pasted-sticker hard shadow + press is on ALL three export buttons (PNG keeps the pink) */
+  .dl button, .dl button:hover { border-radius: 7px; box-shadow: 3px 3px 0 var(--ink); }
   .handoff-enter, .handoff-enter:hover { border-radius: 8px; box-shadow: 3px 3px 0 var(--ink); }
   /* washi tape — a taped-on toolbar (furniture ONLY; sits above #paper, never over it) */
   .canvas-tools { position: relative; }
@@ -535,14 +540,14 @@
   .re-toast.show { opacity: 1; transform: translate(-50%, 0); }
 
   /* ── tactile micro-interactions ── */
-  .dl button:first-child:active, .handoff-enter:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--ink); }
+  .dl button:active, .handoff-enter:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--ink); }
   @media (hover: hover) {
     /* a closed tilted card straightens + lifts on hover — "click to open" */
     details.card:not([open]):hover { transform: rotate(0); box-shadow: 5px 5px 0 rgba(20,20,15,.15), var(--shadow-float); }
     /* the pasted-sticker commit buttons peel UP on hover, then :active slams them down */
-    .dl button:first-child:hover, .handoff-enter:hover { transform: translate(-1px, -1px); box-shadow: 5px 5px 0 var(--ink); }
+    .dl button:hover, .handoff-enter:hover { transform: translate(-1px, -1px); box-shadow: 5px 5px 0 var(--ink); }
   }
-  .btn:active, .seg button:active, .order-btn:active, .dl button:active, .emoji-pick button:active,
+  .btn:active, .seg button:active, .order-btn:active, .emoji-pick button:active,
   .canvas-tools button:active:not(:disabled), .x:active, .lang button:active { transform: translateY(1px); }
 
   /* first-run "studio" intro (zine modal, once per browser) */
@@ -591,6 +596,12 @@
     .insp-x { width: 36px; height: 36px; }
     .handoff-x { width: 44px; height: 44px; }
     .insp-reset { padding: 11px; }
+    /* the bottom sheet is the primary mobile editing surface — its controls were all sub-44px */
+    .insp-size-row input[type=number] { padding: 10px 6px; width: 64px; font-size: 15px; }
+    .insp-size-row input[type=range] { height: 24px; }
+    .insp-seg button { padding: 11px 4px; }
+    .insp-field input[type=color], #insp-color { height: 40px; }
+    .insp-field select, #insp-font { min-height: 40px; }
   }
   /* phones: a deliberate export layout — pink PNG spans the top as the clear primary, SVG/HTML pair
      below — instead of a ragged 2+1 wrap that left the lone HTML button reading as emphasized */
@@ -598,6 +609,12 @@
     .dl { display: grid; grid-template-columns: 1fr 1fr; }
     .dl button { width: 100%; }
     .dl button:first-child { grid-column: 1 / -1; }
+  }
+  /* smallest phones: reclaim width for the item-name field (qty ≤2 digits / price ≤4 fit in 40/56) */
+  @media (max-width: 340px) {
+    .item { grid-template-columns: 1fr 40px 56px 40px; }
+    .drow, .prow { grid-template-columns: 1fr 60px 40px; }
+    .item input, .drow input, .prow input { padding: 7px 6px; }
   }
 </style>
 </head>
@@ -728,7 +745,7 @@
       </details>
 
       <details class="card" id="card-event"><summary><span data-i18n="panel.event.title">攤位 / 活動</span> <span class="hint" data-i18n="panel.event.hint">CWT・FF・市集…</span></summary>
-        <div class="muted-note autofill" data-i18n="field.autofill">可留空,OpenBooth 結帳時會自動帶入</div>
+        <div class="muted-note autofill" data-i18n="field.autofill">可留空,接結帳系統時會自動帶入</div>
         <label class="field" data-i18n="field.eventName">活動名稱</label><input type="text" id="e-name" placeholder="例如:Artist Alley" data-i18n-ph="placeholder.eventName" />
         <div class="row2">
           <div><label class="field" data-i18n="field.boothNumber">攤位編號</label><input type="text" id="e-booth" placeholder="A12" /></div>
@@ -738,14 +755,14 @@
       </details>
 
       <details class="card" id="card-tx"><summary><span data-i18n="panel.tx.title">交易資訊</span> <span class="hint" data-i18n="panel.tx.hint">單號・時間・收銀</span></summary>
-        <div class="muted-note autofill" data-i18n="field.autofill">可留空,OpenBooth 結帳時會自動帶入</div>
+        <div class="muted-note autofill" data-i18n="field.autofill">可留空,接結帳系統時會自動帶入</div>
         <label class="field" data-i18n="field.receiptNo">收據編號</label><input type="text" id="t-no" placeholder="AA-A12-018" />
         <label class="field" data-i18n="field.issuedAt">開立時間</label><input type="datetime-local" id="t-at" />
         <label class="field" data-i18n="field.cashier">收銀員(選填)</label><input type="text" id="t-cashier" placeholder="Mimi" />
       </details>
 
       <details class="card"><summary><span data-i18n="panel.items.title">品項</span> <span class="hint" data-i18n="panel.items.hint">名稱 / 數量 / 單價</span></summary>
-        <div class="muted-note autofill" data-i18n="field.autofill">可留空,OpenBooth 結帳時會自動帶入</div>
+        <div class="muted-note autofill" data-i18n="field.autofill">可留空,接結帳系統時會自動帶入</div>
         <div id="items"></div>
         <div class="row2">
           <button class="btn sm" id="add-item" data-i18n="btn.addItem">+ 新增品項</button>
@@ -754,13 +771,13 @@
       </details>
 
       <details class="card" id="card-discounts"><summary><span data-i18n="panel.discounts.title">折扣</span> <span class="hint" data-i18n="panel.discounts.hint">選填,可多筆</span></summary>
-        <div class="muted-note autofill" data-i18n="field.autofill">可留空,OpenBooth 結帳時會自動帶入</div>
+        <div class="muted-note autofill" data-i18n="field.autofill">可留空,接結帳系統時會自動帶入</div>
         <div id="discounts"></div>
         <button class="btn sm" id="add-discount" data-i18n="btn.addDiscount">+ 新增折扣</button>
       </details>
 
       <details class="card" id="card-payments"><summary><span data-i18n="panel.payments.title">付款</span> <span class="hint" data-i18n="panel.payments.hint">選填,可多筆</span></summary>
-        <div class="muted-note autofill" data-i18n="field.autofill">可留空,OpenBooth 結帳時會自動帶入</div>
+        <div class="muted-note autofill" data-i18n="field.autofill">可留空,接結帳系統時會自動帶入</div>
         <div id="payments"></div>
         <button class="btn sm" id="add-payment" data-i18n="btn.addPayment">+ 新增付款</button>
       </details>
@@ -810,7 +827,7 @@
       <button id="redo" data-i18n-title="nav.redo" title="下一步" disabled><span aria-hidden="true">↷</span> <span data-i18n="nav.redo">下一步</span></button>
       <button id="mute-toggle" class="icon-btn" data-i18n-title="sound.toggle" title="音效開關" aria-pressed="false" style="margin-left:auto"></button>
     </div>
-    <div class="spec-cap"><span aria-hidden="true">[ SPECIMEN&nbsp;№ ] ·</span> <span class="sr-only" data-i18n="spec.size">尺寸</span> <span id="spec-readout" role="status" aria-live="polite">—</span></div>
+    <div class="spec-cap"><span aria-hidden="true">[ SPECIMEN&nbsp;№ ] · </span><span id="spec-readout" aria-hidden="true">—</span></div>
     <div id="paper"><div id="svg-host"></div><div id="sticker-overlay"></div></div>
     <div class="canvas-hint" data-i18n="canvas.hint">點文字改內容/字體 · 拖貼紙縮放旋轉 · 拖邊界改尺寸 · 拖區塊排順序</div>
     <label class="dl-clean"><input type="checkbox" id="dl-clean" /> <span data-i18n="export.clean">去背景 PNG(保留卡片)</span> <span class="hint" data-i18n="export.cleanHint">只去掉卡片後面的頁面底色,保留卡片的形狀與顏色,適合印製</span></label>

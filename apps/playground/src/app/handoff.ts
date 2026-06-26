@@ -135,7 +135,14 @@ export function openHandoff(): void {
   // editor (never leave it aria-hidden with no exit).
   try {
     const svg = renderReceiptToSvg(state.receipt as never, exportOpts({}) as never)
-    ;(ov.querySelector('.handoff-paper') as HTMLElement).innerHTML = svg
+    const paper = ov.querySelector('.handoff-paper') as HTMLElement
+    paper.innerHTML = svg
+    // the receipt IS the point of present-mode — describe it so a SR user hears the keepsake, not
+    // just Share/Save/Close
+    const rc = state.receipt as { merchant?: { name?: string }; totals?: { total?: unknown } }
+    const summary = [rc.merchant?.name, rc.totals?.total].filter((v) => v != null && v !== '').join(' · ')
+    paper.setAttribute('role', 'img')
+    paper.setAttribute('aria-label', t('handoff.title') + (summary ? ' · ' + summary : ''))
   } catch {
     teardown()
     return

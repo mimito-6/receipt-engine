@@ -477,9 +477,9 @@ export const DICT: Record<string, { zh: string; ja: string; en: string }> = {
     "en": "+ Add item"
   },
   "btn.importItems": {
-    "zh": "⇩ 從訂單匯入",
-    "ja": "⇩ 注文から取り込む",
-    "en": "⇩ Import from order"
+    "zh": "從訂單匯入",
+    "ja": "注文から取り込む",
+    "en": "Import from order"
   },
   "btn.importItems.title": {
     "zh": "貼上 POS / 訂單系統的 JSON",
@@ -512,9 +512,9 @@ export const DICT: Record<string, { zh: string; ja: string; en: string }> = {
     "en": "Tags (comma-separated)"
   },
   "item.detailToggle": {
-    "zh": "⋯ 款式 / 標籤",
-    "ja": "⋯ 種類 / タグ",
-    "en": "⋯ Variant / tags"
+    "zh": "款式 / 標籤",
+    "ja": "種類 / タグ",
+    "en": "Variant / tags"
   },
   "placeholder.discountLabel": {
     "zh": "折扣名稱",
@@ -707,9 +707,9 @@ export const DICT: Record<string, { zh: string; ja: string; en: string }> = {
     "en": "Bold"
   },
   "inspector.reset": {
-    "zh": "↺ 還原此元素樣式",
-    "ja": "↺ この要素のスタイルをリセット",
-    "en": "↺ Reset this element’s style"
+    "zh": "還原此元素樣式",
+    "ja": "この要素のスタイルをリセット",
+    "en": "Reset this element’s style"
   },
   "inspector.font.quicksand": {
     "zh": "圓潤 Quicksand",

@@ -78,9 +78,10 @@ export function playPrintReveal(): Promise<void> {
     // CLONE to fit so the ceremony "prints" the WHOLE receipt that downloads (transform on the
     // modal clone only, never #paper → rect-safe)
     const svgH = (paperEl.querySelector('svg') as SVGSVGElement | null)?.getBoundingClientRect().height || 0
-    if (svgH > 700) {
+    const fitScale = svgH > 700 ? 700 / svgH : 1
+    if (fitScale < 1) {
       paperEl.style.transformOrigin = 'top center'
-      paperEl.style.transform = `scale(${(700 / svgH).toFixed(3)})`
+      paperEl.style.transform = `scale(${fitScale.toFixed(3)})`
     }
     const status = stage.querySelector('#print-status') as HTMLElement
 
@@ -124,8 +125,15 @@ export function playPrintReveal(): Promise<void> {
       playDing()
       vibrate(12)
       if (!prefersReducedMotion() && typeof paperEl.animate === 'function') {
+        // bake the fit-to-mouth scale into the keyframes — a bare translateY would 'replace' the
+        // inline scale and blow a long receipt up to full height mid-tear (rect-safe: clone only)
+        const s = `scale(${fitScale.toFixed(3)})`
         paperEl.animate(
-          [{ transform: 'translateY(0)' }, { transform: 'translateY(3px)' }, { transform: 'translateY(0)' }],
+          [
+            { transform: `${s} translateY(0)` },
+            { transform: `${s} translateY(3px)` },
+            { transform: `${s} translateY(0)` },
+          ],
           { duration: 200, easing: 'cubic-bezier(.2,.7,.3,1)' },
         )
       }

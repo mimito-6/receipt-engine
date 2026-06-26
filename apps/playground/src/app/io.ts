@@ -86,15 +86,24 @@ export function currentSvg(): string {
 // PNG export (with font embedding) lives in ./pngExport.ts.
 
 export function downloadSvg(): void {
-  dl('receipt.svg', new Blob([currentSvg()], { type: 'image/svg+xml' }))
-  toast(t('toast.svg'))
+  // belt-and-braces (doExport already validates): never throw silently mid-export
+  try {
+    dl('receipt.svg', new Blob([currentSvg()], { type: 'image/svg+xml' }))
+    toast(t('toast.svg'))
+  } catch {
+    toast(t('error.receiptIncomplete'))
+  }
 }
 export function downloadHtml(): void {
-  dl(
-    'receipt.html',
-    new Blob([renderReceiptToHtml(state.receipt as never, exportOpts() as never)], { type: 'text/html' }),
-  )
-  toast(t('toast.html'))
+  try {
+    dl(
+      'receipt.html',
+      new Blob([renderReceiptToHtml(state.receipt as never, exportOpts() as never)], { type: 'text/html' }),
+    )
+    toast(t('toast.html'))
+  } catch {
+    toast(t('error.receiptIncomplete'))
+  }
 }
 
 // ---------- config file (save / restore the whole design) ----------

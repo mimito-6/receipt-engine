@@ -137,6 +137,19 @@ function positionFrame(sk: any): void {
   frame.classList.toggle('edge-t', r.top < (coarse ? 64 : 52))
 }
 
+/** Remove the currently-selected sticker (shared by the × handle's click/keydown and Delete key). */
+export function deleteSelectedSticker(): void {
+  const arr: any[] = (state.receipt as any).stickers
+  if (!arr || state.sel < 0 || state.sel >= arr.length) return
+  arr.splice(state.sel, 1)
+  if (!arr.length) delete (state.receipt as any).stickers
+  state.sel = -1
+  state.selection = null
+  clearFrame()
+  announce(t('sticker.deleted'))
+  onDelete()
+}
+
 function showFrameFor(sk: any): void {
   clearFrame()
   const ov = $('sticker-overlay')
@@ -145,7 +158,9 @@ function showFrameFor(sk: any): void {
   frame.innerHTML =
     '<div class="re-stem"></div>' +
     '<div class="re-h re-rot" data-role="rot" title="' + t('sticker.frame.rotate.title') + '"></div>' +
-    '<div class="re-h re-del" data-role="del" title="' + t('sticker.frame.delete.title') + '">×</div>' +
+    '<div class="re-h re-del" data-role="del" role="button" tabindex="0" aria-label="' +
+    t('sticker.frame.delete.title') +
+    '" title="' + t('sticker.frame.delete.title') + '">×</div>' +
     '<div class="re-h re-c tl" data-role="scale"></div>' +
     '<div class="re-h re-c tr" data-role="scale"></div>' +
     '<div class="re-h re-c bl" data-role="scale"></div>' +
@@ -153,21 +168,20 @@ function showFrameFor(sk: any): void {
   ov.appendChild(frame)
   positionFrame(sk)
 
-  // delete button — removes the selected sticker
+  // delete button — removes the selected sticker (mouse, touch, AND keyboard)
   const del = frame.querySelector<HTMLElement>('.re-del')
   if (del) {
     del.addEventListener('pointerdown', (e) => e.stopPropagation())
     del.addEventListener('click', (e) => {
       e.stopPropagation()
-      const arr: any[] = (state.receipt as any).stickers
-      if (arr && state.sel >= 0 && state.sel < arr.length) {
-        arr.splice(state.sel, 1)
-        if (!arr.length) delete (state.receipt as any).stickers
+      deleteSelectedSticker()
+    })
+    del.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault()
+        e.stopPropagation()
+        deleteSelectedSticker()
       }
-      state.sel = -1
-      state.selection = null
-      clearFrame()
-      onDelete()
     })
   }
 

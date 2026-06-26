@@ -28,8 +28,35 @@ export function readFile(file: File | undefined, cb: (dataUrl: string) => void):
   fr.onload = () => {
     const url = String(fr.result)
     if (!/^data:image\/(png|jpe?g|webp|bmp)/i.test(url)) {
-      if (file.size > 2 * 1024 * 1024) showError(t('error.imageTooLarge')) // can't downscale a non-raster here
-      cb(url)
+      // SVG / GIF / other: small ones pass through (keep the vector / animation); an OVERSIZED one
+      // is rasterized to a bounded PNG so it doesn't get embedded in every history snapshot + the
+      // autosave blob (a multi-MB animated GIF would blow the history budget on the first edit).
+      if (file.size <= 2 * 1024 * 1024) {
+        cb(url)
+        return
+      }
+      const im = new Image()
+      im.onload = () => {
+        const w = im.naturalWidth || MAX_IMG_DIM
+        const h = im.naturalHeight || MAX_IMG_DIM
+        const s = Math.min(1, MAX_IMG_DIM / Math.max(w, h))
+        const cv = document.createElement('canvas')
+        cv.width = Math.max(1, Math.round(w * s))
+        cv.height = Math.max(1, Math.round(h * s))
+        const cx = cv.getContext('2d')
+        if (!cx) {
+          showError(t('error.imageTooLarge'))
+          return
+        }
+        cx.drawImage(im, 0, 0, cv.width, cv.height)
+        try {
+          cb(cv.toDataURL('image/png'))
+        } catch {
+          showError(t('error.imageTooLarge')) // hard-block: don't pass the multi-MB blob through
+        }
+      }
+      im.onerror = () => showError(t('error.imageTooLarge'))
+      im.src = url
       return
     }
     const img = new Image()

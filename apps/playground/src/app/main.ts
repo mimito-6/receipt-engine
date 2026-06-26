@@ -29,7 +29,14 @@ import {
   normalize,
 } from './io'
 import { downloadPng } from './pngExport'
-import { layoutOverlay, nudgeSelected, setStickerCommit, setStickerDelete, setStickerSelect } from './overlay'
+import {
+  deleteSelectedSticker,
+  layoutOverlay,
+  nudgeSelected,
+  setStickerCommit,
+  setStickerDelete,
+  setStickerSelect,
+} from './overlay'
 import { clearSelection, onCanvasDblClick, onCanvasKeydown, refreshInspector } from './inspector'
 import { installEdgeHandles, positionEdgeHandles } from './resize'
 import { beginCanvasGesture } from './reorder'
@@ -201,7 +208,7 @@ function wire(): void {
   // oppose — robust across the 3 chapter <section>s (nth-of-type re-seeds per section) and stable
   // on open/close. Cards are static markup, so this one pass suffices.
   document.querySelectorAll<HTMLElement>('details.card').forEach((c, i) => {
-    c.style.setProperty('--tilt', i % 2 ? '.5deg' : '-.5deg')
+    c.style.setProperty('--tilt', i % 2 ? '1.4deg' : '-1.4deg') // BOLD enough to read as a pasted scrap
     c.style.setProperty('--shadow-x', i % 2 ? '3px' : '-3px') // shadow falls toward the scrap's low edge
   })
   // render() skips the #json write while the panel is collapsed (perf) — refresh it on open
@@ -252,6 +259,12 @@ function wire(): void {
     if (!sel || sel.kind !== 'sticker') return
     const tag = (e.target as HTMLElement | null)?.tagName
     if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
+    // Delete / Backspace removes the selected sticker (keyboard parity with the × handle)
+    if (e.key === 'Delete' || e.key === 'Backspace') {
+      e.preventDefault()
+      deleteSelectedSticker()
+      return
+    }
     const delta: Record<string, [number, number]> = {
       ArrowLeft: [-1, 0],
       ArrowRight: [1, 0],
@@ -523,6 +536,12 @@ function wire(): void {
   let exporting = false
   const doExport = (fn: () => void | Promise<void>, trigger?: HTMLElement): void => {
     if (exporting || isHandoffOpen()) return // don't stack the print ceremony under the handoff modal
+    // gate ALL exports (PNG already guards, but SVG/HTML threw silently) — don't play a convincing
+    // 1.8s ceremony then produce no file on a half-edited receipt
+    if (!safeValidateReceipt(state.receipt).success) {
+      showError(t('error.receiptIncomplete'))
+      return
+    }
     if (trigger) stampPress(trigger) // instant press-confirm — the ceremony only spins up ~1 frame later
     exporting = true
     primeAudio()

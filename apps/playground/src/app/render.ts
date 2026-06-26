@@ -16,6 +16,7 @@ import { labelFor, refreshInspector } from './inspector'
 import { positionEdgeHandles } from './resize'
 import { renderOrderPanel } from './reorder'
 import { scheduleHistory } from './history'
+import { announce } from './feel'
 import { t } from './i18n'
 
 /** Build the active theme: both themes go through mergeTheme so 外觀 works for either. */
@@ -59,6 +60,8 @@ export function renderOpts(extra: Record<string, unknown> = {}): Record<string, 
 // rAF-coalesced render for high-frequency callers (range sliders, edge-drag) so a fast drag
 // paints once per frame instead of running the full validate→render→overlay pipeline per tick
 let _raf = 0
+let _specT = 0 // debounce timer for the spoken dimension read-out
+let _lastDims = '' // last announced W×H, so unchanged renders (typing) don't re-announce
 export function scheduleRender(): void {
   if (_raf) return
   _raf = requestAnimationFrame(() => {
@@ -110,14 +113,20 @@ export function render(): void {
   if ((jsonEl.closest('details') as HTMLDetailsElement | null)?.open !== false) {
     jsonEl.value = JSON.stringify(state.receipt, null, 2)
   }
-  // live [SPECIMEN №] readout — true export W×H, written into a sibling chip (never into #paper)
+  // live [SPECIMEN №] readout — true export W×H, written into a sibling chip (never into #paper).
+  // The chip is aria-hidden (visual only); SR feedback goes through a DEBOUNCED announce so a width
+  // drag doesn't flood AT with a read-out per frame.
   const sv = $('svg-host').querySelector('svg') as SVGSVGElement | null
   const cap = document.getElementById('spec-readout')
   if (sv && cap) {
     const vb = sv.viewBox.baseVal
-    // #spec-readout is a role=status aria-live region (with a sibling sr-only "尺寸/Size" label),
-    // so updating its text announces the new export dimensions on resize
-    cap.textContent = `${Math.round(vb.width)} × ${Math.round(vb.height)}`
+    const dims = `${Math.round(vb.width)} × ${Math.round(vb.height)}`
+    cap.textContent = dims
+    if (dims !== _lastDims) {
+      _lastDims = dims
+      window.clearTimeout(_specT)
+      _specT = window.setTimeout(() => announce(t('spec.size') + ' ' + dims), 450)
+    }
   }
   scheduleHistory()
 }
