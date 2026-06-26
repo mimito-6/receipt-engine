@@ -4,6 +4,7 @@
 // aria-modal + focus-trap + Esc / Android-back to exit. Chrome-only: never mutates the
 // editor model or the export path.
 import { renderReceiptToSvg } from '@receipt-engine/render-svg'
+import { safeValidateReceipt } from '@receipt-engine/core'
 import { $, dl } from './dom'
 import { esc, state } from './state'
 import { exportOpts } from './io'
@@ -104,6 +105,12 @@ function onPop(): void {
 
 export function openHandoff(): void {
   if (openEl || isPrintPlaying()) return // never stack on top of the print ceremony (one modal, one focus trap)
+  // an incomplete receipt (empty cart / blanked date) makes renderReceiptToSvg throw — guard BEFORE
+  // any DOM/aria mutation so a mid-edit tap can't strand the editor aria-hidden behind a half modal
+  if (!safeValidateReceipt(state.receipt).success) {
+    toast(t('error.receiptIncomplete'))
+    return
+  }
   primeAudio()
   const ov = document.createElement('div')
   openEl = ov
@@ -125,9 +132,16 @@ export function openHandoff(): void {
     b?.setAttribute('aria-hidden', 'true'),
   )
 
-  // clean render == exactly what exports / prints (exportOpts, NOT the interactive editor SVG)
-  const svg = renderReceiptToSvg(state.receipt as never, exportOpts({}) as never)
-  ;(ov.querySelector('.handoff-paper') as HTMLElement).innerHTML = svg
+  // clean render == exactly what exports / prints (exportOpts, NOT the interactive editor SVG).
+  // Validated above, but guard anyway: on any render failure, tear the modal down + restore the
+  // editor (never leave it aria-hidden with no exit).
+  try {
+    const svg = renderReceiptToSvg(state.receipt as never, exportOpts({}) as never)
+    ;(ov.querySelector('.handoff-paper') as HTMLElement).innerHTML = svg
+  } catch {
+    teardown()
+    return
+  }
 
   // reveal-in with the print ceremony (equivalent instant state under reduced motion)
   if (prefersReducedMotion()) {

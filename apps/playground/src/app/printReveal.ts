@@ -7,7 +7,7 @@ import { renderReceiptToSvg } from '@receipt-engine/render-svg'
 import { $ } from './dom'
 import { esc, state } from './state'
 import { exportOpts } from './io'
-import { announce, prefersReducedMotion, vibrate } from './feel'
+import { announce, prefersReducedMotion, releaseFocus, trapFocus, vibrate } from './feel'
 import { playDing, playWhir } from './sound'
 import { t } from './i18n'
 
@@ -59,12 +59,14 @@ export function playPrintReveal(): Promise<void> {
       `<div class="print-status" id="print-status">${esc(t('print.warming'))}</div>` +
       '<div class="print-machine"><div class="print-mouth"></div>' +
       '<div class="print-paper-wrap"><div class="print-paper"></div></div></div>' +
-      `<div class="print-skip">${esc(t('print.skip'))}</div>`
+      `<button type="button" class="print-skip">${esc(t('print.skip'))}</button>`
     document.body.appendChild(stage)
     // hide the editor behind the ceremony from assistive tech (restored in finish())
     const bgHidden = [document.querySelector('.layout'), document.querySelector('header')]
     bgHidden.forEach((b) => b?.setAttribute('aria-hidden', 'true'))
-    stage.focus()
+    // trap focus for the ceremony's lifetime (the skip button is the anchor) so Tab can't reach
+    // the now-aria-hidden editor; releaseFocus() in finish() returns focus to the export button
+    trapFocus(stage)
     // render the SAME receipt the export/handoff show (WITH stickers) — the editor SVG strips
     // them, so cloning it would "print" a different receipt than the one you download
     const paperEl = stage.querySelector('.print-paper') as HTMLElement
@@ -80,6 +82,7 @@ export function playPrintReveal(): Promise<void> {
       if (done) return
       done = true
       window.removeEventListener('keydown', onKey)
+      releaseFocus() // restore focus to the export button that opened the ceremony
       bgHidden.forEach((b) => b?.removeAttribute('aria-hidden'))
       stage.classList.add('out')
       announce(t('print.done'))
@@ -93,6 +96,8 @@ export function playPrintReveal(): Promise<void> {
       if (e.key === 'Escape') finish()
     }
     stage.addEventListener('pointerdown', finish)
+    // keyboard: Enter/Space on the trapped skip button fires click (not pointerdown)
+    stage.querySelector('.print-skip')?.addEventListener('click', finish)
     window.addEventListener('keydown', onKey)
 
     window.requestAnimationFrame(() => {

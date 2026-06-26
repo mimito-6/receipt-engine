@@ -31,7 +31,7 @@ import {
 import { downloadPng } from './pngExport'
 import { layoutOverlay, nudgeSelected, setStickerCommit, setStickerDelete, setStickerSelect } from './overlay'
 import { clearSelection, onCanvasDblClick, onCanvasKeydown, refreshInspector } from './inspector'
-import { installEdgeHandles } from './resize'
+import { installEdgeHandles, positionEdgeHandles } from './resize'
 import { beginCanvasGesture } from './reorder'
 import { redo, resetHistory, undo } from './history'
 import { applyI18n, setLang, t, type Lang } from './i18n'
@@ -163,7 +163,9 @@ function attachStickerDrag(btn: HTMLButtonElement, content: string): void {
         addSticker(content) // a plain tap drops it in the middle
         return
       }
-      if (over(ev.clientX, ev.clientY)) {
+      if (over(ev.clientX, ev.clientY) && svgEl()) {
+        // skip when the canvas has no <svg> (invalid receipt) — clientToReceipt would map to (0,0)
+        // and the sticker would silently jump to the top-left corner ("my sticker vanished")
         const p = clientToReceipt(ev.clientX, ev.clientY)
         addStickerAt(content, p.x, p.y) // the new handle pops in (see overlay.layoutOverlay)
       }
@@ -296,6 +298,7 @@ function wire(): void {
     $('v-scale').textContent = this.value + 'px'
     applyScale()
     layoutOverlay()
+    positionEdgeHandles() // the paper width changed → re-pin the edge handles (else they drift + overflow)
     refreshInspector()
   })
 
@@ -487,10 +490,11 @@ function wire(): void {
   })
 
   // stickers — vector zine marks (no emoji); each button previews its SVG
-  STICKERS.forEach((svg) => {
+  STICKERS.forEach((svg, idx) => {
     const b = document.createElement('button')
     b.type = 'button'
-    b.setAttribute('aria-label', t('panel.stickers.title'))
+    // distinct + countable by ear (mirrors the placed-sticker handles in overlay.ts) — was 16×"Stickers"
+    b.setAttribute('aria-label', t('panel.stickers.title') + ' ' + (idx + 1))
     const im = document.createElement('img')
     im.src = svg
     im.alt = ''
@@ -600,6 +604,7 @@ function wire(): void {
 
   window.addEventListener('resize', () => {
     layoutOverlay()
+    positionEdgeHandles() // viewport/orientation/URL-bar change → re-pin handles to #paper (no stale overflow)
     refreshInspector()
   })
 
@@ -764,8 +769,10 @@ try {
 const AUTOSAVE_KEY = 're-autosave'
 let _saveT = 0
 let quotaWarned = false
+let autosaveDisabled = false // stop re-serializing multi-MB designs once storage is full
 let dirty = false // unsaved edits since the last successful write
 function autosaveNow(): void {
+  if (autosaveDisabled) return
   try {
     localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(buildConfig()))
     dirty = false
@@ -777,8 +784,9 @@ function autosaveNow(): void {
     } catch {
       /* ignore */
     }
-    // tell the user ONCE that auto-restore has stopped — don't fail silently on the heavy
-    // image-laden designs most worth saving
+    // give up for the session — otherwise every later edit re-stringifies several MB and throws
+    // again (typing lag on the heavy designs most worth saving). Tell the user once.
+    autosaveDisabled = true
     if (!quotaWarned) {
       quotaWarned = true
       toast(t('autosave.quota'))
@@ -786,6 +794,7 @@ function autosaveNow(): void {
   }
 }
 function scheduleAutosave(): void {
+  if (autosaveDisabled) return
   dirty = true
   window.clearTimeout(_saveT)
   _saveT = window.setTimeout(autosaveNow, 900)
@@ -811,17 +820,24 @@ function offerRestore(cfg: unknown): void {
   bar.setAttribute('aria-labelledby', 're-restore-msg')
   const msg = document.createElement('span')
   msg.id = 're-restore-msg'
+  msg.setAttribute('data-i18n', 'restore.prompt') // re-translate on language switch (applyI18n)
   msg.textContent = t('restore.prompt')
   const yes = document.createElement('button')
   yes.type = 'button'
+  yes.setAttribute('data-i18n', 'restore.yes')
   yes.textContent = t('restore.yes')
   const no = document.createElement('button')
   no.type = 'button'
   no.className = 'ghost'
+  no.setAttribute('data-i18n', 'restore.no')
   no.textContent = t('restore.no')
   bar.append(msg, yes, no)
   document.body.appendChild(bar)
-  yes.focus() // land focus on the prompt so a keyboard/SR user can act without blind-Tabbing the page
+  // don't pull focus out of the first-run intro's trap if both happen to be up — the bar is still
+  // reachable once the intro is dismissed
+  if (!document.querySelector('.re-intro')) {
+    yes.focus() // land focus on the prompt so a keyboard/SR user can act without blind-Tabbing the page
+  }
   const close = (): void => bar.remove()
   yes.addEventListener('click', () => {
     applyConfig(cfg)

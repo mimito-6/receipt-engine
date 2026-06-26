@@ -99,7 +99,9 @@ export function render(): void {
   const cap = document.getElementById('spec-readout')
   if (sv && cap) {
     const vb = sv.viewBox.baseVal
-    cap.textContent = `${Math.round(vb.width)} × ${Math.round(vb.height)}`
+    const dims = `${Math.round(vb.width)} × ${Math.round(vb.height)}`
+    cap.textContent = dims
+    cap.setAttribute('aria-label', t('spec.size') + ' ' + dims) // field name for SR (the bracket chip is aria-hidden)
   }
   scheduleHistory()
 }

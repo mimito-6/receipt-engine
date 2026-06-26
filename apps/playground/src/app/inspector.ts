@@ -12,6 +12,11 @@ import { applyI18n, t } from './i18n'
 
 const PAD = 4 // selection box padding (screen px)
 
+// the keyboard-aware bottom sheet, not the floating popover, for ALL touch devices — not just
+// narrow widths (a short landscape tablet at 900-1000px would otherwise get a clipped popover)
+const isSheet = (): boolean =>
+  window.innerWidth < 900 || (window.matchMedia?.('(pointer: coarse)').matches ?? false)
+
 let panel: HTMLDivElement | null = null
 let box: HTMLDivElement | null = null
 // the receipt text element that opened the inspector — focus returns here on Escape/close
@@ -307,7 +312,7 @@ export function selectText(id: string): void {
   syncControls(id, el)
   // remember the pre-open scroll so closing the sheet returns the user to where they tapped
   // (only on the mobile sheet, and only on a FRESH entry so re-tapping another text keeps it)
-  if (_preScrollY === null && window.innerWidth < 900) _preScrollY = window.scrollY
+  if (_preScrollY === null && isSheet()) _preScrollY = window.scrollY
   panel!.hidden = false
   panel!.classList.remove('in') // restart the entrance on each fresh selection
   positionUi(el)
@@ -408,7 +413,7 @@ function positionUi(el: SVGGraphicsElement): void {
   // made it jump out from under the cursor. The selection box still tracks.
   if (panel.contains(document.activeElement)) return
 
-  const sheet = window.innerWidth < 900
+  const sheet = isSheet()
   panel.classList.toggle('as-sheet', sheet)
   if (sheet) {
     panel.style.left = ''

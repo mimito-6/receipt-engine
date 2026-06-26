@@ -64,6 +64,7 @@ const EXTRA: Record<string, { zh: string; ja: string; en: string }> = {
   // ── de-emoji overrides ──
   'placeholder.icon': { zh: '或一個字當圖示', ja: '1文字をアイコンに', en: 'A letter as icon' },
   'theme.group.label': { zh: '收據風格', ja: 'レシートのスタイル', en: 'Receipt style' },
+  'spec.size': { zh: '尺寸', ja: 'サイズ', en: 'Size' },
   'btn.saveConfig': { zh: '↓ 下載設定檔', ja: '↓ 設定を保存', en: '↓ Save config' },
   'btn.loadConfig': { zh: '↑ 載入設定檔', ja: '↑ 設定を読込', en: '↑ Load config' },
   // ── first-run studio intro (Phase C) ──

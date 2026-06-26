@@ -83,7 +83,7 @@
     clip-path: polygon(0 0,100% 0,100% 84%,96% 92%,92% 84%,88% 93%,83% 85%,79% 95%,74% 86%,70% 95%,65% 87%,61% 95%,56% 88%,50% 95%,45% 87%,40% 95%,35% 88%,30% 94%,25% 85%,20% 93%,15% 85%,11% 92%,7% 84%,3% 91%,0 85%); }
   /* neon-lime sparkle punching off the top-right (furniture, clipped to viewport) */
   /* lime sparkle (vector, not an emoji) punching off the top-right */
-  header::after { content: ''; position: absolute; top: 7px; right: 13px; z-index: 1; width: 36px; height: 36px;
+  header::after { content: ''; position: absolute; top: 6px; right: clamp(16px, 5vw, 28px); z-index: 1; width: 36px; height: 36px;
     transform: rotate(10deg); pointer-events: none; filter: drop-shadow(1px 2px 0 rgba(0,0,0,.22));
     background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M50 3C54 36 64 46 97 50C64 54 54 64 50 97C46 64 36 54 3 50C36 46 46 36 50 3Z' fill='%23C8F230'/%3E%3C/svg%3E") no-repeat center / contain; }
   .brand-block { min-width: 0; position: relative; z-index: 1; }
@@ -105,6 +105,7 @@
   @media (max-width: 560px) {
     header { padding: 18px 16px 24px; gap: 10px; }
     .brand-block { flex: 1 1 100%; }
+    header::after { right: 18px; width: 30px; height: 30px; } /* pull the sparkle off the scrollbar + torn notches */
   }
 
   .layout { max-width: 1080px; margin: 0 auto; padding: 16px 14px 56px; display: grid; gap: 16px; grid-template-columns: 1fr; }
@@ -428,7 +429,9 @@
   @keyframes print-feed {
     from { clip-path: inset(0 0 100% 0); transform: translateY(-6px); }
     to   { clip-path: inset(0 0 0 0);    transform: translateY(0); } }
-  .print-skip { margin-top: 18px; font-size: 11px; color: var(--ink); opacity: .8; }
+  .print-skip { margin-top: 18px; font: inherit; font-size: 11px; color: var(--ink); opacity: .8;
+    background: none; border: none; cursor: pointer; padding: 4px 8px; } /* a real button now (keyboard skip) */
+  .print-skip:focus-visible { outline: 2px solid var(--ink-affordance); outline-offset: 2px; opacity: 1; }
   /* warming beat: the mouth breathes before the feed so it reads as a machine spinning up */
   @media (prefers-reduced-motion: no-preference) {
     /* punchier + faster so the spin-up beat actually reads inside the ~420ms warming window */
@@ -438,9 +441,13 @@
 
   /* ---- "restore your last design?" boot banner (autosave) ---- */
   .re-restore { position: fixed; left: 50%; bottom: calc(16px + env(safe-area-inset-bottom)); transform: translateX(-50%);
-    z-index: 80; display: flex; align-items: center; gap: 9px; background: var(--panel); color: var(--ink);
+    z-index: 80; display: flex; flex-wrap: wrap; align-items: center; gap: 9px; background: var(--panel); color: var(--ink);
     border: 1px solid var(--line); box-shadow: var(--shadow-float); border-radius: 999px; padding: 7px 9px 7px 15px;
     font-size: 13px; max-width: calc(100vw - 24px); animation: re-restore-in var(--dur-settle) var(--ease-out); }
+  /* at narrow widths the CJK/JA prompt + 2 buttons can't fit one line — let the message take a full
+     first row and the buttons wrap below, and become a rounded card (a 2-line pill can't stay round) */
+  #re-restore-msg { flex: 1 1 100%; white-space: normal; }
+  @media (max-width: 380px) { .re-restore { width: calc(100vw - 24px); border-radius: 16px; justify-content: flex-end; } }
   @keyframes re-restore-in { from { opacity: 0; transform: translate(-50%, 8px); } to { opacity: 1; transform: translate(-50%, 0); } }
   .re-restore button { font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; border-radius: 999px;
     border: 1px solid transparent; padding: 6px 14px; background: var(--ink-affordance); color: #fff; }
@@ -790,13 +797,13 @@
       <button id="redo" data-i18n-title="nav.redo" title="下一步" disabled><span aria-hidden="true">↷</span> <span data-i18n="nav.redo">下一步</span></button>
       <button id="mute-toggle" class="icon-btn" data-i18n-title="sound.toggle" title="音效開關" aria-pressed="false" style="margin-left:auto"></button>
     </div>
-    <div class="spec-cap"><span>[ SPECIMEN&nbsp;№ ]</span> · <span id="spec-readout">—</span></div>
+    <div class="spec-cap"><span aria-hidden="true">[ SPECIMEN&nbsp;№ ] ·</span> <span id="spec-readout">—</span></div>
     <div id="paper"><div id="svg-host"></div><div id="sticker-overlay"></div></div>
     <div class="canvas-hint" data-i18n="canvas.hint">點文字改內容/字體 · 拖貼紙縮放旋轉 · 拖邊界改尺寸 · 拖區塊排順序</div>
     <label class="dl-clean"><input type="checkbox" id="dl-clean" /> <span data-i18n="export.clean">去背景 PNG(保留卡片)</span> <span class="hint" data-i18n="export.cleanHint">只去掉卡片後面的頁面底色,保留卡片的形狀與顏色,適合印製</span></label>
     <label class="dl-clean"><input type="checkbox" id="fast-print" /> <span data-i18n="export.fastPrint">快速匯出(略過列印動畫)</span></label>
     <button id="handoff-enter" class="handoff-enter" data-i18n="handoff.enter">交給客人</button>
-    <div class="export-label">[ EXPORT ]</div>
+    <div class="export-label" aria-hidden="true">[ EXPORT ]</div>
     <div class="dl">
       <button id="dl-png" data-i18n="btn.downloadPng">下載 PNG</button>
       <button id="dl-svg" data-i18n="btn.downloadSvg">下載 SVG</button>

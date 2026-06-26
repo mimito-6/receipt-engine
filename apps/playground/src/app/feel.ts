@@ -59,7 +59,7 @@ export function toast(msg: string): void {
     el = document.createElement('div')
     el.id = 're-toast'
     el.className = 're-toast'
-    el.setAttribute('role', 'status')
+    el.setAttribute('aria-hidden', 'true') // purely visual — announce() (#re-live) is the sole spoken channel (no double-read)
     document.body.appendChild(el)
   }
   el.textContent = msg
