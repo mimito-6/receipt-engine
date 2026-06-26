@@ -180,13 +180,10 @@
     padding: 13px 14px 15px; box-shadow: var(--shadow-panel);
     transition: box-shadow var(--dur-settle), transform var(--dur-settle); transform-origin: left center; }
   .card:hover { box-shadow: var(--shadow-float); }
-  /* stable per-position paste angles (4-cycle) so opening a middle card never leaves two closed
-     neighbours tilting the same way — the parity no longer re-seeds on open/close */
-  details.card:not([open]) { box-shadow: 3px 3px 0 rgba(20,20,15,.13), var(--shadow-panel); }
-  details.card:not([open]):nth-of-type(4n+1) { transform: rotate(-.5deg); }
-  details.card:not([open]):nth-of-type(4n+2) { transform: rotate(.6deg); }
-  details.card:not([open]):nth-of-type(4n+3) { transform: rotate(-.3deg); }
-  details.card:not([open]):nth-of-type(4n) { transform: rotate(.4deg); }
+  /* paste angle comes from --tilt, stamped per-card in DOM order at init (main.ts) so adjacent
+     scraps ALWAYS oppose — robust across the 3 chapter <section>s where nth-of-type would re-seed,
+     and stable on open/close. Fallback -.4deg if the stamp hasn't run. */
+  details.card:not([open]) { transform: rotate(var(--tilt, -.4deg)); box-shadow: 3px 3px 0 rgba(20,20,15,.13), var(--shadow-panel); }
   /* open = pressed flat (hard 1px), keeping one hard-shadow elevation story closed→hover→open */
   details.card[open] { transform: rotate(0); box-shadow: 1px 1px 0 rgba(20,20,15,.13), var(--shadow-panel); }
   .card > h2 { margin: 0 0 9px; font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
@@ -327,8 +324,13 @@
   /* ---- sticker PS-style transform frame + alignment guides ---- */
   .re-guide { position: absolute; pointer-events: none; z-index: 5; }
   /* snap-confirm: the guide flashes pink (the reserved commit colour) at the snap instant, then settles neutral */
-  .re-guide.snap { animation: re-snap-flash .24s var(--ease-out); }
-  @keyframes re-snap-flash { 0%, 35% { border-color: var(--accent); } 100% { border-color: var(--ink-affordance); } }
+  .re-guide.snap { animation: re-snap-flash .26s var(--ease-out); }
+  /* the snap visibly "clicks": colour pop + a brief halo around the thin line (orientation-agnostic,
+     transform/box-shadow only — rect-safe, and a no-op haptic on desktop is no longer the only cue) */
+  @keyframes re-snap-flash {
+    0% { border-color: var(--accent); opacity: .5; box-shadow: 0 0 0 0 rgba(27,77,228,0); }
+    35% { border-color: var(--ink-affordance); opacity: 1; box-shadow: 0 0 0 3px var(--ink-soft); }
+    100% { border-color: var(--ink-affordance); opacity: 1; box-shadow: 0 0 0 0 rgba(27,77,228,0); } }
   .re-frame { position: absolute; pointer-events: none; z-index: 4; border: 1.5px dashed var(--ink-affordance); border-radius: 3px; }
   .re-h { position: absolute; pointer-events: auto; width: 16px; height: 16px; background: #fff;
     border: 2px solid var(--ink-affordance); border-radius: 50%; box-shadow: 0 1px 3px rgba(22,22,30,.35); touch-action: none; }
@@ -429,9 +431,10 @@
   .print-skip { margin-top: 18px; font-size: 11px; color: var(--ink); opacity: .8; }
   /* warming beat: the mouth breathes before the feed so it reads as a machine spinning up */
   @media (prefers-reduced-motion: no-preference) {
-    .print-stage.in:not(.feeding) .print-mouth { animation: mouth-ready .5s var(--ease-out) infinite alternate; }
+    /* punchier + faster so the spin-up beat actually reads inside the ~420ms warming window */
+    .print-stage.in:not(.feeding) .print-mouth { animation: mouth-ready .32s var(--ease-out) infinite alternate; }
   }
-  @keyframes mouth-ready { from { transform: translateY(0); } to { transform: translateY(-1.5px); } }
+  @keyframes mouth-ready { from { transform: translateY(0); } to { transform: translateY(-3px); } }
 
   /* ---- "restore your last design?" boot banner (autosave) ---- */
   .re-restore { position: fixed; left: 50%; bottom: calc(16px + env(safe-area-inset-bottom)); transform: translateX(-50%);
@@ -483,7 +486,8 @@
   .handoff-enter, .handoff-enter:hover { border-radius: 8px; box-shadow: 3px 3px 0 var(--ink); }
   /* washi tape — a taped-on toolbar (furniture ONLY; sits above #paper, never over it) */
   .canvas-tools { position: relative; }
-  .canvas-tools::before { content: ''; position: absolute; left: -7px; top: -10px; width: 54px; height: 17px; z-index: 3;
+  /* taped to the toolbar's TOP EDGE (bottom sits at the edge), never over a button's glyph */
+  .canvas-tools::before { content: ''; position: absolute; left: -7px; top: -15px; width: 54px; height: 14px; z-index: 3;
     background: rgba(200,242,48,.62); transform: rotate(-7deg); box-shadow: 0 1px 3px rgba(0,0,0,.14);
     border-left: 1px dashed rgba(0,0,0,.07); border-right: 1px dashed rgba(0,0,0,.07); pointer-events: none; }
   .canvas-tools::after { content: ''; position: absolute; right: -9px; top: -7px; width: 46px; height: 16px; z-index: 3;
@@ -515,6 +519,8 @@
   @media (hover: hover) {
     /* a closed tilted card straightens + lifts on hover — "click to open" */
     details.card:not([open]):hover { transform: rotate(0); box-shadow: 5px 5px 0 rgba(20,20,15,.15), var(--shadow-float); }
+    /* the pasted-sticker commit buttons peel UP on hover, then :active slams them down */
+    .dl button:first-child:hover, .handoff-enter:hover { transform: translate(-1px, -1px); box-shadow: 5px 5px 0 var(--ink); }
   }
   .btn:active, .seg button:active, .order-btn:active, .dl button:active, .emoji-pick button:active,
   .canvas-tools button:active:not(:disabled), .x:active, .lang button:active { transform: translateY(1px); }
@@ -544,8 +550,10 @@
     to { opacity: 1; transform: rotate(-.6deg) scale(1) translateY(0); } }
 
   /* theme-switch fade (opacity only — never transforms #paper, so overlay rects stay valid) */
-  @media (prefers-reduced-motion: no-preference) { #svg-host.theme-swap svg { animation: re-theme-swap .3s var(--ease-out); } }
-  @keyframes re-theme-swap { from { opacity: .2; } to { opacity: 1; } }
+  @media (prefers-reduced-motion: no-preference) { #svg-host.theme-swap svg { animation: re-theme-swap .34s var(--ease-out); } }
+  /* a theme change re-PRINTS top-down (reuse the print-feed clip language) — clip-path is paint-only,
+     so #paper's box never moves and getBoundingClientRect stays valid (rect-safe hard constraint) */
+  @keyframes re-theme-swap { from { clip-path: inset(0 0 100% 0); opacity: .35; } to { clip-path: inset(0 0 0 0); opacity: 1; } }
 
   /* phone touch targets: bump the highest-traffic controls toward the 44px minimum (desktop's tight zine sizing stays) */
   @media (pointer: coarse) {
@@ -555,6 +563,21 @@
     .canvas-tools .icon-btn { padding: 10px 12px; }
     .emoji-pick { gap: 8px; }
     .emoji-pick button { padding: 10px; } /* 23px img + 10px ≈ 43px target */
+    /* the row delete ×, reorder ↑↓, and the modal close/reset escaped both coarse blocks → sub-44px */
+    .item { grid-template-columns: 1fr 46px 64px 40px; }
+    .drow, .prow { grid-template-columns: 1fr 72px 40px; }
+    .x { height: 44px; }
+    .order-btn { width: 40px; height: 40px; }
+    .insp-x { width: 36px; height: 36px; }
+    .handoff-x { width: 44px; height: 44px; }
+    .insp-reset { padding: 11px; }
+  }
+  /* phones: a deliberate export layout — pink PNG spans the top as the clear primary, SVG/HTML pair
+     below — instead of a ragged 2+1 wrap that left the lone HTML button reading as emphasized */
+  @media (max-width: 380px) {
+    .dl { display: grid; grid-template-columns: 1fr 1fr; }
+    .dl button { width: 100%; }
+    .dl button:first-child { grid-column: 1 / -1; }
   }
 </style>
 </head>

@@ -29,6 +29,16 @@ function liveRegion(): HTMLElement | null {
   if (!_live) _live = document.getElementById('re-live')
   return _live
 }
+/** A one-shot "stamp" press-confirm for a toggle that lands its .on state — transform-only, rect-safe. */
+export function stampPress(el: Element): void {
+  const e = el as HTMLElement
+  if (prefersReducedMotion() || typeof e.animate !== 'function') return
+  e.animate([{ transform: 'scale(.94)' }, { transform: 'scale(1)' }], {
+    duration: 160,
+    easing: 'cubic-bezier(.2,.7,.3,1)',
+  })
+}
+
 /** Announce a status message to assistive tech (errors, undo, print/snap state, share result). */
 export function announce(msg: string): void {
   const el = liveRegion()

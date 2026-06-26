@@ -38,7 +38,7 @@ import { applyI18n, setLang, t, type Lang } from './i18n'
 import { fastPrint, playPrintReveal, setFastPrint } from './printReveal'
 import { isMuted, primeAudio, setMuted } from './sound'
 import { isHandoffOpen, openHandoff } from './handoff'
-import { releaseFocus, toast, trapFocus } from './feel'
+import { releaseFocus, stampPress, toast, trapFocus } from './feel'
 
 // Expose the engine under the historical global so embedders/docs keep working.
 ;(window as unknown as Record<string, unknown>).ReceiptEngine = {
@@ -170,9 +170,16 @@ function attachStickerDrag(btn: HTMLButtonElement, content: string): void {
       // land the ghost where it dropped (shrink+fade), then clean up
       const g = ghost
       if (g) {
+        // start .land from a known state (drop .over + reflow) and key the cleanup off the OPACITY
+        // transition specifically — opacity always travels .92->0, so the shrink-into-paper never
+        // gets cut by a zero-delta transitionend firing in the first frame
+        g.classList.remove('over')
+        void g.offsetWidth
         g.classList.add('land')
         const done = (): void => g.remove()
-        g.addEventListener('transitionend', done, { once: true })
+        g.addEventListener('transitionend', (ev) => {
+          if ((ev as TransitionEvent).propertyName === 'opacity') done()
+        })
         window.setTimeout(done, 400)
       }
     }
@@ -183,6 +190,12 @@ function attachStickerDrag(btn: HTMLButtonElement, content: string): void {
 }
 
 function wire(): void {
+  // stamp a strictly-alternating paste tilt on each card in DOM order, so adjacent scraps always
+  // oppose — robust across the 3 chapter <section>s (nth-of-type re-seeds per section) and stable
+  // on open/close. Cards are static markup, so this one pass suffices.
+  document.querySelectorAll<HTMLElement>('details.card').forEach((c, i) => {
+    c.style.setProperty('--tilt', i % 2 ? '.55deg' : '-.5deg')
+  })
   // sticker overlay callbacks
   setStickerCommit(() => {
     ;($('json') as HTMLTextAreaElement).value = JSON.stringify(state.receipt, null, 2)
@@ -246,7 +259,10 @@ function wire(): void {
   $('theme-seg')
     .querySelectorAll('button')
     .forEach((b) => {
-      ;(b as HTMLElement).onclick = () => setTheme((b as HTMLElement).dataset.theme as ThemeName)
+      ;(b as HTMLElement).onclick = () => {
+        setTheme((b as HTMLElement).dataset.theme as ThemeName)
+        stampPress(b) // tactile confirm on the most-pressed toggle
+      }
     })
   $('example').addEventListener('change', (e) => loadExample((e.target as HTMLSelectElement).value))
   $('f-currency').addEventListener('change', function (this: HTMLSelectElement) {

@@ -7,6 +7,7 @@ import { render } from './render'
 import { FONT_PRESETS, state } from './state'
 import { renderStickerList } from './form'
 import { clearFrame } from './overlay'
+import { stampPress } from './feel'
 import { applyI18n, t } from './i18n'
 
 const PAD = 4 // selection box padding (screen px)
@@ -196,6 +197,7 @@ function build(): void {
         if (!id) return
         setWeightActive(Number((b as HTMLElement).dataset.w))
         setOverride(id, { weight: Number((b as HTMLElement).dataset.w) })
+        stampPress(b) // tactile confirm
       }
     })
   ;($('insp-reset') as HTMLButtonElement).onclick = () => {

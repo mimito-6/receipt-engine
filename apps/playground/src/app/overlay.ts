@@ -130,8 +130,11 @@ function positionFrame(sk: any): void {
   // rotate(top) handles would land off-viewport (there is deliberately no horizontal scroll
   // to chase them) — flip them inward via edge classes (CSS in index.html). rect-safe.
   const r = frame.getBoundingClientRect()
-  frame.classList.toggle('edge-r', r.right > window.innerWidth - 44)
-  frame.classList.toggle('edge-t', r.top < 52)
+  // wider thresholds on touch — the coarse handles are bigger and the 320px gutter is thinner,
+  // so flip them inward sooner to keep × / rotate on-paper and off the masthead above
+  const coarse = window.matchMedia?.('(pointer: coarse)').matches
+  frame.classList.toggle('edge-r', r.right > window.innerWidth - (coarse ? 56 : 44))
+  frame.classList.toggle('edge-t', r.top < (coarse ? 64 : 52))
 }
 
 function showFrameFor(sk: any): void {
