@@ -19,6 +19,16 @@ import { scheduleHistory } from './history'
 import { announce } from './feel'
 import { t } from './i18n'
 
+/** hex (#rgb or #rrggbb) → rgba() with the given alpha. */
+function hexToRgba(hex: string, a: number): string {
+  const h = hex.replace('#', '')
+  const f = h.length === 3 ? h.split('').map((c) => c + c).join('') : h
+  const r = parseInt(f.slice(0, 2), 16)
+  const g = parseInt(f.slice(2, 4), 16)
+  const b = parseInt(f.slice(4, 6), 16)
+  return `rgba(${r},${g},${b},${a})`
+}
+
 /** Build the active theme: both themes go through mergeTheme so 外觀 works for either. */
 export function currentTheme(): ReceiptTheme {
   const L = curLook()
@@ -32,6 +42,9 @@ export function currentTheme(): ReceiptTheme {
       background: L.bg,
       surface: L.surface,
       text: L.text,
+      // derive the card border from the look's text colour instead of the theme's hard-coded pink
+      // (#ffd6e7) — that pink was invisible on light cards but showed as a stray edge on dark ones
+      border: hexToRgba(L.text, 0.16),
     } as ReceiptThemePalette,
     typography: { fontFamily: fontStack(L.latinFont, L.cjkFont) } as ReceiptThemeTypography,
     decoration: { showCornerStars: !!L.stars },
