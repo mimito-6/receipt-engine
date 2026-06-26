@@ -46,6 +46,11 @@ the browser editor and let them design their own.
 - 📄 **One schema, many outputs** — SVG (canonical) · HTML · PNG, all deterministic.
 - 🎨 **Themes** — `custom` (colorful, change colors / fonts / stickers) and `thermal` (monospace,
   auto-grayscaled images), plus fully custom themes via `mergeTheme`.
+- 🗂️ **8 ready-made starter templates** — minimal · doujin booth · zine press · café · craft market ·
+  pixel arcade · boutique · neon night — each with its own font, palette and personality. Pick one
+  and tweak, or start blank.
+- 🪙 **Any currency** — pick a code or just type your own symbol (`NT$`, `¥`, …); the editor renders it as-is.
+- ✶ **Borderless vector stickers** — a clean, solid-fill mark set (no emoji), scalable / rotatable on the canvas.
 - 🖨️ **Thermal printing** — ESC/POS raster (GS v 0) over **Web Bluetooth**, straight from the browser.
 - 📲 **Browser PNG & share** — rasterize to PNG client-side (canvas) and share via Web Share — no server.
 - 🌏 **i18n** — the editor UI ships in 中文 / 日本語 / English.
@@ -76,6 +81,7 @@ pnpm test
 <details>
 <summary><b>What you can do in the editor</b></summary>
 
+- **Start from a template** → 8 ready-made styles (or blank), then make it yours.
 - **Tap any text** → a contextual inspector to change its content, font, color, size and weight
   (saved per-element in `styleOverrides`); double-tap to edit text inline.
 - **Tap a sticker** → a Photoshop-style frame: corner handles scale, a top handle rotates,
@@ -170,7 +176,7 @@ const svg = renderReceiptToSvg(receipt, { theme })
   "discounts": [{ "label": "Set deal", "amount": 50 }],
   "payments": [{ "method": "Cash", "amount": 700 }],
   "qr": { "value": "https://instagram.com/mimito.art", "label": "追蹤我們" },
-  "message": { "title": "Thank you! ♡", "body": "感謝支持我們的攤位！" }
+  "message": { "title": "Thank you!", "body": "感謝支持我們的攤位！" }
 }
 ```
 

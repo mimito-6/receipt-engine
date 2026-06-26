@@ -42,6 +42,9 @@
 - 🖌️ **直接操作編輯器** —— 點文字就改樣式、拖貼紙縮放旋轉、拖邊界改尺寸、拖區塊排序。全程在瀏覽器裡跑,手機也行。
 - 📄 **一套 schema、多種輸出** —— SVG(主格式)· HTML · PNG,全部確定性渲染。
 - 🎨 **主題** —— `custom`(彩色,可改色/字/貼紙)與 `thermal`(等寬、圖自動轉灰),也能用 `mergeTheme` 完全自訂。
+- 🗂️ **8 個現成範本** —— 極簡 · 同人攤位 · 印刷所 zine · 咖啡店 · 手作市集 · 像素遊戲 · 精品手帳 · 夜間霓虹,各有字體、配色與個性;挑一個改,或從空白開始。
+- 🪙 **任意幣別** —— 選代碼,或直接打你自己的符號(`NT$`、`¥`…),編輯器原樣顯示。
+- ✶ **無邊框向量貼紙** —— 一組乾淨的實心圖示(零 emoji),在畫布上可縮放/旋轉。
 - 🖨️ **熱感列印** —— ESC/POS raster(GS v 0)透過 **Web Bluetooth**,直接從瀏覽器印。
 - 📲 **瀏覽器 PNG 與分享** —— 前端 canvas 轉 PNG,用 Web Share 傳給手機,免伺服器。
 - 🌏 **多語** —— 編輯器 UI 內建 中文 / 日本語 / English。
@@ -72,6 +75,7 @@ pnpm test
 <details>
 <summary><b>編輯器能做什麼</b></summary>
 
+- **從範本開始** → 8 個現成風格(或空白),再改成你的樣子。
 - **點任何文字** → 跳出情境工具列,改內容、字體、顏色、大小、粗細(逐元素存進 `styleOverrides`);雙擊就地改字。
 - **點貼紙** → PS 式變形框:四角縮放、上方旋轉、觸控雙指縮放旋轉;拖移時有對齊吸附。
 - **拖卡片邊界** → 改寬度 / 上下留白。
@@ -148,7 +152,7 @@ receipt-engine render receipt.json --theme custom --format png --out receipt.png
   "discounts": [{ "label": "套組優惠", "amount": 50 }],
   "payments": [{ "method": "現金", "amount": 700 }],
   "qr": { "value": "https://instagram.com/mimito.art", "label": "追蹤我們" },
-  "message": { "title": "Thank you! ♡", "body": "感謝支持我們的攤位!" }
+  "message": { "title": "Thank you!", "body": "感謝支持我們的攤位!" }
 }
 ```
 
