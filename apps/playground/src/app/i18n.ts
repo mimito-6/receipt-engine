@@ -35,6 +35,10 @@ const EXTRA: Record<string, { zh: string; ja: string; en: string }> = {
   },
   // ── blank start + autosave/restore (Phase C) ──
   'example.blank': { zh: '從空白開始', ja: '空白から作る', en: 'Start blank' },
+  'example.zine': { zh: '印刷所 Zine', ja: '印刷所 Zine', en: 'Press / Zine' },
+  'example.pixel': { zh: '像素遊戲', ja: 'ピクセル', en: 'Pixel arcade' },
+  'example.boutique': { zh: '精品手帳', ja: 'ブティック', en: 'Boutique' },
+  'example.night': { zh: '夜間霓虹', ja: 'ナイト', en: 'Night neon' },
   'restore.prompt': { zh: '還原上次的設計?', ja: '前回のデザインを復元しますか?', en: 'Restore your last design?' },
   'restore.yes': { zh: '還原', ja: '復元', en: 'Restore' },
   'restore.no': { zh: '不用', ja: 'いいえ', en: 'No thanks' },

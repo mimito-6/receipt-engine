@@ -188,6 +188,7 @@ export const THERMAL_LOOK: Look = {
 }
 
 export const examples: Record<string, { receipt: Draft; custom: Look }> = {
+  // ── minimal clean starter (no background frame: bg == surface) ──
   blank: {
     receipt: {
       schemaVersion: '0.1',
@@ -197,38 +198,9 @@ export const examples: Record<string, { receipt: Draft; custom: Look }> = {
       items: [{ name: '商品 1', quantity: 1, unitPrice: 100 }],
       message: { title: 'Thank you!' },
     } as Draft,
-    custom: {
-      primary: '#3b3b44',
-      bg: '#ffffff',
-      surface: '#ffffff',
-      text: '#2a2a31',
-      latinFont: 'quicksand',
-      cjkFont: 'noto',
-    },
+    custom: { primary: '#2b2b33', bg: '#ffffff', surface: '#ffffff', text: '#2b2b33', latinFont: 'poppins', cjkFont: 'noto' },
   },
-  coffee: {
-    receipt: {
-      schemaVersion: '0.1',
-      currency: 'USD',
-      merchant: { name: 'Corner Coffee', subtitle: 'Daily roast & fresh bakes' },
-      transaction: { receiptNo: '0042', issuedAt: '2026-06-01T08:15', cashier: 'Sam' },
-      items: [
-        { name: 'Flat White', quantity: 1, unitPrice: 4.5 },
-        { name: 'Butter Croissant', quantity: 2, unitPrice: 3.25 },
-      ],
-      payments: [{ method: 'Cash', amount: 15 }],
-      qr: { value: 'https://corner.coffee/r/0042', label: 'View online' },
-      message: { title: 'Thank you!', body: 'Have a lovely day.' },
-    } as Draft,
-    custom: {
-      primary: '#8a5a2b',
-      bg: '#f6efe6',
-      surface: '#fffdf8',
-      text: '#4a3b2a',
-      latinFont: 'poppins',
-      cjkFont: 'noto',
-    },
-  },
+  // ── 同人攤位: cheerful pink, rounded playful font, corner stars ──
   cute: {
     receipt: {
       schemaVersion: '0.1',
@@ -245,25 +217,53 @@ export const examples: Record<string, { receipt: Draft; custom: Look }> = {
       discounts: [{ label: '套組優惠', amount: 50 }],
       payments: [{ method: 'Cash', amount: 700 }],
       qr: { value: 'https://instagram.com/mimito.art', label: '追蹤我們', caption: '新作 & 下次擺攤資訊' },
-      message: {
-        title: 'Thank you!',
-        body: '感謝支持我們的攤位,希望你喜歡這次的作品。',
-        footer: 'See you next event!',
-      },
+      message: { title: 'Thank you!', body: '感謝支持我們的攤位,希望你喜歡這次的作品。', footer: 'See you next event!' },
       stickers: [
-        { content: STICKERS[0], anchor: 'free', x: 610, y: 88, size: 54 },
-        { content: STICKERS[2], anchor: 'free', x: 118, y: 122, size: 50 },
+        { content: STICKERS[2], anchor: 'free', x: 118, y: 120, size: 52 },
+        { content: STICKERS[3], anchor: 'free', x: 612, y: 92, size: 50 },
       ],
     } as Draft,
-    custom: {
-      primary: '#1B4DE4',
-      bg: '#E9EEFC',
-      surface: '#FFFFFF',
-      text: '#1A1E2E',
-      latinFont: 'spacemono',
-      cjkFont: 'sarasa',
-    },
+    custom: { primary: '#ef5b9c', bg: '#ffffff', surface: '#ffffff', text: '#3a2733', latinFont: 'fredoka', cjkFont: 'noto', stars: true },
   },
+  // ── 印刷所: the BLUE STORE PRESS zine look — blue + warm cream paper, mono ──
+  zine: {
+    receipt: {
+      schemaVersion: '0.1',
+      locale: 'zh-TW',
+      currency: 'TWD',
+      merchant: { name: 'BLUE STORE PRESS', subtitle: 'RISO ZINE · PRINT · GOODS' },
+      transaction: { receiptNo: 'BSP-0042', issuedAt: '2026-06-01T13:20', cashier: 'Press' },
+      items: [
+        { name: 'Riso Zine', variant: 'A5 / 24p', quantity: 1, unitPrice: 220 },
+        { name: 'Print Set', variant: '3 sheets', quantity: 1, unitPrice: 180 },
+        { name: 'Sticker Sheet', quantity: 2, unitPrice: 60 },
+      ],
+      payments: [{ method: 'Cash', amount: 600 }],
+      qr: { value: 'https://bluestore.press', label: 'SHOP ONLINE' },
+      message: { title: 'PRINTED FOR YOU', footer: 'KEEP THE RECEIPT' },
+      stickers: [{ content: STICKERS[0], anchor: 'free', x: 612, y: 96, size: 52 }],
+    } as Draft,
+    custom: { primary: '#1B4DE4', bg: '#FBF8EF', surface: '#FBF8EF', text: '#14140F', latinFont: 'spacemono', cjkFont: 'sarasa' },
+  },
+  // ── 咖啡店: warm espresso on cream ──
+  coffee: {
+    receipt: {
+      schemaVersion: '0.1',
+      currency: 'USD',
+      merchant: { name: 'Corner Coffee', subtitle: 'Daily roast & fresh bakes' },
+      transaction: { receiptNo: '0042', issuedAt: '2026-06-01T08:15', cashier: 'Sam' },
+      items: [
+        { name: 'Flat White', quantity: 1, unitPrice: 4.5 },
+        { name: 'Butter Croissant', quantity: 2, unitPrice: 3.25 },
+        { name: 'Banana Bread', quantity: 1, unitPrice: 3.75 },
+      ],
+      payments: [{ method: 'Card', amount: 14.75 }],
+      qr: { value: 'https://corner.coffee/r/0042', label: 'View online' },
+      message: { title: 'Thank you!', body: 'Have a lovely day.' },
+    } as Draft,
+    custom: { primary: '#7a4a24', bg: '#fffaf3', surface: '#fffaf3', text: '#4a3526', latinFont: 'poppins', cjkFont: 'noto' },
+  },
+  // ── 手作市集: botanical green ──
   market: {
     receipt: {
       schemaVersion: '0.1',
@@ -282,14 +282,66 @@ export const examples: Record<string, { receipt: Draft; custom: Look }> = {
       qr: { value: 'https://glow.example/feedback', label: '填回饋拿小禮' },
       message: { body: '手工製作,每件都獨一無二。', footer: '下次市集見' },
     } as Draft,
-    custom: {
-      primary: '#2f6f4f',
-      bg: '#eef4ef',
-      surface: '#ffffff',
-      text: '#2c3a32',
-      latinFont: 'nunito',
-      cjkFont: 'noto',
-    },
+    custom: { primary: '#2f7a55', bg: '#ffffff', surface: '#ffffff', text: '#2c3a32', latinFont: 'nunito', cjkFont: 'noto' },
+  },
+  // ── 像素遊戲: pixel font + retro teal on cream ──
+  pixel: {
+    receipt: {
+      schemaVersion: '0.1',
+      locale: 'zh-TW',
+      currency: 'TWD',
+      merchant: { name: 'PIXEL ARCADE', subtitle: '8-BIT GOODS & TOKENS' },
+      transaction: { receiptNo: 'PX-1985', issuedAt: '2026-06-01T20:10', cashier: 'P1' },
+      items: [
+        { name: 'Arcade Tokens', variant: 'x20', quantity: 1, unitPrice: 200 },
+        { name: 'Enamel Pin', variant: '1UP', quantity: 1, unitPrice: 150 },
+        { name: 'Game Sticker', quantity: 3, unitPrice: 40 },
+      ],
+      payments: [{ method: 'Cash', amount: 500 }],
+      qr: { value: 'https://pixel.arcade/hi', label: 'HI-SCORE' },
+      message: { title: 'PLAYER 1 · THANKS', footer: 'INSERT COIN TO CONTINUE' },
+      stickers: [{ content: STICKERS[12], anchor: 'free', x: 120, y: 118, size: 50 }],
+    } as Draft,
+    custom: { primary: '#17a398', bg: '#fff8e8', surface: '#fff8e8', text: '#222222', latinFont: 'cubic', cjkFont: 'cubic' },
+  },
+  // ── 精品手帳: elegant muted gold on ivory ──
+  boutique: {
+    receipt: {
+      schemaVersion: '0.1',
+      locale: 'zh-TW',
+      currency: 'TWD',
+      merchant: { name: 'ATELIER NOIR', subtitle: '手帳・文具・選物' },
+      transaction: { receiptNo: 'AN-2026-0601', issuedAt: '2026-06-01T15:40', cashier: 'Lin' },
+      items: [
+        { name: '皮革手帳 Leather Journal', variant: 'A5 / Tan', quantity: 1, unitPrice: 1280 },
+        { name: '黃銅筆 Brass Pen', quantity: 1, unitPrice: 680 },
+        { name: '封蠟印章 Wax Seal', quantity: 1, unitPrice: 420 },
+      ],
+      payments: [{ method: 'Card', amount: 2380 }],
+      qr: { value: 'https://ateliernoir.example', label: '會員專屬' },
+      message: { title: 'Merci', body: '謝謝您的選購,願文字陪伴您每一天。' },
+    } as Draft,
+    custom: { primary: '#b08948', bg: '#faf8f4', surface: '#faf8f4', text: '#3a3631', latinFont: 'poppins', cjkFont: 'noto' },
+  },
+  // ── 夜間霓虹: full dark receipt, neon-lime accent ──
+  night: {
+    receipt: {
+      schemaVersion: '0.1',
+      locale: 'zh-TW',
+      currency: 'TWD',
+      merchant: { name: 'MIDNIGHT MART', subtitle: '深夜販賣部 · 24H' },
+      transaction: { receiptNo: 'MM-2350', issuedAt: '2026-06-01T23:50', cashier: 'Owl' },
+      items: [
+        { name: 'Energy Drink', quantity: 2, unitPrice: 45 },
+        { name: 'Instant Noodles', variant: '辣味', quantity: 1, unitPrice: 38 },
+        { name: 'Mochi Ice', quantity: 3, unitPrice: 30 },
+      ],
+      payments: [{ method: 'Cash', amount: 200 }],
+      qr: { value: 'https://midnight.mart', label: 'NIGHT OWL CLUB' },
+      message: { title: 'STAY UP, STAY FED', footer: 'SEE YOU AFTER DARK' },
+      stickers: [{ content: STICKERS[4], anchor: 'free', x: 612, y: 96, size: 52 }],
+    } as Draft,
+    custom: { primary: '#C8F230', bg: '#16161e', surface: '#16161e', text: '#e8e8ee', latinFont: 'spacemono', cjkFont: 'sarasa', stars: true },
   },
 }
 
