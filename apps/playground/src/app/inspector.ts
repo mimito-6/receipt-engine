@@ -136,7 +136,8 @@ function build(): void {
   panel.setAttribute('aria-labelledby', 'insp-title-label')
   panel.innerHTML =
     '<div class="insp-head"><span class="insp-title" id="insp-title-label" data-i18n="inspector.title">文字樣式</span>' +
-    '<button class="insp-x" id="insp-close" data-i18n-title="inspector.close.title" title="關閉">×</button></div>' +
+    '<button class="insp-x" id="insp-close" aria-label="' + t('inspector.close.title') +
+    '" data-i18n-aria-label="inspector.close.title" data-i18n-title="inspector.close.title" title="關閉">×</button></div>' +
     '<div class="insp-target" id="insp-target"></div>' +
     '<label class="insp-field" id="insp-text-wrap"><span data-i18n="inspector.field.text">文字內容</span><input type="text" id="insp-text" autocomplete="off" /></label>' +
     '<label class="insp-field"><span data-i18n="inspector.field.font">字體</span>' +
@@ -389,12 +390,17 @@ export function onCanvasKeydown(e: KeyboardEvent): void {
   if (e.key !== 'Enter' && e.key !== ' ') return
   const hit = (e.target as Element | null)?.closest('[data-re-id]')
   const id = hit?.getAttribute('data-re-id')
-  if (!id || !modelText(id)) return
+  if (!id) return
+  // every [data-re-id] is role=button/tabindex=0 (incl. computed totals/prices), so Enter/Space
+  // must open the inspector for ALL of them (keyboard parity with the tap path) — only the
+  // editable ones additionally focus the text input
   e.preventDefault()
   selectText(id)
-  const inp = $('insp-text') as HTMLInputElement
-  inp.focus()
-  inp.select()
+  if (modelText(id)) {
+    const inp = $('insp-text') as HTMLInputElement
+    inp.focus()
+    inp.select()
+  }
 }
 
 /**

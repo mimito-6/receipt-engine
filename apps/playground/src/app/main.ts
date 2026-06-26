@@ -208,7 +208,7 @@ function wire(): void {
   // oppose — robust across the 3 chapter <section>s (nth-of-type re-seeds per section) and stable
   // on open/close. Cards are static markup, so this one pass suffices.
   document.querySelectorAll<HTMLElement>('details.card').forEach((c, i) => {
-    c.style.setProperty('--tilt', i % 2 ? '1.4deg' : '-1.4deg') // BOLD enough to read as a pasted scrap
+    c.style.setProperty('--tilt', i % 2 ? '1deg' : '-1deg') // reads as a pasted scrap without colliding neighbours
     c.style.setProperty('--shadow-x', i % 2 ? '3px' : '-3px') // shadow falls toward the scrap's low edge
   })
   // render() skips the #json write while the panel is collapsed (perf) — refresh it on open
@@ -729,6 +729,11 @@ document.querySelectorAll<HTMLButtonElement>('.lang button[data-lang]').forEach(
     render()
   })
 })
+// on touch, swap the canvas hint to the gestures that actually work there (block-drag reorder +
+// edge-drag resize are mouse/pen-only) — re-point the data-i18n key so it stays translated on switch
+if (window.matchMedia?.('(pointer: coarse)').matches) {
+  document.querySelector('.canvas-hint')?.setAttribute('data-i18n', 'canvas.hint.touch')
+}
 applyI18n()
 
 // First-visit coachmark: a phone visitor has no hover cue, so point at the receipt
@@ -883,7 +888,10 @@ function offerRestore(cfg: unknown): void {
   if (!document.querySelector('.re-intro')) {
     yes.focus() // land focus on the prompt so a keyboard/SR user can act without blind-Tabbing the page
   }
-  const close = (): void => bar.remove()
+  const close = (): void => {
+    bar.classList.add('out') // fade out (mirrors the other transient surfaces) instead of an instant remove
+    window.setTimeout(() => bar.remove(), 240)
+  }
   yes.addEventListener('click', () => {
     applyConfig(cfg)
     close()

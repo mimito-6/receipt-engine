@@ -79,10 +79,10 @@ export function playPrintReveal(): Promise<void> {
     // modal clone only, never #paper → rect-safe)
     const svgH = (paperEl.querySelector('svg') as SVGSVGElement | null)?.getBoundingClientRect().height || 0
     const fitScale = svgH > 700 ? 700 / svgH : 1
-    if (fitScale < 1) {
-      paperEl.style.transformOrigin = 'top center'
-      paperEl.style.transform = `scale(${fitScale.toFixed(3)})`
-    }
+    // drive the fit scale through a CSS var so the feed keyframes (which set transform) carry it —
+    // a running CSS animation wins over inline style, so the main feed would otherwise drop the scale
+    // and balloon a long receipt to full height mid-ceremony
+    paperEl.style.setProperty('--fit', fitScale.toFixed(3))
     const status = stage.querySelector('#print-status') as HTMLElement
 
     let done = false

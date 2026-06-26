@@ -67,7 +67,10 @@
   /* visible keyboard focus everywhere (WCAG 2.4.7) — the UA default outline is swallowed by the
      pink sticker-shadow buttons + the ultramarine language band, so each surface gets a clear ring */
   :focus-visible { outline: 2px solid var(--ink-affordance); outline-offset: 2px; }
-  #svg-host svg [data-re-id]:focus-visible { outline: 2px solid var(--ink-affordance); outline-offset: 1px; }
+  /* SVG <text> doesn't paint `outline` in WebKit/iOS Safari — use stroke (which IS painted); paint-order
+     keeps the glyph fill on top so the label stays legible. The outline is a desktop progressive enhancement. */
+  #svg-host svg [data-re-id]:focus-visible { outline: 2px solid var(--ink-affordance); outline-offset: 1px;
+    stroke: var(--ink-affordance); stroke-width: 2px; paint-order: stroke; }
   .dl button:first-child:focus-visible, .handoff-enter:focus-visible, .handoff-act:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
   .lang button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
   body {
@@ -93,6 +96,9 @@
   header::after { content: ''; position: absolute; top: 6px; right: clamp(16px, 5vw, 28px); z-index: 1; width: 36px; height: 36px;
     transform: rotate(10deg); pointer-events: none; filter: drop-shadow(1px 2px 0 rgba(0,0,0,.22));
     background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M50 3C54 36 64 46 97 50C64 54 54 64 50 97C46 64 36 54 3 50C36 46 46 36 50 3Z' fill='%23C8F230'/%3E%3C/svg%3E") no-repeat center / contain; }
+  /* desktop pins the lang group top-right (justify-content:space-between) — move the lime furniture to the
+     empty bottom-right so it never paints over the live EN button (lime = "never an affordance") */
+  @media (min-width: 561px) { header::after { top: auto; bottom: 8px; right: 18px; } }
   .brand-block { min-width: 0; position: relative; z-index: 1; }
   .brand { display: flex; align-items: center; gap: 11px; }
   .brand .mark { display: none; } /* the Anton wordmark is the brand on the band */
@@ -161,8 +167,14 @@
   .canvas-tools button:disabled { opacity: .4; cursor: default; box-shadow: none; }
   .canvas-tools .icon-btn { padding: 6px 11px; font-size: 14px; line-height: 1; }
 
-  .controls { display: grid; gap: 22px; overflow-x: hidden; } /* contains the card-tilt sub-pixel overflow */
-  .group { display: grid; gap: 12px; }
+  /* directional affordance arrows as decorative ::before (visible icon, NOT spoken — the i18n label
+     stays glyph-free so screen readers don't read "downwards arrow, …") */
+  #import-items::before { content: '⇩ '; }
+  #cfg-save::before { content: '↓ '; }
+  #cfg-load-btn span[data-i18n]::before { content: '↑ '; }
+  /* padding (not overflow:hidden) absorbs the card-tilt overflow, so a -3px left paste-shadow isn't clipped */
+  .controls { display: grid; gap: 22px; padding-inline: 6px; }
+  .group { display: grid; gap: 16px; } /* room for the ±1deg rotated bounding boxes so scraps don't kiss */
   /* "machine voice": mono + letter-spacing, CJK-safe (no uppercase reliance), de-emoji'd */
   /* ── chapter heads: a big Anton number hangs in the gutter, a lime swipe under the title ── */
   .group-title { color: var(--ink); font-family: var(--font-ui); font-size: 14px; font-weight: 700; letter-spacing: 0;
@@ -194,8 +206,9 @@
      scraps ALWAYS oppose — robust across the 3 chapter <section>s where nth-of-type would re-seed,
      and stable on open/close. Fallback -.4deg if the stamp hasn't run. */
   details.card:not([open]) { transform: rotate(var(--tilt, -.4deg)); box-shadow: var(--shadow-x, 3px) 3px 0 rgba(20,20,15,.13), var(--shadow-panel); }
-  /* open = pressed flat (hard 1px), keeping one hard-shadow elevation story closed→hover→open */
-  details.card[open] { transform: rotate(0); box-shadow: 1px 1px 0 rgba(20,20,15,.13), var(--shadow-panel); }
+  /* open = pressed flat (hard 1px) but the HIGHEST soft tier, so rest < hover ≤ open is monotonic
+     (opening a card must not read as it sinking below the hover preview) */
+  details.card[open] { transform: rotate(0); box-shadow: 1px 1px 0 rgba(20,20,15,.13), var(--shadow-float); }
   .card > h2 { margin: 0 0 9px; font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
   .card > h2 .hint { font-weight: 500; color: var(--muted); font-size: 11px; }
   details.card > summary { font-size: 13px; font-weight: 700; cursor: pointer; list-style: none; display: flex; align-items: center; gap: 6px; }
@@ -293,7 +306,7 @@
   }
   .inspector[hidden] { display: none; }
   /* tap-outside-to-dismiss layer behind the mobile bottom sheet (subtle — the receipt stays visible) */
-  .re-sheet-scrim { position: fixed; inset: 0; z-index: 55; background: rgba(20,20,15,.06); }
+  .re-sheet-scrim { position: fixed; inset: 0; z-index: 55; background: rgba(20,20,15,.14); } /* perceptible dismiss layer */
   @media (prefers-reduced-motion: no-preference) { .re-sheet-scrim { animation: sel-box-in var(--dur-tap) var(--ease-out); } }
   /* entrance: the most-used surface gets the same crafted reveal as every other (toast/intro/sticker) */
   @media (prefers-reduced-motion: no-preference) {
@@ -333,6 +346,8 @@
   .inspector.as-sheet { left: 0; right: 0; bottom: 0; top: auto; width: auto; border-radius: 16px 16px 0 0;
     padding-bottom: calc(13px + env(safe-area-inset-bottom)); box-shadow: 0 -10px 30px rgba(22,22,30,.18);
     max-height: min(66vh, calc(100dvh - 150px)); overflow-y: auto; -webkit-overflow-scrolling: touch; } /* keep the receipt partly visible on short phones; sheet scrolls internally if needed */
+  /* a conventional grab-handle so the bottom sheet reads as dismissible */
+  .inspector.as-sheet::before { content: ''; display: block; width: 36px; height: 4px; margin: -2px auto 8px; border-radius: 999px; background: var(--line); }
 
   /* ---- sticker PS-style transform frame + alignment guides ---- */
   .re-guide { position: absolute; pointer-events: none; z-index: 5; }
@@ -382,7 +397,9 @@
   #edge-overlay { position: absolute; inset: 0; pointer-events: none; z-index: 2; }
   .re-edge { position: absolute; pointer-events: auto; opacity: 0; transition: opacity .12s; }
   .re-edge:hover, .re-edge.on { opacity: 1; }
-  @media (hover: none) { .re-edge { opacity: .45; } }
+  /* edge-drag resize is a hover/pointer gesture — on touch it fought page-scroll and was sub-target,
+     so hide it there and route resize to the 尺寸 sliders (the touch hint says so) */
+  @media (hover: none) { .re-edge { display: none; } }
   .re-edge-r { width: 14px; transform: translateX(-50%); cursor: ew-resize; }
   .re-edge-r::after { content: ''; position: absolute; left: 50%; top: 0; bottom: 0; width: 3px;
     transform: translateX(-50%); background: var(--ink-affordance); border-radius: 2px; }
@@ -396,7 +413,8 @@
 
   /* ---- block reorder: drag frame + insertion line + "版面順序" panel ---- */
   #re-insert-line { position: absolute; z-index: 6; height: 0; pointer-events: none;
-    border-top: 3px solid var(--ink-affordance); box-shadow: 0 0 8px rgba(43,43,52,.45); border-radius: 2px; }
+    border-top: 3px solid var(--ink-affordance); box-shadow: 0 0 8px rgba(43,43,52,.45); border-radius: 2px;
+    transition: top var(--dur-tap) var(--ease-out); } /* ease between slots so it doesn't teleport vs the gliding frame */
   #re-insert-line::before { content: ''; position: absolute; left: -5px; top: -5px; width: 8px; height: 8px;
     border-radius: 50%; background: var(--ink-affordance); }
   .re-drag-frame { position: absolute; z-index: 5; pointer-events: none; border: 2px solid var(--ink-affordance);
@@ -436,13 +454,15 @@
     max-height: min(70vh, 700px);
     -webkit-mask-image: linear-gradient(180deg, #000 94%, transparent); mask-image: linear-gradient(180deg, #000 94%, transparent); }
   /* reveal TOP-first (like a real receipt printing out), via a clip that opens downward */
-  .print-paper { clip-path: inset(0 0 100% 0); transform: translateY(-6px);
+  /* --fit (default 1) is set by printReveal for a tall receipt so the feed keyframes carry the
+     fit-to-mouth scale (a running CSS animation would otherwise drop an inline scale) — top-origin */
+  .print-paper { clip-path: inset(0 0 100% 0); transform: translateY(-6px) scale(var(--fit, 1)); transform-origin: top center;
     filter: drop-shadow(0 14px 26px rgba(22,22,30,.28)); }
   .print-stage.feeding .print-paper { animation: print-feed 1.05s var(--ease-out) forwards; }
   .print-paper svg { width: 100%; height: auto; display: block; border-radius: 6px; }
   @keyframes print-feed {
-    from { clip-path: inset(0 0 100% 0); transform: translateY(-6px); }
-    to   { clip-path: inset(0 0 0 0);    transform: translateY(0); } }
+    from { clip-path: inset(0 0 100% 0); transform: translateY(-6px) scale(var(--fit, 1)); }
+    to   { clip-path: inset(0 0 0 0);    transform: translateY(0) scale(var(--fit, 1)); } }
   .print-skip { margin-top: 18px; font: inherit; font-size: 11px; color: var(--ink); opacity: .8;
     background: none; border: none; cursor: pointer; padding: 4px 8px; } /* a real button now (keyboard skip) */
   .print-skip:focus-visible { outline: 2px solid var(--ink-affordance); outline-offset: 2px; opacity: 1; }
@@ -466,6 +486,8 @@
   #re-restore-msg { flex: 1 1 100%; white-space: normal; }
   @media (max-width: 380px) { .re-restore { width: calc(100vw - 24px); border-radius: 16px; justify-content: flex-end; } }
   @keyframes re-restore-in { from { opacity: 0; transform: translate(-50%, 8px); } to { opacity: 1; transform: translate(-50%, 0); } }
+  /* mirror exit (matches handoff/print/intro) so the pill fades instead of vanishing mid-blink */
+  .re-restore.out { opacity: 0; transform: translate(-50%, 8px); transition: opacity var(--dur-settle) var(--ease-out), transform var(--dur-settle) var(--ease-out); }
   .re-restore button { font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; border-radius: 999px;
     border: 1px solid transparent; padding: 6px 14px; background: var(--ink-affordance); color: #fff; }
   .re-restore button.ghost { background: var(--panel); color: var(--muted); border-color: var(--line); }
@@ -543,7 +565,7 @@
   .dl button:active, .handoff-enter:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--ink); }
   @media (hover: hover) {
     /* a closed tilted card straightens + lifts on hover — "click to open" */
-    details.card:not([open]):hover { transform: rotate(0); box-shadow: 5px 5px 0 rgba(20,20,15,.15), var(--shadow-float); }
+    details.card:not([open]):hover { transform: rotate(0); box-shadow: 3px 3px 0 rgba(20,20,15,.15), var(--shadow-float); }
     /* the pasted-sticker commit buttons peel UP on hover, then :active slams them down */
     .dl button:hover, .handoff-enter:hover { transform: translate(-1px, -1px); box-shadow: 5px 5px 0 var(--ink); }
   }
@@ -766,7 +788,7 @@
         <div id="items"></div>
         <div class="row2">
           <button class="btn sm" id="add-item" data-i18n="btn.addItem">+ 新增品項</button>
-          <button class="btn sm ghost" id="import-items" title="貼上 POS / 訂單系統的 JSON" data-i18n-title="btn.importItems.title" data-i18n="btn.importItems">⇩ 從訂單匯入</button>
+          <button class="btn sm ghost" id="import-items" title="貼上 POS / 訂單系統的 JSON" data-i18n-title="btn.importItems.title" data-i18n="btn.importItems">從訂單匯入</button>
         </div>
       </details>
 
@@ -803,8 +825,8 @@
 
       <details class="card"><summary><span data-i18n="panel.saveImport.title">存檔 / 匯入</span> <span class="hint" data-i18n="panel.saveImport.hint">設定檔 · 進階 JSON</span></summary>
         <div class="row2">
-          <button class="btn" id="cfg-save" data-i18n="btn.saveConfig">↓ 下載設定檔</button>
-          <button class="btn ghost upload"><span data-i18n="btn.loadConfig">↑ 載入設定檔</span><input type="file" id="cfg-load" accept="application/json,.json" /></button>
+          <button class="btn" id="cfg-save" data-i18n="btn.saveConfig">下載設定檔</button>
+          <button class="btn ghost upload" id="cfg-load-btn"><span data-i18n="btn.loadConfig">載入設定檔</span><input type="file" id="cfg-load" accept="application/json,.json" /></button>
         </div>
         <div class="muted-note" data-i18n="note.configContents">含收據內容、主題、中英字體、顏色、上下/左右留白、底圖、貼紙——載回 100% 還原。</div>
         <details class="sub" id="card-json"><summary data-i18n="panel.json.title">進階:JSON(收據 / 訂單)</summary>

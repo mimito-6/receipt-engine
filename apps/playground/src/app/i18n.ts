@@ -65,6 +65,11 @@ const EXTRA: Record<string, { zh: string; ja: string; en: string }> = {
   'placeholder.icon': { zh: '或一個字當圖示', ja: '1文字をアイコンに', en: 'A letter as icon' },
   'theme.group.label': { zh: '收據風格', ja: 'レシートのスタイル', en: 'Receipt style' },
   'spec.size': { zh: '尺寸', ja: 'サイズ', en: 'Size' },
+  'canvas.hint.touch': {
+    zh: '點文字改樣式 · 拖貼紙縮放旋轉 · 用「尺寸」卡改大小 · 用「版面順序」↑↓ 排序',
+    ja: 'テキストをタップして編集 · ステッカーをドラッグで拡縮/回転 · 「サイズ」カードで大きさ · 「並び順」↑↓ で並べ替え',
+    en: 'Tap text to style · drag stickers to scale/rotate · resize via the Size card · reorder via the ↑↓ panel',
+  },
   'sticker.limit': { zh: '貼紙數量已達上限', ja: 'ステッカーの上限に達しました', en: 'Sticker limit reached' },
   'sticker.deleted': { zh: '已刪除貼紙', ja: 'ステッカーを削除しました', en: 'Sticker deleted' },
   'order.moveUp': { zh: '{name} 上移', ja: '{name} を上へ', en: 'Move {name} up' },

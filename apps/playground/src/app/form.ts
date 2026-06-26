@@ -222,6 +222,11 @@ export function addSticker(content: string): void {
   popSticker(state.sel)
   renderStickerList()
   render()
+  // on a phone the tray sits a full scroll above #paper — bring the receipt (and the new sticker,
+  // now draggable on it) into view so the tap-to-add path lands visibly
+  if (window.matchMedia?.('(pointer: coarse)').matches) {
+    $('paper').scrollIntoView({ block: 'center', behavior: 'smooth' })
+  }
 }
 
 /** Drop a sticker at a specific receipt-space point (drag-from-tray), clamped to the card. */
