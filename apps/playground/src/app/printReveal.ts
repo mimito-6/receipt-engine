@@ -8,6 +8,7 @@ import { $ } from './dom'
 import { esc, state } from './state'
 import { exportOpts } from './io'
 import { announce, prefersReducedMotion, releaseFocus, setEditorInert, trapFocus, vibrate } from './feel'
+import { clearSelection } from './inspector'
 import { playDing, playWhir } from './sound'
 import { t } from './i18n'
 
@@ -61,6 +62,7 @@ export function playPrintReveal(): Promise<void> {
       '<div class="print-paper-wrap"><div class="print-paper"></div></div></div>' +
       `<button type="button" class="print-skip">${esc(t('print.skip'))}</button>`
     document.body.appendChild(stage)
+    clearSelection() // don't leave the inspector live behind the ceremony's focus trap
     // make the editor behind the ceremony inert (focus-blocking + AT-hidden), restored in finish()
     setEditorInert(true)
     // trap focus for the ceremony's lifetime (the skip button is the anchor) so Tab can't reach

@@ -12,6 +12,7 @@ import { receiptPngBlob } from './pngExport'
 import { announce, prefersReducedMotion, releaseFocus, setEditorInert, toast, trapFocus } from './feel'
 import { playDing, playWhir, primeAudio } from './sound'
 import { isPrintPlaying } from './printReveal'
+import { clearSelection } from './inspector'
 import { t } from './i18n'
 
 let openEl: HTMLElement | null = null
@@ -128,6 +129,7 @@ export function openHandoff(): void {
     `<button class="handoff-act" id="handoff-save">${esc(t('handoff.save'))}</button>` +
     '</div>'
   document.body.appendChild(ov)
+  clearSelection() // close the inspector/selection box so it can't leak behind the modal trap
   setEditorInert(true) // editor is focus-blocked + AT-hidden while present-mode is up
 
   // clean render == exactly what exports / prints (exportOpts, NOT the interactive editor SVG).
@@ -143,6 +145,14 @@ export function openHandoff(): void {
     const summary = [rc.merchant?.name, rc.totals?.total].filter((v) => v != null && v !== '').join(' · ')
     paper.setAttribute('role', 'img')
     paper.setAttribute('aria-label', t('handoff.title') + (summary ? ' · ' + summary : ''))
+    // present a tall (20+ item) receipt as ONE keepsake (fit-to-frame) instead of a scrollable wall —
+    // mirrors the print ceremony's fit-scale; transform on the modal clone only, never #paper
+    const svgH = (paper.querySelector('svg') as SVGSVGElement | null)?.getBoundingClientRect().height || 0
+    const budget = Math.min(window.innerHeight * 0.72, 760)
+    if (svgH > budget && budget > 0) {
+      paper.style.transformOrigin = 'top center'
+      paper.style.transform = `scale(${(budget / svgH).toFixed(3)})`
+    }
   } catch {
     teardown()
     return

@@ -552,9 +552,16 @@ function wire(): void {
     if (trigger) stampPress(trigger) // instant press-confirm — the ceremony only spins up ~1 frame later
     exporting = true
     primeAudio()
+    // keep the editor frozen for the WHOLE export, not just the ceremony — fn() (PNG font-embed) does
+    // multi-second font fetches before it reads state at await-time, so a mid-fetch theme/text switch
+    // would download a file that doesn't match the screen
     void playPrintReveal()
-      .then(() => fn())
+      .then(() => {
+        setEditorInert(true)
+        return fn()
+      })
       .finally(() => {
+        setEditorInert(false)
         exporting = false
       })
   }
@@ -578,7 +585,8 @@ function wire(): void {
     const m = isMuted()
     muteBtn.innerHTML = m ? SPK_OFF : SPK_ON
     muteBtn.setAttribute('aria-pressed', m ? 'false' : 'true')
-    muteBtn.setAttribute('aria-label', t('sound.toggle')) // SR name (the SVG is aria-hidden; title alone isn't exposed)
+    // state-bearing name (some mobile SRs under-announce aria-pressed), so the label itself says on/off
+    muteBtn.setAttribute('aria-label', t(m ? 'sound.muted' : 'sound.on'))
   }
   syncMute()
   muteBtn.addEventListener('click', () => {
@@ -779,6 +787,7 @@ try {
     card.append(go)
     intro.append(card)
     document.body.append(intro)
+    clearSelection() // no leaked inspector behind the intro trap
     setEditorInert(true) // editor is focus-blocked + AT-hidden while the first-run modal is up
     const dismiss = (): void => {
       intro.classList.add('out')
@@ -916,7 +925,9 @@ try {
   const saved = localStorage.getItem(AUTOSAVE_KEY)
   if (saved) {
     const cfg = JSON.parse(saved)
-    if (cfg && cfg.receipt) offerRestore(cfg)
+    // only offer a blob that actually restores — a corrupt/partial autosave shouldn't be promised as
+    // "your last design" only to bail to an error banner after the user clicks Restore
+    if (cfg && cfg.receipt && safeValidateReceipt(cfg.receipt).success) offerRestore(cfg)
   }
 } catch {
   /* ignore */

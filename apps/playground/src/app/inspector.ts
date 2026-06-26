@@ -7,7 +7,7 @@ import { render } from './render'
 import { FONT_PRESETS, state } from './state'
 import { renderStickerList } from './form'
 import { clearFrame } from './overlay'
-import { stampPress } from './feel'
+import { announce, stampPress } from './feel'
 import { applyI18n, t } from './i18n'
 
 const PAD = 4 // selection box padding (screen px)
@@ -404,6 +404,11 @@ export function onCanvasKeydown(e: KeyboardEvent): void {
     const inp = $('insp-text') as HTMLInputElement
     inp.focus()
     inp.select()
+  } else {
+    // a computed total/price has no text field — still move focus INTO the dialog and announce it,
+    // so a keyboard/SR user gets the same "a style panel opened" feedback the tap path gets
+    announce(t('inspector.title'))
+    ;($('insp-close') as HTMLElement)?.focus()
   }
 }
 

@@ -258,6 +258,7 @@ function repositionSelected(sk: any): void {
 }
 
 let _nudgeT = 0
+let _lastNudgeSnap = '' // last snap axes during keyboard nudge, so a held arrow doesn't re-strobe per press
 /**
  * Keyboard arrow-nudge of the selected sticker. Updates the model + reuses the SAME snap pass
  * as dragging, repositions IN PLACE (so the focused handle survives → repeated presses work),
@@ -277,10 +278,17 @@ export function nudgeSelected(dx: number, dy: number): void {
   sk.x = snapped.x
   sk.y = snapped.y
   repositionSelected(sk)
-  const fresh = snapped.guides.length > 0
+  // only pulse the guide + haptic on a FRESH snap (mirrors the drag path) — otherwise holding an arrow
+  // while resting on a guide strobes the pink line + buzzes nonstop every keypress
+  const key = snapped.guides
+    .map((g) => g.axis)
+    .sort()
+    .join(',')
+  const fresh = key !== '' && key !== _lastNudgeSnap
+  _lastNudgeSnap = key
   drawGuides(snapped.guides, fresh)
   if (fresh) vibrate(8)
-  window.setTimeout(() => clearGuides(), 240)
+  window.setTimeout(() => clearGuides(), 280)
   // keep keyboard focus ON the handle so the next arrow press keeps nudging (was lost when the
   // whole overlay got rebuilt)
   $('sticker-overlay').querySelector<HTMLElement>(`.sticker-handle[data-i="${i}"]`)?.focus()
