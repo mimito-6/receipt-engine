@@ -253,9 +253,9 @@ export const examples: Record<string, { receipt: Draft; custom: Look }> = {
       merchant: { name: 'Corner Coffee', subtitle: 'Daily roast & fresh bakes' },
       transaction: { receiptNo: '0042', issuedAt: '2026-06-01T08:15', cashier: 'Sam' },
       items: [
-        { name: 'Flat White', quantity: 1, unitPrice: 4.5 },
+        { name: 'Flat White', quantity: 1, unitPrice: 4.5, tags: ['Signature'] },
         { name: 'Butter Croissant', quantity: 2, unitPrice: 3.25 },
-        { name: 'Banana Bread', quantity: 1, unitPrice: 3.75 },
+        { name: 'Banana Bread', variant: 'Warm', quantity: 1, unitPrice: 3.75 },
       ],
       payments: [{ method: 'Card', amount: 14.75 }],
       qr: { value: 'https://corner.coffee/r/0042', label: 'View online' },
@@ -273,8 +273,8 @@ export const examples: Record<string, { receipt: Draft; custom: Look }> = {
       event: { name: '週末手作市集', boothName: 'Row B · Stall 7', location: '華山 1914', date: '2026-06-01' },
       transaction: { receiptNo: 'MKT-20260601-031', issuedAt: '2026-06-01T16:05', cashier: '阿光' },
       items: [
-        { name: '大豆蠟燭 Soy Candle', variant: '海鹽鼠尾草', quantity: 1, unitPrice: 480 },
-        { name: '乾燥花束 Dried Bouquet', quantity: 1, unitPrice: 360 },
+        { name: '大豆蠟燭 Soy Candle', variant: '海鹽鼠尾草', quantity: 1, unitPrice: 480, tags: ['手作'] },
+        { name: '乾燥花束 Dried Bouquet', quantity: 1, unitPrice: 360, tags: ['期間限定'] },
         { name: '香氛蠟磚 Wax Tablet', quantity: 3, unitPrice: 150 },
       ],
       discounts: [{ label: '市集首日優惠', amount: 129 }],
@@ -294,7 +294,7 @@ export const examples: Record<string, { receipt: Draft; custom: Look }> = {
       transaction: { receiptNo: 'PX-1985', issuedAt: '2026-06-01T20:10', cashier: 'P1' },
       items: [
         { name: 'Arcade Tokens', variant: 'x20', quantity: 1, unitPrice: 200 },
-        { name: 'Enamel Pin', variant: '1UP', quantity: 1, unitPrice: 150 },
+        { name: 'Enamel Pin', variant: '1UP', quantity: 1, unitPrice: 150, tags: ['LIMITED'] },
         { name: 'Game Sticker', quantity: 3, unitPrice: 40 },
       ],
       payments: [{ method: 'Cash', amount: 500 }],
@@ -302,7 +302,7 @@ export const examples: Record<string, { receipt: Draft; custom: Look }> = {
       message: { title: 'PLAYER 1 · THANKS', footer: 'INSERT COIN TO CONTINUE' },
       stickers: [{ content: STICKERS[12], anchor: 'free', x: 120, y: 118, size: 50 }],
     } as Draft,
-    custom: { primary: '#17a398', bg: '#f0e6cb', surface: '#fff8e8', text: '#222222', latinFont: 'cubic', cjkFont: 'cubic' },
+    custom: { primary: '#17a398', bg: '#f0e6cb', surface: '#fff8e8', text: '#222222', latinFont: 'cubic', cjkFont: 'cubic', stars: true },
   },
   // ── 精品手帳: elegant muted gold on ivory ──
   boutique: {
@@ -313,7 +313,7 @@ export const examples: Record<string, { receipt: Draft; custom: Look }> = {
       merchant: { name: 'ATELIER NOIR', subtitle: '手帳・文具・選物' },
       transaction: { receiptNo: 'AN-2026-0601', issuedAt: '2026-06-01T15:40', cashier: 'Lin' },
       items: [
-        { name: '皮革手帳 Leather Journal', variant: 'A5 / Tan', quantity: 1, unitPrice: 1280 },
+        { name: '皮革手帳 Leather Journal', variant: 'A5 / Tan', quantity: 1, unitPrice: 1280, tags: ['限定'] },
         { name: '黃銅筆 Brass Pen', quantity: 1, unitPrice: 680 },
         { name: '封蠟印章 Wax Seal', quantity: 1, unitPrice: 420 },
       ],

@@ -42,8 +42,10 @@ export function currentTheme(): ReceiptTheme {
       background: L.bg,
       surface: L.surface,
       text: L.text,
-      // derive the card border from the look's text colour instead of the theme's hard-coded pink
-      // (#ffd6e7) — that pink was invisible on light cards but showed as a stray edge on dark ones
+      // derive muted (metadata: receipt no / cashier / dates) + the card border from the look's own
+      // text colour, instead of the theme's hard-coded pinks (mutedText #a4799b / border #ffd6e7)
+      // which clashed with every non-pink template
+      mutedText: hexToRgba(L.text, 0.55),
       border: hexToRgba(L.text, 0.16),
     } as ReceiptThemePalette,
     typography: { fontFamily: fontStack(L.latinFont, L.cjkFont) } as ReceiptThemeTypography,
