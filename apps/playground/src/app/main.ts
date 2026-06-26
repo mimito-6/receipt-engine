@@ -301,8 +301,9 @@ function wire(): void {
       }
     })
   $('example').addEventListener('change', (e) => loadExample((e.target as HTMLSelectElement).value))
-  $('f-currency').addEventListener('change', function (this: HTMLSelectElement) {
-    state.receipt.currency = this.value
+  // currency is now a free-text field (datalist suggestions) so any symbol/code works — live update
+  $('f-currency').addEventListener('input', function (this: HTMLInputElement) {
+    state.receipt.currency = this.value.trim() || 'TWD'
     render()
   })
 

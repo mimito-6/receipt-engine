@@ -282,7 +282,8 @@
     border-radius: 8px; padding: 5px 7px; background: #fcfcfd; }
   .colors .hex:focus { outline: none; border-color: var(--ink-affordance); box-shadow: 0 0 0 3px var(--ink-ring); }
   .dl-clean { display: flex; align-items: center; gap: 7px; color: var(--muted); font-size: 12px; cursor: pointer; max-width: 360px; }
-  .dl-clean input { width: 16px; height: 16px; }
+  .dl-clean input { width: 20px; height: 20px; flex: none; accent-color: var(--ink-affordance); cursor: pointer; }
+  @media (pointer: coarse) { .dl-clean input { width: 24px; height: 24px; } }
   .check { display: flex; align-items: center; gap: 8px; font-size: 13px; margin-top: 10px; cursor: pointer; }
   .upload { position: relative; overflow: hidden; }
   .upload input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
@@ -522,7 +523,7 @@
 
   /* ── BLUE STORE PRESS — spec chips, sticker buttons, "the press runs" load ── */
   .spec-cap { font-family: var(--font-label); font-size: 11px; letter-spacing: .04em; color: var(--muted);
-    text-align: center; font-variant-numeric: tabular-nums; margin: 14px 0 6px; } /* float in clear space over the specimen, not crowded onto the toolbar/paper */
+    text-align: center; font-variant-numeric: tabular-nums; margin: 4px 0 8px; } /* hug the specimen it labels (toolbar gap comes from the stage) */
   .spec-cap #spec-readout { color: var(--ink); font-weight: 700; }
   .export-label { font-family: var(--font-label); font-size: 11px; letter-spacing: .14em; color: var(--muted);
     text-align: center; margin: 8px 0 -2px; }
@@ -673,7 +674,8 @@
           <div><label class="field" data-i18n="field.startFromSample">從範例開始</label>
             <select id="example"><option value="blank" data-i18n="example.blank">從空白開始</option><option value="cute" data-i18n="example.cute">同人攤位</option><option value="coffee" data-i18n="example.coffee">咖啡店</option><option value="market" data-i18n="example.market">手作市集</option></select></div>
           <div><label class="field" data-i18n="field.currency">幣別</label>
-            <select id="f-currency"><option>TWD</option><option>USD</option><option>JPY</option><option>EUR</option><option>CNY</option><option>HKD</option><option>KRW</option><option>THB</option><option>SGD</option></select></div>
+            <input id="f-currency" list="currency-list" autocomplete="off" maxlength="8" placeholder="TWD" />
+            <datalist id="currency-list"><option>TWD</option><option>USD</option><option>JPY</option><option>EUR</option><option>CNY</option><option>HKD</option><option>KRW</option><option>THB</option><option>SGD</option><option>GBP</option><option>AUD</option><option>NT$</option><option>¥</option><option>$</option><option>€</option></datalist></div>
         </div>
         <div class="sub-label" data-i18n="subLabel.fineTune">細部調整(顏色 / 字體 / 星星)</div>
         <div class="colors">
@@ -869,6 +871,6 @@
 <footer data-i18n="footer.text">純前端 · 收據不上傳伺服器 · 由 @receipt-engine/render-svg 在瀏覽器內渲染</footer>
 
 <!-- Editor app (bundles the engine). Built from src/app/main.ts -> public/playground.global.js -->
-<script src="./playground.global.js"></script>
+<script src="./playground.global.js?b=13"></script>
 </body>
 </html>

@@ -40,7 +40,7 @@ const EXTRA: Record<string, { zh: string; ja: string; en: string }> = {
   'restore.no': { zh: '不用', ja: 'いいえ', en: 'No thanks' },
   'sound.toggle': { zh: '音效開關', ja: '効果音 オン/オフ', en: 'Sound on / off' },
   // ── customer handoff present-mode (Phase C) ──
-  'handoff.enter': { zh: '交給客人', ja: 'お客さまへ渡す', en: 'Hand to customer' },
+  'handoff.enter': { zh: '印出!', ja: '印刷!', en: 'Print!' },
   'handoff.title': { zh: '交給客人', ja: 'お客さまへ', en: 'Hand to customer' },
   'handoff.close': { zh: '關閉', ja: '閉じる', en: 'Close' },
   'handoff.share': { zh: '分享', ja: '共有', en: 'Share' },

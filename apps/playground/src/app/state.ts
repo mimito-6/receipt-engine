@@ -122,62 +122,57 @@ const vsticker = (inner: string): string =>
   'data:image/svg+xml,' +
   encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">${inner}</svg>`)
 
+// All marks are SOLID FILLS — no outline strokes ("無邊框") — for a clean, designed sticker set.
 export const STICKERS: string[] = [
   // 4-point sparkle (blue)
   vsticker(`<path d="M50 5C54 35 65 46 95 50C65 54 54 65 50 95C46 65 35 54 5 50C35 46 46 35 50 5Z" fill="${_blue}"/>`),
-  // sparkle pair (ink)
+  // double sparkle (ink)
   vsticker(
     `<path d="M38 8C41 27 49 35 68 38C49 41 41 49 38 68C35 49 27 41 8 38C27 35 35 27 38 8Z" fill="${_ink}"/>` +
       `<path d="M76 54C78 65 84 71 95 73C84 75 78 81 76 92C74 81 68 75 57 73C68 71 74 65 76 54Z" fill="${_ink}"/>`,
   ),
-  // 5-point star (lime + ink outline)
+  // solid 5-point star (lime)
+  vsticker(`<path d="M50 6 61 38 95 39 68 60 78 93 50 73 22 93 32 60 5 39 39 38Z" fill="${_lime}"/>`),
+  // solid heart (blue)
+  vsticker(`<path d="M50 84C18 62 12 41 26 30 38 21 50 31 50 38 50 31 62 21 74 30 88 41 82 62 50 84Z" fill="${_blue}"/>`),
+  // solid lightning (lime)
+  vsticker(`<path d="M58 6 26 56H46L40 94 76 40H54Z" fill="${_lime}"/>`),
+  // flower — blue petals + lime core (two-tone fill)
   vsticker(
-    `<path d="M50 6 61 38 95 39 68 60 78 93 50 73 22 93 32 60 5 39 39 38Z" fill="${_lime}" stroke="${_ink}" stroke-width="5" stroke-linejoin="round"/>`,
+    `<g fill="${_blue}"><circle cx="50" cy="24" r="17"/><circle cx="75" cy="42" r="17"/><circle cx="66" cy="73" r="17"/><circle cx="34" cy="73" r="17"/><circle cx="25" cy="42" r="17"/></g>` +
+      `<circle cx="50" cy="50" r="15" fill="${_lime}"/>`,
   ),
-  // asterisk (ink)
+  // organic blob (lime)
   vsticker(
-    `<g stroke="${_ink}" stroke-width="10" stroke-linecap="round"><path d="M50 12V88"/><path d="M19 30 81 70"/><path d="M81 30 19 70"/></g>`,
+    `<path d="M54 8C72 7 86 19 91 37 96 55 85 65 78 77 70 89 53 96 37 90 21 84 7 71 8 53 9 36 19 23 31 17 41 12 46 9 54 8Z" fill="${_lime}"/>`,
   ),
-  // bold arrow (blue)
+  // teardrop / dot (blue)
+  vsticker(`<path d="M50 8C50 8 80 46 80 64A30 30 0 0 1 20 64C20 46 50 8 50 8Z" fill="${_blue}"/>`),
+  // sun — solid disc + rays (lime)
   vsticker(
-    `<path d="M12 50H76M54 28 84 50 54 72" fill="none" stroke="${_blue}" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>`,
+    `<circle cx="50" cy="50" r="20" fill="${_lime}"/>` +
+      `<g fill="${_lime}"><path d="M50 3 56 18 44 18Z"/><path d="M50 97 56 82 44 82Z"/><path d="M3 50 18 44 18 56Z"/><path d="M97 50 82 44 82 56Z"/><path d="M16 16 30 23 23 30Z"/><path d="M84 84 70 77 77 70Z"/><path d="M84 16 77 30 70 23Z"/><path d="M16 84 23 70 30 77Z"/></g>`,
   ),
-  // heart outline (lime + ink)
+  // cloud (blue)
+  vsticker(`<path d="M30 72A19 19 0 0 1 31 35 25 25 0 0 1 76 40 17 17 0 0 1 75 72Z" fill="${_blue}"/>`),
+  // speech bubble (lime)
   vsticker(
-    `<path d="M50 86C16 62 10 40 25 28 38 18 50 30 50 37 50 30 62 18 75 28 90 40 84 62 50 86Z" fill="${_lime}" stroke="${_ink}" stroke-width="5" stroke-linejoin="round"/>`,
+    `<path d="M18 18H82A9 9 0 0 1 91 27V59A9 9 0 0 1 82 68H46L27 88 30 68H18A9 9 0 0 1 9 59V27A9 9 0 0 1 18 18Z" fill="${_lime}"/>`,
   ),
-  // lightning (lime + ink)
+  // rounded cross / plus (blue)
   vsticker(
-    `<path d="M58 6 26 56H46L40 94 76 40H54Z" fill="${_lime}" stroke="${_ink}" stroke-width="4" stroke-linejoin="round"/>`,
+    `<path d="M42 12H58A4 4 0 0 1 62 16V38H84A4 4 0 0 1 88 42V58A4 4 0 0 1 84 62H62V84A4 4 0 0 1 58 88H42A4 4 0 0 1 38 84V62H16A4 4 0 0 1 12 58V42A4 4 0 0 1 16 38H38V16A4 4 0 0 1 42 12Z" fill="${_blue}"/>`,
   ),
-  // plus (blue)
-  vsticker(`<path d="M50 16V84M16 50H84" stroke="${_blue}" stroke-width="13" stroke-linecap="round"/>`),
-  // stamp ring (ink + lime core)
+  // confetti dots (blue / lime / ink)
   vsticker(
-    `<circle cx="50" cy="50" r="38" fill="none" stroke="${_ink}" stroke-width="8"/><circle cx="50" cy="50" r="10" fill="${_lime}"/>`,
+    `<circle cx="28" cy="32" r="13" fill="${_blue}"/><circle cx="70" cy="28" r="11" fill="${_lime}"/><circle cx="52" cy="70" r="15" fill="${_ink}"/>`,
   ),
-  // triple slash (blue zine mark)
-  vsticker(
-    `<path d="M34 22 18 78M60 22 44 78M86 22 70 78" stroke="${_blue}" stroke-width="9" stroke-linecap="round"/>`,
-  ),
-  // sun / seal (blue)
-  vsticker(
-    `<circle cx="50" cy="50" r="20" fill="${_blue}"/><g stroke="${_blue}" stroke-width="6" stroke-linecap="round"><path d="M50 6V17M50 83V94M6 50H17M83 50H94M20 20 27 27M73 73 80 80M80 20 73 27M27 73 20 80"/></g>`,
-  ),
-  // diamond (lime + ink)
-  vsticker(`<path d="M50 8 84 50 50 92 16 50Z" fill="${_lime}" stroke="${_ink}" stroke-width="5" stroke-linejoin="round"/>`),
-  // target (blue concentric)
-  vsticker(
-    `<circle cx="50" cy="50" r="36" fill="none" stroke="${_blue}" stroke-width="7"/><circle cx="50" cy="50" r="19" fill="none" stroke="${_blue}" stroke-width="7"/><circle cx="50" cy="50" r="5" fill="${_blue}"/>`,
-  ),
-  // wave / squiggle (ink)
-  vsticker(`<path d="M8 50Q22 28 36 50T64 50T92 50" fill="none" stroke="${_ink}" stroke-width="8" stroke-linecap="round"/>`),
-  // chevron stack (blue)
-  vsticker(
-    `<path d="M20 30 50 52 80 30M20 52 50 74 80 52" fill="none" stroke="${_blue}" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>`,
-  ),
-  // banner / pennant (blue)
+  // crescent moon (ink)
+  vsticker(`<path d="M64 10A41 41 0 1 0 64 90 33 33 0 1 1 64 10Z" fill="${_ink}"/>`),
+  // pennant / flag (blue)
   vsticker(`<path d="M14 28H86V60L74 51 62 60 50 51 38 60 26 51 14 60Z" fill="${_blue}"/>`),
+  // solid diamond (lime)
+  vsticker(`<path d="M50 8 84 50 50 92 16 50Z" fill="${_lime}"/>`),
 ]
 export const DEFAULT_W: Record<ThemeName, number> = { custom: 720, thermal: 384 }
 
@@ -251,7 +246,7 @@ export const examples: Record<string, { receipt: Draft; custom: Look }> = {
       payments: [{ method: 'Cash', amount: 700 }],
       qr: { value: 'https://instagram.com/mimito.art', label: '追蹤我們', caption: '新作 & 下次擺攤資訊' },
       message: {
-        title: 'Thank you! ♡',
+        title: 'Thank you!',
         body: '感謝支持我們的攤位,希望你喜歡這次的作品。',
         footer: 'See you next event!',
       },
