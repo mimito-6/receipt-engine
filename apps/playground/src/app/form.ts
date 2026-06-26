@@ -4,7 +4,10 @@ import { $, clientToReceipt, svgEl } from './dom'
 import { render } from './render'
 import { layoutOverlay, popSticker } from './overlay'
 import { type Draft, clamp, curEdges, curLook, curMono, curPad, curWidth, esc, isImg, state } from './state'
+import { toast } from './feel'
 import { t } from './i18n'
+
+const MAX_STICKERS = 24 // soft cap: bounds overlay-rebuild / autosave-size / export-raster cost
 
 export function ensure(k: string): any {
   if (!state.receipt[k]) state.receipt[k] = {}
@@ -198,6 +201,10 @@ export function renderStickerList(): void {
 
 export function addSticker(content: string): void {
   const r: any = state.receipt
+  if ((r.stickers?.length || 0) >= MAX_STICKERS) {
+    toast(t('sticker.limit'))
+    return
+  }
   if (!r.stickers) r.stickers = []
   const w = curWidth()
   const num = r.stickers.length
@@ -220,6 +227,10 @@ export function addSticker(content: string): void {
 /** Drop a sticker at a specific receipt-space point (drag-from-tray), clamped to the card. */
 export function addStickerAt(content: string, x: number, y: number): void {
   const r: any = state.receipt
+  if ((r.stickers?.length || 0) >= MAX_STICKERS) {
+    toast(t('sticker.limit'))
+    return
+  }
   if (!r.stickers) r.stickers = []
   const vb = svgEl()?.viewBox.baseVal
   r.stickers.push({

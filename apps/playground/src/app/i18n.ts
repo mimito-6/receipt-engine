@@ -10,8 +10,8 @@ export type { Lang }
 const EXTRA: Record<string, { zh: string; ja: string; en: string }> = {
   'brand.tagline': {
     zh: '生成你的收據模板 · 純瀏覽器、免上傳',
-    ja: 'ブラウザだけでレシートのテンプレートを作成',
-    en: 'Generate your receipt template — all in your browser',
+    ja: 'ブラウザだけでレシートのテンプレートを作成 · アップロード不要',
+    en: 'Generate your receipt template — all in your browser, nothing uploaded',
   },
   'look.edges': {
     zh: '收據機邊框(鋸齒撕邊)',
@@ -65,6 +65,7 @@ const EXTRA: Record<string, { zh: string; ja: string; en: string }> = {
   'placeholder.icon': { zh: '或一個字當圖示', ja: '1文字をアイコンに', en: 'A letter as icon' },
   'theme.group.label': { zh: '收據風格', ja: 'レシートのスタイル', en: 'Receipt style' },
   'spec.size': { zh: '尺寸', ja: 'サイズ', en: 'Size' },
+  'sticker.limit': { zh: '貼紙數量已達上限', ja: 'ステッカーの上限に達しました', en: 'Sticker limit reached' },
   'btn.saveConfig': { zh: '↓ 下載設定檔', ja: '↓ 設定を保存', en: '↓ Save config' },
   'btn.loadConfig': { zh: '↑ 載入設定檔', ja: '↑ 設定を読込', en: '↑ Load config' },
   // ── first-run studio intro (Phase C) ──

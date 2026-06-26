@@ -168,11 +168,8 @@ export function beginCanvasGesture(e: PointerEvent): void {
   const startX = e.clientX
   const startY = e.clientY
   let started = false
-  try {
-    host.setPointerCapture(e.pointerId)
-  } catch {
-    /* ignore */
-  }
+  // NOTE: do NOT setPointerCapture here — capturing on every pointerdown ate the page's vertical
+  // scroll on touch (the receipt fills the phone viewport). Capture only once a drag commits below.
   const move = (ev: PointerEvent): void => {
     if (!started) {
       const dx = ev.clientX - startX
@@ -181,6 +178,11 @@ export function beginCanvasGesture(e: PointerEvent): void {
       // click (or a small horizontal wobble) still reliably selects the text.
       if (blockKey && Math.abs(dy) > THRESHOLD && Math.abs(dy) > Math.abs(dx)) {
         started = true
+        try {
+          host.setPointerCapture(ev.pointerId)
+        } catch {
+          /* ignore */
+        }
         ev.preventDefault()
         dimBlock(blockKey, true)
         showDragFrame(blockKey)

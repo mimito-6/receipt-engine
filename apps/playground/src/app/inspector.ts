@@ -19,6 +19,19 @@ const isSheet = (): boolean =>
 
 let panel: HTMLDivElement | null = null
 let box: HTMLDivElement | null = null
+let scrim: HTMLDivElement | null = null // tap-outside-to-dismiss layer behind the mobile bottom sheet
+function showScrim(on: boolean): void {
+  if (on) {
+    if (!scrim) {
+      scrim = document.createElement('div')
+      scrim.className = 're-sheet-scrim'
+      scrim.addEventListener('pointerdown', () => clearSelection())
+    }
+    if (!scrim.parentElement) document.body.appendChild(scrim)
+  } else {
+    scrim?.remove()
+  }
+}
 // the receipt text element that opened the inspector — focus returns here on Escape/close
 let srcEl: HTMLElement | null = null
 // page scrollY before the bottom sheet's scroll-to-clear ran — restored when the sheet closes
@@ -323,6 +336,7 @@ export function selectText(id: string): void {
 export function clearSelection(): void {
   if (state.selection && state.selection.kind === 'text') state.selection = null
   srcEl = null
+  showScrim(false)
   if (panel) {
     panel.hidden = true
     panel.classList.remove('in')
@@ -415,6 +429,7 @@ function positionUi(el: SVGGraphicsElement): void {
 
   const sheet = isSheet()
   panel.classList.toggle('as-sheet', sheet)
+  showScrim(sheet) // a tap-outside layer so the sheet reads as a dismissible layer (mobile only)
   if (sheet) {
     panel.style.left = ''
     panel.style.top = ''

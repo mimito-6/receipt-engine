@@ -56,6 +56,17 @@ export function renderOpts(extra: Record<string, unknown> = {}): Record<string, 
   }
 }
 
+// rAF-coalesced render for high-frequency callers (range sliders, edge-drag) so a fast drag
+// paints once per frame instead of running the full validate→render→overlay pipeline per tick
+let _raf = 0
+export function scheduleRender(): void {
+  if (_raf) return
+  _raf = requestAnimationFrame(() => {
+    _raf = 0
+    render()
+  })
+}
+
 export function render(): void {
   const check = safeValidateReceipt(state.receipt)
   if (!check.success) {
@@ -93,15 +104,20 @@ export function render(): void {
   refreshInspector()
   positionEdgeHandles()
   renderOrderPanel()
-  ;($('json') as HTMLTextAreaElement).value = JSON.stringify(state.receipt, null, 2)
+  // stringifying multi-KB/MB base64 (logo/bg/stickers) every render is pure waste while the JSON
+  // panel is collapsed — only write it when the user can actually see it
+  const jsonEl = $('json') as HTMLTextAreaElement
+  if ((jsonEl.closest('details') as HTMLDetailsElement | null)?.open !== false) {
+    jsonEl.value = JSON.stringify(state.receipt, null, 2)
+  }
   // live [SPECIMEN №] readout — true export W×H, written into a sibling chip (never into #paper)
   const sv = $('svg-host').querySelector('svg') as SVGSVGElement | null
   const cap = document.getElementById('spec-readout')
   if (sv && cap) {
     const vb = sv.viewBox.baseVal
-    const dims = `${Math.round(vb.width)} × ${Math.round(vb.height)}`
-    cap.textContent = dims
-    cap.setAttribute('aria-label', t('spec.size') + ' ' + dims) // field name for SR (the bracket chip is aria-hidden)
+    // #spec-readout is a role=status aria-live region (with a sibling sr-only "尺寸/Size" label),
+    // so updating its text announces the new export dimensions on resize
+    cap.textContent = `${Math.round(vb.width)} × ${Math.round(vb.height)}`
   }
   scheduleHistory()
 }

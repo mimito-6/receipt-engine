@@ -1067,9 +1067,9 @@ export const DICT: Record<string, { zh: string; ja: string; en: string }> = {
     "en": "Optional"
   },
   "field.autofill": {
-    "zh": "可留空,OpenBooth 結帳時會自動帶入",
-    "ja": "空でもOK。OpenBooth の会計時に自動で入力されます",
-    "en": "Optional — OpenBooth fills this in automatically at checkout"
+    "zh": "可留空,接結帳系統時會自動帶入",
+    "ja": "空でもOK。レジ連携時に自動で入力されます",
+    "en": "Optional — your checkout system fills this in automatically"
   },
   "lang.zh": {
     "zh": "繁體中文",

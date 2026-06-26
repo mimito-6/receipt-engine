@@ -7,7 +7,7 @@ import { renderReceiptToSvg } from '@receipt-engine/render-svg'
 import { $ } from './dom'
 import { esc, state } from './state'
 import { exportOpts } from './io'
-import { announce, prefersReducedMotion, releaseFocus, trapFocus, vibrate } from './feel'
+import { announce, prefersReducedMotion, releaseFocus, setEditorInert, trapFocus, vibrate } from './feel'
 import { playDing, playWhir } from './sound'
 import { t } from './i18n'
 
@@ -61,9 +61,8 @@ export function playPrintReveal(): Promise<void> {
       '<div class="print-paper-wrap"><div class="print-paper"></div></div></div>' +
       `<button type="button" class="print-skip">${esc(t('print.skip'))}</button>`
     document.body.appendChild(stage)
-    // hide the editor behind the ceremony from assistive tech (restored in finish())
-    const bgHidden = [document.querySelector('.layout'), document.querySelector('header')]
-    bgHidden.forEach((b) => b?.setAttribute('aria-hidden', 'true'))
+    // make the editor behind the ceremony inert (focus-blocking + AT-hidden), restored in finish()
+    setEditorInert(true)
     // trap focus for the ceremony's lifetime (the skip button is the anchor) so Tab can't reach
     // the now-aria-hidden editor; releaseFocus() in finish() returns focus to the export button
     trapFocus(stage)
@@ -75,6 +74,14 @@ export function playPrintReveal(): Promise<void> {
     } catch {
       paperEl.appendChild(src.cloneNode(true)) // fall back to the live SVG if a render throws
     }
+    // a tall (20+ item) receipt would be clipped by the .print-paper-wrap max-height — scale the
+    // CLONE to fit so the ceremony "prints" the WHOLE receipt that downloads (transform on the
+    // modal clone only, never #paper → rect-safe)
+    const svgH = (paperEl.querySelector('svg') as SVGSVGElement | null)?.getBoundingClientRect().height || 0
+    if (svgH > 700) {
+      paperEl.style.transformOrigin = 'top center'
+      paperEl.style.transform = `scale(${(700 / svgH).toFixed(3)})`
+    }
     const status = stage.querySelector('#print-status') as HTMLElement
 
     let done = false
@@ -83,7 +90,7 @@ export function playPrintReveal(): Promise<void> {
       done = true
       window.removeEventListener('keydown', onKey)
       releaseFocus() // restore focus to the export button that opened the ceremony
-      bgHidden.forEach((b) => b?.removeAttribute('aria-hidden'))
+      setEditorInert(false)
       stage.classList.add('out')
       announce(t('print.done'))
       window.setTimeout(() => {

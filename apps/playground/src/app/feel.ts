@@ -29,6 +29,21 @@ function liveRegion(): HTMLElement | null {
   if (!_live) _live = document.getElementById('re-live')
   return _live
 }
+/**
+ * Make the editor behind a modal truly non-interactive. `inert` blocks focus AND removes the
+ * subtree from the a11y tree (aria-hidden alone leaves focusable tabindex=0 nodes reachable — an
+ * invalid ARIA state). aria-hidden is kept as a fallback for engines without inert.
+ */
+export function setEditorInert(on: boolean): void {
+  ;[document.querySelector('.layout'), document.querySelector('header')].forEach((b) => {
+    const el = b as (HTMLElement & { inert?: boolean }) | null
+    if (!el) return
+    el.inert = on
+    if (on) el.setAttribute('aria-hidden', 'true')
+    else el.removeAttribute('aria-hidden')
+  })
+}
+
 /** A one-shot "stamp" press-confirm for a toggle that lands its .on state — transform-only, rect-safe. */
 export function stampPress(el: Element): void {
   const e = el as HTMLElement

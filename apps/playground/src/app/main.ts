@@ -15,7 +15,7 @@ import {
   examples,
   state,
 } from './state'
-import { applyScale, render } from './render'
+import { applyScale, render, scheduleRender } from './render'
 import { addSticker, addStickerAt, ensure, renderStickerList, syncFormFromState } from './form'
 import {
   buildConfig,
@@ -38,7 +38,7 @@ import { applyI18n, setLang, t, type Lang } from './i18n'
 import { fastPrint, playPrintReveal, setFastPrint } from './printReveal'
 import { isMuted, primeAudio, setMuted } from './sound'
 import { isHandoffOpen, openHandoff } from './handoff'
-import { releaseFocus, stampPress, toast, trapFocus } from './feel'
+import { releaseFocus, setEditorInert, stampPress, toast, trapFocus } from './feel'
 
 // Expose the engine under the historical global so embedders/docs keep working.
 ;(window as unknown as Record<string, unknown>).ReceiptEngine = {
@@ -65,7 +65,11 @@ function setTheme(t: ThemeName): void {
     })
   syncFormFromState()
   render()
-  // quick opacity swap so a theme change reads as a fresh "print" (opacity only — rect-safe)
+  replayPrint() // top-down clip re-print so a theme change reads as a fresh print (rect-safe)
+}
+
+/** Replay the top-down "re-print" reveal on the receipt SVG (theme swap + example swap). */
+function replayPrint(): void {
   const host = $('svg-host')
   host.classList.remove('theme-swap')
   void host.offsetWidth
@@ -86,6 +90,7 @@ function loadExample(key: string): void {
   state.cleanExport = false
   syncFormFromState()
   render()
+  replayPrint() // same crafted re-print as the theme toggle (was a hard pop)
   resetHistory()
 }
 
@@ -196,7 +201,12 @@ function wire(): void {
   // oppose — robust across the 3 chapter <section>s (nth-of-type re-seeds per section) and stable
   // on open/close. Cards are static markup, so this one pass suffices.
   document.querySelectorAll<HTMLElement>('details.card').forEach((c, i) => {
-    c.style.setProperty('--tilt', i % 2 ? '.55deg' : '-.5deg')
+    c.style.setProperty('--tilt', i % 2 ? '.5deg' : '-.5deg')
+    c.style.setProperty('--shadow-x', i % 2 ? '3px' : '-3px') // shadow falls toward the scrap's low edge
+  })
+  // render() skips the #json write while the panel is collapsed (perf) — refresh it on open
+  $('card-json').addEventListener('toggle', function (this: HTMLDetailsElement) {
+    if (this.open) ($('json') as HTMLTextAreaElement).value = JSON.stringify(state.receipt, null, 2)
   })
   // sticker overlay callbacks
   setStickerCommit(() => {
@@ -273,25 +283,26 @@ function wire(): void {
   })
 
   // dimensions
+  // range sliders fire 'input' rapidly during a drag → coalesce to one paint per frame
   $('s-width').addEventListener('input', function (this: HTMLInputElement) {
     state.width[state.theme] = +this.value
     $('v-width').textContent = this.value + 'px'
-    render()
+    scheduleRender()
   })
   $('s-padtop').addEventListener('input', function (this: HTMLInputElement) {
     curPad().top = +this.value
     $('v-padtop').textContent = this.value + 'px'
-    render()
+    scheduleRender()
   })
   $('s-padbottom').addEventListener('input', function (this: HTMLInputElement) {
     curPad().bottom = +this.value
     $('v-padbottom').textContent = this.value + 'px'
-    render()
+    scheduleRender()
   })
   $('s-padx').addEventListener('input', function (this: HTMLInputElement) {
     curPad().x = +this.value
     $('v-padx').textContent = this.value + 'px'
-    render()
+    scheduleRender()
   })
   $('s-scale').addEventListener('input', function (this: HTMLInputElement) {
     state.scale = +this.value
@@ -510,8 +521,9 @@ function wire(): void {
   // double-tap mid-ceremony from firing two downloads + two toasts (playPrintReveal resolves
   // immediately while already playing).
   let exporting = false
-  const doExport = (fn: () => void | Promise<void>): void => {
+  const doExport = (fn: () => void | Promise<void>, trigger?: HTMLElement): void => {
     if (exporting || isHandoffOpen()) return // don't stack the print ceremony under the handoff modal
+    if (trigger) stampPress(trigger) // instant press-confirm — the ceremony only spins up ~1 frame later
     exporting = true
     primeAudio()
     void playPrintReveal()
@@ -520,9 +532,9 @@ function wire(): void {
         exporting = false
       })
   }
-  $('dl-png').addEventListener('click', () => doExport(downloadPng))
-  $('dl-svg').addEventListener('click', () => doExport(downloadSvg))
-  $('dl-html').addEventListener('click', () => doExport(downloadHtml))
+  $('dl-png').addEventListener('click', (e) => doExport(downloadPng, e.currentTarget as HTMLElement))
+  $('dl-svg').addEventListener('click', (e) => doExport(downloadSvg, e.currentTarget as HTMLElement))
+  $('dl-html').addEventListener('click', (e) => doExport(downloadHtml, e.currentTarget as HTMLElement))
   ;($('fast-print') as HTMLInputElement).checked = fastPrint()
   $('fast-print').addEventListener('change', function (this: HTMLInputElement) {
     setFastPrint(this.checked)
@@ -733,11 +745,10 @@ try {
     card.append(go)
     intro.append(card)
     document.body.append(intro)
-    const introBg = [document.querySelector('.layout'), document.querySelector('header')]
-    introBg.forEach((el) => el?.setAttribute('aria-hidden', 'true')) // hide the editor from AT while the modal is up
+    setEditorInert(true) // editor is focus-blocked + AT-hidden while the first-run modal is up
     const dismiss = (): void => {
       intro.classList.add('out')
-      introBg.forEach((el) => el?.removeAttribute('aria-hidden'))
+      setEditorInert(false)
       $('svg-host').removeEventListener('pointerdown', dismiss)
       releaseFocus()
       try {
@@ -771,10 +782,13 @@ let _saveT = 0
 let quotaWarned = false
 let autosaveDisabled = false // stop re-serializing multi-MB designs once storage is full
 let dirty = false // unsaved edits since the last successful write
+let _lastSerialized = '' // most recent successful blob, reused on tab-hide to skip a re-stringify
 function autosaveNow(): void {
   if (autosaveDisabled) return
   try {
-    localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(buildConfig()))
+    const s = JSON.stringify(buildConfig())
+    localStorage.setItem(AUTOSAVE_KEY, s)
+    _lastSerialized = s
     dirty = false
   } catch {
     // quota exceeded (a large data-URI image) or storage blocked: drop any older snapshot so
@@ -807,7 +821,19 @@ document.addEventListener('change', scheduleAutosave, true)
 // idle tab-switch / screen-lock doesn't re-serialize a multi-MB design the 900ms debounce
 // already saved.
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'hidden' && dirty) autosaveNow()
+  if (document.visibilityState !== 'hidden' || !dirty || autosaveDisabled) return
+  // for a heavy design, write the recently-cached blob (the 900ms debounce already produced one)
+  // instead of synchronously re-stringifying several MB of base64 on the hide event
+  if (_lastSerialized && _lastSerialized.length > 1e6) {
+    try {
+      localStorage.setItem(AUTOSAVE_KEY, _lastSerialized)
+      dirty = false
+    } catch {
+      autosaveDisabled = true
+    }
+  } else {
+    autosaveNow()
+  }
 })
 
 function offerRestore(cfg: unknown): void {

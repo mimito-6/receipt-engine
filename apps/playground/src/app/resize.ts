@@ -4,7 +4,7 @@
 // sticker overlay) so it survives the re-render mid-drag.
 import { $, receiptLen, receiptToPaper, scaleFactor, svgEl } from './dom'
 import { clamp, curPad, state } from './state'
-import { render } from './render'
+import { render, scheduleRender } from './render'
 import { t } from './i18n'
 
 let host: HTMLDivElement | null = null
@@ -43,21 +43,27 @@ function syncSlider(id: string, valId: string, v: number, suffix = 'px'): void {
 
 function dragWidth(el: HTMLElement): void {
   el.addEventListener('pointerdown', (e: PointerEvent) => {
-    e.preventDefault()
-    try {
-      el.setPointerCapture(e.pointerId)
-    } catch {
-      /* ignore */
-    }
-    el.classList.add('on')
     const k = scaleFactor()
     const startW = state.width[state.theme]
     const startX = e.clientX
+    const startY = e.clientY
+    let active = false // only commit a resize past a 6px move, so a tap/scroll near the edge passes through
     const move = (ev: PointerEvent): void => {
+      if (!active) {
+        if (Math.hypot(ev.clientX - startX, ev.clientY - startY) <= 6) return
+        active = true
+        try {
+          el.setPointerCapture(ev.pointerId)
+        } catch {
+          /* ignore */
+        }
+        el.classList.add('on')
+      }
+      ev.preventDefault()
       const d = (ev.clientX - startX) * k
       state.width[state.theme] = clamp(Math.round(startW + d * 2), 280, 900)
       syncSlider('s-width', 'v-width', state.width[state.theme])
-      render()
+      scheduleRender()
     }
     const up = (): void => {
       el.classList.remove('on')
@@ -78,17 +84,23 @@ function dragWidth(el: HTMLElement): void {
 
 function dragPad(el: HTMLElement, which: 'top' | 'bottom'): void {
   el.addEventListener('pointerdown', (e: PointerEvent) => {
-    e.preventDefault()
-    try {
-      el.setPointerCapture(e.pointerId)
-    } catch {
-      /* ignore */
-    }
-    el.classList.add('on')
     const k = scaleFactor()
     const start = which === 'top' ? curPad().top : curPad().bottom
+    const startX = e.clientX
     const startY = e.clientY
+    let active = false // 6px gate so a tap/scroll near the edge isn't an accidental pad change
     const move = (ev: PointerEvent): void => {
+      if (!active) {
+        if (Math.hypot(ev.clientX - startX, ev.clientY - startY) <= 6) return
+        active = true
+        try {
+          el.setPointerCapture(ev.pointerId)
+        } catch {
+          /* ignore */
+        }
+        el.classList.add('on')
+      }
+      ev.preventDefault()
       const d = (ev.clientY - startY) * k
       const v = clamp(Math.round(start + d), 0, 320)
       if (which === 'top') {
@@ -98,7 +110,7 @@ function dragPad(el: HTMLElement, which: 'top' | 'bottom'): void {
         curPad().bottom = v
         syncSlider('s-padbottom', 'v-padbottom', v)
       }
-      render()
+      scheduleRender()
     }
     const up = (): void => {
       el.classList.remove('on')

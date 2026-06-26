@@ -9,7 +9,7 @@ import { $, dl } from './dom'
 import { esc, state } from './state'
 import { exportOpts } from './io'
 import { receiptPngBlob } from './pngExport'
-import { announce, prefersReducedMotion, releaseFocus, toast, trapFocus } from './feel'
+import { announce, prefersReducedMotion, releaseFocus, setEditorInert, toast, trapFocus } from './feel'
 import { playDing, playWhir, primeAudio } from './sound'
 import { isPrintPlaying } from './printReveal'
 import { t } from './i18n'
@@ -31,7 +31,7 @@ async function saveReceipt(): Promise<void> {
     dl('receipt.png', await receiptPngBlob())
     toast(t('handoff.savedHint'))
   } catch {
-    /* ignore (e.g. tainted canvas from a cross-origin image) */
+    toast(t('error.pngFailed')) // never leave a customer-facing Save silently dead
   } finally {
     handoffBusy = false
   }
@@ -45,6 +45,7 @@ async function shareReceipt(): Promise<void> {
   try {
     blob = await receiptPngBlob()
   } catch {
+    toast(t('error.pngFailed'))
     handoffBusy = false
     return
   }
@@ -75,7 +76,7 @@ function teardown(): void {
   window.removeEventListener('keydown', onKey)
   window.removeEventListener('popstate', onPop)
   releaseFocus()
-  ;[document.querySelector('.layout'), document.querySelector('header')].forEach((b) => b?.removeAttribute('aria-hidden'))
+  setEditorInert(false)
   el.classList.add('out')
   window.setTimeout(() => el.remove(), 220)
 }
@@ -127,10 +128,7 @@ export function openHandoff(): void {
     `<button class="handoff-act" id="handoff-save">${esc(t('handoff.save'))}</button>` +
     '</div>'
   document.body.appendChild(ov)
-  // hide the editor from assistive tech while the present-mode modal is up
-  ;[document.querySelector('.layout'), document.querySelector('header')].forEach((b) =>
-    b?.setAttribute('aria-hidden', 'true'),
-  )
+  setEditorInert(true) // editor is focus-blocked + AT-hidden while present-mode is up
 
   // clean render == exactly what exports / prints (exportOpts, NOT the interactive editor SVG).
   // Validated above, but guard anyway: on any render failure, tear the modal down + restore the

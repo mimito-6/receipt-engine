@@ -6,18 +6,18 @@
 <meta name="color-scheme" content="light dark" />
 <meta name="theme-color" content="#d6336c" />
 <title>receipt-engine · 生成你的收據模板</title>
-<meta name="description" content="在瀏覽器裡直接設計、生成可愛又實用的收據模板:點文字改字、拖貼紙、即時預覽,可印到熱感收據機或分享給客人。純前端、收據不上傳伺服器,手機也能用。" />
+<meta name="description" content="在瀏覽器裡直接排版、生成收據模板:點文字改字、拖貼紙、即時預覽,可印到熱感收據機或交給客人。純前端、收據不上傳伺服器,手機也能用。" />
 <!-- favicon: a little torn-receipt mark (inline SVG, no extra request) -->
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23d6336c'/%3E%3Cpath d='M9 6h14v19l-2.3-1.7L18.3 25 16 23.3 13.7 25 11.3 23.3 9 25z' fill='white'/%3E%3Crect x='11.5' y='11' width='9' height='1.8' rx='.9' fill='%23d6336c'/%3E%3Crect x='11.5' y='15' width='9' height='1.8' rx='.9' fill='%23f06595'/%3E%3C/svg%3E" />
 <!-- Social preview. NOTE: set og:url / og:image to your ABSOLUTE deploy URL for full unfurl support. -->
 <meta property="og:type" content="website" />
 <meta property="og:title" content="receipt-engine · 生成你的收據模板" />
-<meta property="og:description" content="在瀏覽器裡直接設計、生成可愛又實用的收據模板,可印到熱感收據機或分享給客人。純前端、免上傳。" />
+<meta property="og:description" content="在瀏覽器裡直接排版、生成收據模板,可印到熱感收據機或交給客人。純前端、收據不上傳伺服器。" />
 <meta property="og:image" content="og-image.png" />
 <meta property="og:locale" content="zh_TW" />
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="receipt-engine · 生成你的收據模板" />
-<meta name="twitter:description" content="瀏覽器內設計可愛又實用的收據模板,熱感列印 / 分享給客人。純前端、免上傳。" />
+<meta name="twitter:description" content="在瀏覽器裡直接排版、生成收據模板,可印到熱感收據機或交給客人。純前端、收據不上傳伺服器。" />
 <meta name="twitter:image" content="og-image.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -64,6 +64,12 @@
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; } /* no global overflow-x:hidden — it would clip a right-edge sticker's delete handle */
+  /* visible keyboard focus everywhere (WCAG 2.4.7) — the UA default outline is swallowed by the
+     pink sticker-shadow buttons + the ultramarine language band, so each surface gets a clear ring */
+  :focus-visible { outline: 2px solid var(--ink-affordance); outline-offset: 2px; }
+  #svg-host svg [data-re-id]:focus-visible { outline: 2px solid var(--ink-affordance); outline-offset: 1px; }
+  .dl button:first-child:focus-visible, .handoff-enter:focus-visible, .handoff-act:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+  .lang button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
   body {
     background:
       repeating-linear-gradient(0deg, var(--grid-line) 0 1px, transparent 1px 24px),
@@ -159,9 +165,11 @@
   /* "machine voice": mono + letter-spacing, CJK-safe (no uppercase reliance), de-emoji'd */
   /* ── chapter heads: a big Anton number hangs in the gutter, a lime swipe under the title ── */
   .group-title { color: var(--ink); font-family: var(--font-ui); font-size: 14px; font-weight: 700; letter-spacing: 0;
-    margin: 2px 0 2px; display: flex; align-items: baseline; gap: 10px; }
+    margin: 2px 0 2px; display: flex; align-items: baseline; gap: 10px; position: relative; padding-left: 34px; }
+  /* the Anton numeral hangs in a real LEFT gutter (marginalia), not as an inline prefix */
   .group-title .chap-no { font-family: var(--font-display); font-weight: 400; font-size: 30px; line-height: .7;
-    color: var(--ink); letter-spacing: .02em; flex: none; align-self: center; transform: translateY(1px); }
+    color: var(--ink); letter-spacing: .02em; position: absolute; left: 0; top: 50%; transform: translateY(-50%);
+    width: 30px; text-align: right; }
   .group-title .ico { display: none; }
   .group-title > span:last-child { position: relative; z-index: 0; }
   .group-title > span:last-child::before { content: ''; position: absolute; left: -2px; right: -3px; bottom: 0; height: 9px;
@@ -184,7 +192,7 @@
   /* paste angle comes from --tilt, stamped per-card in DOM order at init (main.ts) so adjacent
      scraps ALWAYS oppose — robust across the 3 chapter <section>s where nth-of-type would re-seed,
      and stable on open/close. Fallback -.4deg if the stamp hasn't run. */
-  details.card:not([open]) { transform: rotate(var(--tilt, -.4deg)); box-shadow: 3px 3px 0 rgba(20,20,15,.13), var(--shadow-panel); }
+  details.card:not([open]) { transform: rotate(var(--tilt, -.4deg)); box-shadow: var(--shadow-x, 3px) 3px 0 rgba(20,20,15,.13), var(--shadow-panel); }
   /* open = pressed flat (hard 1px), keeping one hard-shadow elevation story closed→hover→open */
   details.card[open] { transform: rotate(0); box-shadow: 1px 1px 0 rgba(20,20,15,.13), var(--shadow-panel); }
   .card > h2 { margin: 0 0 9px; font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
@@ -283,6 +291,9 @@
     .inspector { background: rgba(255,255,255,.78); -webkit-backdrop-filter: blur(12px) saturate(1.2); backdrop-filter: blur(12px) saturate(1.2); }
   }
   .inspector[hidden] { display: none; }
+  /* tap-outside-to-dismiss layer behind the mobile bottom sheet (subtle — the receipt stays visible) */
+  .re-sheet-scrim { position: fixed; inset: 0; z-index: 55; background: rgba(20,20,15,.06); }
+  @media (prefers-reduced-motion: no-preference) { .re-sheet-scrim { animation: sel-box-in var(--dur-tap) var(--ease-out); } }
   /* entrance: the most-used surface gets the same crafted reveal as every other (toast/intro/sticker) */
   @media (prefers-reduced-motion: no-preference) {
     .inspector { opacity: 0; transform: translateY(6px); transition: opacity var(--dur-settle) var(--ease-out), transform var(--dur-settle) var(--ease-out); }
@@ -389,7 +400,9 @@
     border-radius: 50%; background: var(--ink-affordance); }
   .re-drag-frame { position: absolute; z-index: 5; pointer-events: none; border: 2px solid var(--ink-affordance);
     border-radius: var(--r-sm); background: var(--ink-soft); box-shadow: var(--shadow-float); }
-  #svg-host svg [data-re-block] { cursor: grab; }
+  /* let the browser own vertical page-scroll over the receipt on touch; reorder-by-drag stays a
+     mouse/pen gesture, the 版面順序 ↑↓ arrows are the touch-primary reorder path */
+  #svg-host svg [data-re-block] { cursor: grab; touch-action: pan-y; }
   .order-row { display: grid; grid-template-columns: 1fr auto auto; gap: 6px; align-items: center; margin-bottom: 6px; }
   .order-name { font-size: 13px; }
   .order-btn { border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: var(--r-sm);
@@ -564,7 +577,7 @@
 
   /* phone touch targets: bump the highest-traffic controls toward the 44px minimum (desktop's tight zine sizing stays) */
   @media (pointer: coarse) {
-    .lang button { padding: 9px 11px; }
+    .lang button { padding: 12px 12px; min-height: 44px; }
     .dl button { padding: 12px 18px; }
     .canvas-tools button { padding: 10px 14px; }
     .canvas-tools .icon-btn { padding: 10px 12px; }
@@ -783,7 +796,7 @@
             <button class="btn sm" id="load-receipt" data-i18n="btn.loadReceiptJson">載入收據 JSON</button>
             <button class="btn sm ghost" id="load-order" data-i18n="btn.loadOrderJson">載入訂單 JSON</button>
           </div>
-          <div class="muted-note" data-i18n="note.orderJson">「訂單 JSON」會經由 importOrder() 轉成收據——之後接 POS / 電商系統就走這條。</div>
+          <div class="muted-note" data-i18n="note.orderJson">「訂單 JSON」會自動轉成收據——日後接 POS / 電商系統也走同一條路徑。</div>
         </details>
       </details>
     </section>
@@ -797,7 +810,7 @@
       <button id="redo" data-i18n-title="nav.redo" title="下一步" disabled><span aria-hidden="true">↷</span> <span data-i18n="nav.redo">下一步</span></button>
       <button id="mute-toggle" class="icon-btn" data-i18n-title="sound.toggle" title="音效開關" aria-pressed="false" style="margin-left:auto"></button>
     </div>
-    <div class="spec-cap"><span aria-hidden="true">[ SPECIMEN&nbsp;№ ] ·</span> <span id="spec-readout">—</span></div>
+    <div class="spec-cap"><span aria-hidden="true">[ SPECIMEN&nbsp;№ ] ·</span> <span class="sr-only" data-i18n="spec.size">尺寸</span> <span id="spec-readout" role="status" aria-live="polite">—</span></div>
     <div id="paper"><div id="svg-host"></div><div id="sticker-overlay"></div></div>
     <div class="canvas-hint" data-i18n="canvas.hint">點文字改內容/字體 · 拖貼紙縮放旋轉 · 拖邊界改尺寸 · 拖區塊排順序</div>
     <label class="dl-clean"><input type="checkbox" id="dl-clean" /> <span data-i18n="export.clean">去背景 PNG(保留卡片)</span> <span class="hint" data-i18n="export.cleanHint">只去掉卡片後面的頁面底色,保留卡片的形狀與顏色,適合印製</span></label>
