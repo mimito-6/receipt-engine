@@ -1,8 +1,11 @@
 import {
   normalizeReceipt,
+  receiptMetadata,
   validateReceipt,
   type BlockKey,
+  type PaperProfile,
   type ReceiptDocument,
+  type ReceiptMetadata,
 } from '@receipt-engine/core'
 import {
   getTheme,
@@ -40,6 +43,15 @@ import {
 export interface RenderSvgOptions {
   theme?: ReceiptThemeName | ReceiptTheme
   width?: number
+  /**
+   * Thermal paper profile (58mm/384 dots, 80mm/576 dots, …). When set, the receipt is
+   * LAID OUT natively at `printableWidthDots` — the card margins, side padding, QR and
+   * logo boxes all come from the profile, so an 80mm receipt is a genuine 576-dot
+   * design rather than a 384-dot one scaled up (which would smear every raster edge).
+   *
+   * An explicit `width` still wins, so existing callers are unaffected.
+   */
+  paper?: PaperProfile
   /** Top whitespace inside the card, in px. Defaults to 4× the side padding. */
   padTop?: number
   /** Bottom whitespace inside the card, in px. Defaults to 4× the side padding. */
@@ -152,11 +164,11 @@ function monoFilter(id: string): string {
   )
 }
 
-/** Render a validated, normalized receipt to a deterministic SVG string. */
-export function renderReceiptToSvg(
+/** Internal renderer: produces the SVG plus the geometry callers need for metadata. */
+function renderInternal(
   receipt: ReceiptDocument,
   options: RenderSvgOptions = {},
-): string {
+): { svg: string; widthDots: number; heightDots: number } {
   const doc = normalizeReceipt(validateReceipt(receipt))
   const theme = resolveTheme(options.theme)
   const isThermal = theme.mode === 'thermal'
@@ -165,9 +177,12 @@ export function renderReceiptToSvg(
   // The value used in `filter="…"`; the <defs> below uses the bare id.
   const monoFilterId = monoImages ? `url(#${MONO_FILTER_ID})` : undefined
 
-  const width = options.width ?? (isThermal ? THERMAL_WIDTH : DEFAULT_CARD_WIDTH)
-  const outerMargin = isThermal ? 22 : 26
-  const innerPad = theme.spacing.page
+  // Paper profile (when given) drives the geometry; an explicit `width` still wins so
+  // existing callers keep their exact output.
+  const paper = options.paper
+  const width = options.width ?? paper?.printableWidthDots ?? (isThermal ? THERMAL_WIDTH : DEFAULT_CARD_WIDTH)
+  const outerMargin = paper?.outerMarginDots ?? (isThermal ? 22 : 26)
+  const innerPad = paper?.sidePaddingDots ?? theme.spacing.page
   // Top & bottom whitespace inside the card. Default is 4× the side padding for a
   // roomy, receipt-like feed margin, but each edge is independently overridable
   // (so the UI can expose separate top/bottom sliders).
@@ -197,6 +212,9 @@ export function renderReceiptToSvg(
     monoFilterId,
     interactive: !!options.interactive,
     styleOverrides: doc.styleOverrides,
+    qrSize: paper?.qrSizeDots,
+    logoMaxWidth: paper?.logoMaxWidthDots,
+    logoMaxHeight: paper?.logoMaxHeightDots,
   }
   const p = createPainter(ctx)
 
@@ -395,7 +413,7 @@ export function renderReceiptToSvg(
     `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${totalHeight}" ` +
     `viewBox="0 0 ${width} ${totalHeight}" font-family="${escapeXml(theme.typography.fontFamily)}">`
 
-  return (
+  const svg =
     xmlDecl +
     open +
     defs +
@@ -407,5 +425,45 @@ export function renderReceiptToSvg(
     parts.join('') +
     stickerLayer +
     '</svg>'
-  )
+
+  return { svg, widthDots: width, heightDots: totalHeight }
+}
+
+/** Render a validated, normalized receipt to a deterministic SVG string. */
+export function renderReceiptToSvg(
+  receipt: ReceiptDocument,
+  options: RenderSvgOptions = {},
+): string {
+  return renderInternal(receipt, options).svg
+}
+
+/** An SVG plus the physical measurements of the receipt it describes. */
+export interface RenderedReceipt {
+  svg: string
+  metadata: ReceiptMetadata
+}
+
+/**
+ * Render a receipt AND report its physical size: dots, mm, and how many fit on a
+ * roll. Callers driving a thermal printer need the dot dimensions anyway (to size the
+ * raster), and the mm/roll figures let a UI say "this receipt is 12cm of paper"
+ * without re-deriving the maths.
+ *
+ * The feed distance and DPI come from `options.paper` when present, so the length
+ * estimate accounts for the blank paper advanced after printing.
+ */
+export function renderReceiptWithMetadata(
+  receipt: ReceiptDocument,
+  options: RenderSvgOptions = {},
+): RenderedReceipt {
+  const { svg, widthDots, heightDots } = renderInternal(receipt, options)
+  return {
+    svg,
+    metadata: receiptMetadata({
+      widthDots,
+      heightDots,
+      dpi: options.paper?.dpi,
+      feedAfterPrintMm: options.paper?.feedAfterPrintMm,
+    }),
+  }
 }

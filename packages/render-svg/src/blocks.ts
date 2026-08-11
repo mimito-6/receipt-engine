@@ -111,8 +111,8 @@ export function renderHeader(
   let markup = ''
 
   if (merchant.logo && isImageSource(merchant.logo)) {
-    const w = Math.min(160, ctx.contentWidth * 0.5)
-    const h = 76
+    const w = Math.min(ctx.logoMaxWidth ?? 160, ctx.contentWidth * 0.5)
+    const h = ctx.logoMaxHeight ?? 76
     markup += p.image(merchant.logo, cx - w / 2, cursor, w, h)
     cursor += h + 14
   } else if (merchant.icon) {
@@ -538,7 +538,7 @@ export function renderQrBlock(
 ): BlockResult {
   const { theme } = ctx
   const cx = centerX(ctx)
-  const size = theme.mode === 'thermal' ? 120 : 132
+  const size = ctx.qrSize ?? (theme.mode === 'thermal' ? 120 : 132)
   let cursor = y
   let markup = ''
 
@@ -683,8 +683,8 @@ export function renderMessage(
 export function renderLogo(ctx: RenderContext, p: Painter, merchant: ReceiptMerchant, y: number): BlockResult {
   const cx = centerX(ctx)
   if (merchant.logo && isImageSource(merchant.logo)) {
-    const w = Math.min(160, ctx.contentWidth * 0.5)
-    const h = 76
+    const w = Math.min(ctx.logoMaxWidth ?? 160, ctx.contentWidth * 0.5)
+    const h = ctx.logoMaxHeight ?? 76
     return { markup: p.image(merchant.logo, cx - w / 2, y, w, h), height: h }
   }
   if (merchant.icon) {
@@ -745,7 +745,7 @@ export function renderMerchantSubtitle(ctx: RenderContext, p: Painter, merchant:
 export function renderQrImage(ctx: RenderContext, p: Painter, qr: ReceiptQr, y: number): BlockResult {
   const { theme } = ctx
   const cx = centerX(ctx)
-  const size = theme.mode === 'thermal' ? 120 : 132
+  const size = ctx.qrSize ?? (theme.mode === 'thermal' ? 120 : 132)
   const markup = renderQrGroup(qr.value, { size, x: cx - size / 2, y, dark: theme.palette.text, light: qr.background ?? '#ffffff' })
   return { markup, height: size }
 }

@@ -10,7 +10,10 @@
     "clean": "node -e \"require('node:fs').rmSync('public/receipt-engine.global.js',{force:true})\""
   },
   "dependencies": {
+    "@receipt-engine/bitmap": "workspace:*",
+    "@receipt-engine/connect": "workspace:*",
     "@receipt-engine/core": "workspace:*",
+    "@receipt-engine/escpos": "workspace:*",
     "@receipt-engine/render-html": "workspace:*",
     "@receipt-engine/render-svg": "workspace:*",
     "@receipt-engine/themes": "workspace:*"

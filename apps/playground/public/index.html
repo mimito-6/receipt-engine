@@ -308,6 +308,25 @@
   .inspector[hidden] { display: none; }
   /* tap-outside-to-dismiss layer behind the mobile bottom sheet (subtle — the receipt stays visible) */
   .re-sheet-scrim { position: fixed; inset: 0; z-index: 55; background: rgba(20,20,15,.14); } /* perceptible dismiss layer */
+
+  /* ── BLE thermal printing panel (prints the live design) ── */
+  .ble-card { width: 100%; max-width: 360px; text-align: left; margin-top: 4px; }
+  .ble-grid { display: grid; gap: 8px; margin-top: 10px; }
+  .ble-grid select { width: 100%; }
+  .ble-btns { display: grid; gap: 8px; grid-template-columns: 1fr 1fr; margin-top: 10px; }
+  .ble-btns .btn { width: 100%; }
+  #ble-status {
+    margin-top: 10px; padding: 9px 10px; border-radius: 8px; border: 1px solid var(--line);
+    background: #fff; font-family: var(--font-label); font-size: 12px; word-break: break-word;
+  }
+  #ble-status[data-kind="ok"] { color: #1f7a3f; border-color: #1f7a3f; }
+  #ble-status[data-kind="busy"] { color: #b0480f; border-color: #b0480f; }
+  #ble-status[data-kind="err"] { color: #b3261e; border-color: #b3261e; }
+  #ble-diag { margin-top: 8px; font-family: var(--font-label); font-size: 11px; }
+  #ble-diag .ble-row { display: flex; justify-content: space-between; gap: 10px; padding: 3px 0; border-bottom: 1px dotted var(--line); }
+  #ble-diag .ble-row:last-child { border-bottom: 0; }
+  #ble-diag .ble-row span:first-child { color: var(--muted); flex: none; }
+  #ble-diag .ble-row span:last-child { text-align: right; word-break: break-all; }
   @media (prefers-reduced-motion: no-preference) { .re-sheet-scrim { animation: sel-box-in var(--dur-tap) var(--ease-out); } }
   /* entrance: the most-used surface gets the same crafted reveal as every other (toast/intro/sticker) */
   @media (prefers-reduced-motion: no-preference) {
@@ -865,12 +884,49 @@
       <button id="dl-svg" data-i18n="btn.downloadSvg">下載 SVG</button>
       <button id="dl-html" data-i18n="btn.downloadHtml">下載 HTML</button>
     </div>
+
+    <!-- Thermal printing over BLE: prints the design that is open right now. -->
+    <details class="card ble-card" id="ble-print">
+      <summary><span data-i18n="ble.title">熱感印表機列印(藍牙)</span> <span class="hint" data-i18n="ble.hint">把目前這張版型直接印出來</span></summary>
+      <div class="ble-grid">
+        <label class="field"><span data-i18n="ble.printer">印表機</span>
+          <select id="ble-printer">
+            <option value="gprinter-ble-80">Gprinter BLE 80mm</option>
+            <option value="generic-58">Generic BLE 58mm</option>
+            <option value="generic-80">Generic BLE 80mm</option>
+          </select>
+        </label>
+        <label class="field"><span data-i18n="ble.paper">紙寬</span>
+          <select id="ble-paper">
+            <option value="80mm">80mm · 576 dots</option>
+            <option value="58mm">58mm · 384 dots</option>
+          </select>
+        </label>
+        <label class="field"><span data-i18n="ble.mode">傳輸速度</span>
+          <select id="ble-mode">
+            <option value="conservative">Conservative · 20B / 20ms</option>
+            <option value="standard">Standard · 50B / 10ms</option>
+            <option value="fast">Fast · 100B / 5ms</option>
+          </select>
+        </label>
+      </div>
+      <label class="dl-clean"><input type="checkbox" id="ble-mono" checked /> <span data-i18n="ble.mono">白底黑字(熱感模式,省紙墨)</span></label>
+      <div class="ble-btns">
+        <button class="btn" id="ble-connect" type="button" data-i18n="ble.connect">連線印表機</button>
+        <button class="btn ghost" id="ble-disconnect" type="button" data-i18n="ble.disconnect">中斷</button>
+        <button class="btn" id="ble-estimate" type="button" data-i18n="ble.estimate">估算長度</button>
+        <button class="btn" id="ble-print-btn" type="button" data-i18n="ble.print">印出這張</button>
+      </div>
+      <div id="ble-status" data-kind="idle" role="status" aria-live="polite">尚未連線</div>
+      <div id="ble-diag"></div>
+      <div class="muted-note" data-i18n="ble.note">需要 Android Chrome + HTTPS(iOS Safari 不支援藍牙列印)。連線必須由你按下按鈕觸發。</div>
+    </details>
   </div>
 </div>
 
 <footer data-i18n="footer.text">純前端 · 收據不上傳伺服器 · 由 @receipt-engine/render-svg 在瀏覽器內渲染</footer>
 
 <!-- Editor app (bundles the engine). Built from src/app/main.ts -> public/playground.global.js -->
-<script src="./playground.global.js?b=19"></script>
+<script src="./playground.global.js?b=20"></script>
 </body>
 </html>

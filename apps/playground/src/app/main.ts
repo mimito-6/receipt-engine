@@ -45,6 +45,7 @@ import { applyI18n, setLang, t, type Lang } from './i18n'
 import { fastPrint, playPrintReveal, setFastPrint } from './printReveal'
 import { isMuted, primeAudio, setMuted } from './sound'
 import { isHandoffOpen, openHandoff } from './handoff'
+import { initBlePrint } from './blePrint'
 import { prefersReducedMotion, releaseFocus, setEditorInert, stampPress, toast, trapFocus } from './feel'
 
 // Expose the engine under the historical global so embedders/docs keep working.
@@ -740,6 +741,7 @@ function wire(): void {
 // boot — load data first (sets state.receipt), then apply theme UI
 wire()
 installEdgeHandles()
+initBlePrint()
 loadExample('cute')
 setTheme('custom')
 // first impression should PRINT like every later swap — the boot replayPrint (t=0) is masked by the

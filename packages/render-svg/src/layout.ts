@@ -22,6 +22,13 @@ export interface RenderContext {
   interactive?: boolean
   /** Per-element style overrides, keyed by element id. */
   styleOverrides?: Record<string, TextStyle>
+  /**
+   * Graphic sizes in dots, supplied by the active paper profile. Absent for
+   * non-thermal / profile-less renders, where blocks keep their historical constants.
+   */
+  qrSize?: number
+  logoMaxWidth?: number
+  logoMaxHeight?: number
 }
 
 /**

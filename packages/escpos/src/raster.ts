@@ -1,5 +1,5 @@
 // GS v 0 raster bit-image encoding + a complete print-job builder.
-import { align, cut, feed, init } from './commands'
+import { align, cut, feed, feedDots, init } from './commands'
 
 /**
  * A 1-bit-per-pixel bitmap, rows packed MSB-first (leftmost pixel = bit 0x80),
@@ -49,22 +49,53 @@ export interface PrintJobOptions {
   align?: 'left' | 'center' | 'right'
   /** Lines to feed after the image before cutting (default 3). */
   feedLines?: number
-  /** Append a cut command (default true). */
+  /**
+   * Append a cut command. Defaults to true for backwards compatibility, but is
+   * forced OFF when `supportsCut: false` — portable BLE printers have no cutter and
+   * a stray `GS V` either errors or is ignored, so it must never be assumed.
+   */
   cut?: boolean
   /** Partial vs full cut (default partial). */
   partialCut?: boolean
   /** Max rows per GS v 0 band (default 255). */
   maxBand?: number
+  /**
+   * Printer capability. When false, no cut command is emitted regardless of `cut`,
+   * and the post-print advance uses `feedAfterPrintMm` so the paper clears the tear bar.
+   */
+  supportsCut?: boolean
+  /**
+   * Blank paper to advance after the image, in mm. Takes precedence over `feedLines`
+   * when set: it is emitted as `ESC J` dot feeds, which are resolution-exact.
+   */
+  feedAfterPrintMm?: number
+  /** Resolution used to convert `feedAfterPrintMm` to dots (default 203 dpi). */
+  dpi?: number
 }
 
-/** Build a complete print stream: init → align → raster → feed → cut. */
+/** 203 dpi ≈ 7.99 dots/mm — mirrors core's DEFAULT_DPI without adding a dependency. */
+const DEFAULT_DPI = 203
+
+/**
+ * Build a complete print stream: init → align → raster → feed → (cut).
+ *
+ * With a `feedAfterPrintMm` the trailing advance is emitted in dots (`ESC J`) so the
+ * receipt clears the tear bar by an exact distance; otherwise the legacy whole-line
+ * `ESC d` feed is used. A printer declared `supportsCut: false` never gets a cut.
+ */
 export function buildPrintJob(bmp: Bitmap1bpp, opts: PrintJobOptions = {}): Uint8Array {
   const bytes: number[] = []
   bytes.push(...init())
   bytes.push(...align(opts.align ?? 'center'))
   bytes.push(...encodeRaster(bmp, { maxBand: opts.maxBand }))
   bytes.push(...align('left'))
-  bytes.push(...feed(opts.feedLines ?? 3))
-  if (opts.cut !== false) bytes.push(...cut({ partial: opts.partialCut ?? true }))
+  if (opts.feedAfterPrintMm != null) {
+    const dpi = opts.dpi ?? DEFAULT_DPI
+    bytes.push(...feedDots(Math.round(opts.feedAfterPrintMm * (dpi / 25.4))))
+  } else {
+    bytes.push(...feed(opts.feedLines ?? 3))
+  }
+  const canCut = opts.supportsCut !== false
+  if (canCut && opts.cut !== false) bytes.push(...cut({ partial: opts.partialCut ?? true }))
   return Uint8Array.from(bytes)
 }

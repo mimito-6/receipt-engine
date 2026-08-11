@@ -3,13 +3,42 @@
 //   • Web Share to the customer's phone (download fallback)
 //   • canvas SVG→ImageData/PNG bridge + one-call compose flows
 export { chunk, sleep } from './chunk'
-export { BluetoothThermalPrinter, printViaBluetooth } from './bluetooth'
+export { BleTransport, BluetoothThermalPrinter, printViaBluetooth } from './bluetooth'
 export type { PrintOptions } from './bluetooth'
+export { Mutex, MemoryTransport, resolvePacing } from './transport'
+export type {
+  PrinterState,
+  Transport,
+  TransportDiagnostics,
+  WriteOptions,
+} from './transport'
+export {
+  TRANSMISSION_MODES,
+  getTransmissionMode,
+  GPRINTER_SERVICE_UUIDS,
+  GENERIC_SERVICE_UUIDS,
+  ALL_KNOWN_SERVICE_UUIDS,
+  normalizeUuid,
+  sameUuid,
+  GPRINTER_BLE_80,
+  GENERIC_BLE_58,
+  GENERIC_BLE_80,
+  PRINTER_PROFILES,
+  getPrinterProfile,
+} from './profiles'
+export type { PrinterProfile, TransmissionMode, TransmissionModeName } from './profiles'
 export { shareReceipt, canShareFiles, downloadBlob } from './share'
 export type { ShareResult, ShareOptions } from './share'
 export { loadSvgImage, svgToImageData, svgToPngBlob } from './raster-browser'
 export type { RasterImageData } from './raster-browser'
-export { printReceiptSvg, receiptSvgToEscpos, shareReceiptSvg } from './compose'
-export type { PrintReceiptOptions } from './compose'
+export {
+  printReceiptSvg,
+  receiptSvgToEscpos,
+  receiptSvgToEscposWithMetadata,
+  shareReceiptSvg,
+} from './compose'
+export type { PrintReceiptOptions, PrintSink, EscposBuildResult } from './compose'
 export { buildFontFaceCss } from './fonts'
 export type { FontEmbedOptions } from './fonts'
+export { renderReceipt, Printer } from './api'
+export type { RenderReceiptOptions, ReceiptResult, PrinterOptions } from './api'

@@ -21,6 +21,11 @@ export default defineConfig({
   },
   test: {
     environment: 'node',
-    include: ['packages/**/tests/**/*.test.ts', 'packages/**/src/**/*.test.ts'],
+    // apps/** was previously excluded, so any test placed there was silently never run.
+    include: [
+      'packages/**/tests/**/*.test.ts',
+      'packages/**/src/**/*.test.ts',
+      'apps/**/tests/**/*.test.ts',
+    ],
   },
 })

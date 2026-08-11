@@ -26,6 +26,8 @@
   },
   "dependencies": {
     "@receipt-engine/bitmap": "workspace:*",
-    "@receipt-engine/escpos": "workspace:*"
+    "@receipt-engine/core": "workspace:*",
+    "@receipt-engine/escpos": "workspace:*",
+    "@receipt-engine/render-svg": "workspace:*"
   }
 }

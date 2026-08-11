@@ -69,6 +69,26 @@ const EXTRA: Record<string, { zh: string; ja: string; en: string }> = {
   'placeholder.icon': { zh: '或一個字當圖示', ja: '1文字をアイコンに', en: 'A letter as icon' },
   'theme.group.label': { zh: '收據風格', ja: 'レシートのスタイル', en: 'Receipt style' },
   'spec.size': { zh: '尺寸', ja: 'サイズ', en: 'Size' },
+  // ── BLE thermal printing (prints the design open in the editor) ──
+  'ble.title': { zh: '熱感印表機列印(藍牙)', ja: 'BLE サーマル印刷', en: 'Thermal print (Bluetooth)' },
+  'ble.hint': { zh: '把目前這張版型直接印出來', ja: '今のデザインをそのまま印刷', en: 'print the design you see' },
+  'ble.printer': { zh: '印表機', ja: 'プリンター', en: 'Printer' },
+  'ble.paper': { zh: '紙寬', ja: '用紙幅', en: 'Paper width' },
+  'ble.mode': { zh: '傳輸速度', ja: '転送速度', en: 'Transfer speed' },
+  'ble.mono': {
+    zh: '白底黑字(熱感模式,省紙墨)',
+    ja: '白地に黒(サーマル向け)',
+    en: 'Black on white (thermal-friendly)',
+  },
+  'ble.connect': { zh: '連線印表機', ja: 'プリンター接続', en: 'Connect printer' },
+  'ble.disconnect': { zh: '中斷', ja: '切断', en: 'Disconnect' },
+  'ble.estimate': { zh: '估算長度', ja: '長さを試算', en: 'Estimate length' },
+  'ble.print': { zh: '印出這張', ja: 'これを印刷', en: 'Print this' },
+  'ble.note': {
+    zh: '需要 Android Chrome + HTTPS(iOS Safari 不支援藍牙列印)。連線必須由你按下按鈕觸發。',
+    ja: 'Android Chrome + HTTPS が必要(iOS Safari は非対応)。接続はボタン操作から。',
+    en: 'Needs Android Chrome + HTTPS (iOS Safari has no Web Bluetooth). Connect must start from your tap.',
+  },
   'canvas.hint.touch': {
     zh: '點文字改樣式 · 拖貼紙縮放旋轉 · 用「尺寸」卡改大小 · 用「版面順序」↑↓ 排序',
     ja: 'テキストをタップして編集 · ステッカーをドラッグで拡縮/回転 · 「サイズ」カードで大きさ · 「レイアウト順序」↑↓ で並べ替え',

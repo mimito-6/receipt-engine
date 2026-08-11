@@ -25,4 +25,15 @@ export default defineConfig([
     dts: false,
     target: 'es2019',
   },
+  {
+    // -> public/print-test.global.js (BLE thermal-printer test bench, standalone page)
+    entry: { 'print-test': 'src/print-test/main.ts' },
+    format: ['iife'],
+    outDir: 'public',
+    noExternal: [/.*/],
+    minify: true,
+    clean: false,
+    dts: false,
+    target: 'es2019',
+  },
 ])

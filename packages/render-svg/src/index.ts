@@ -1,4 +1,9 @@
-export { renderReceiptToSvg, type RenderSvgOptions } from './renderReceiptToSvg'
+export {
+  renderReceiptToSvg,
+  renderReceiptWithMetadata,
+  type RenderSvgOptions,
+  type RenderedReceipt,
+} from './renderReceiptToSvg'
 export { renderQrSvg, renderQrGroup, type QrOptions } from './qr'
 export { escapeXml } from './escape'
 export {

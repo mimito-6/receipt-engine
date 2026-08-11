@@ -4,7 +4,9 @@
     "baseUrl": ".",
     "paths": {
       "@receipt-engine/bitmap": ["../bitmap/src/index.ts"],
-      "@receipt-engine/escpos": ["../escpos/src/index.ts"]
+      "@receipt-engine/core": ["../core/src/index.ts"],
+      "@receipt-engine/escpos": ["../escpos/src/index.ts"],
+      "@receipt-engine/render-svg": ["../render-svg/src/index.ts"]
     }
   },
   "include": ["src"]

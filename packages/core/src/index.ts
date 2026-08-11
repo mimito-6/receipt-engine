@@ -30,6 +30,21 @@ export type { ReceiptValidationIssue } from './errors'
 
 export { calculateTotals, itemSubtotal, round2 } from './totals'
 
+export {
+  DEFAULT_DPI,
+  DEFAULT_ROLL_LENGTH_MM,
+  PAPER_58,
+  PAPER_80,
+  PAPER_PROFILES,
+  getPaperProfile,
+  dotsPerMm,
+  mmToDots,
+  dotsToMm,
+  bytesPerRow,
+  receiptMetadata,
+} from './paper'
+export type { PaperProfile, ReceiptMetadata, ReceiptMetadataInput } from './paper'
+
 export { normalizeReceipt } from './normalize'
 export type {
   NormalizedReceiptDocument,
