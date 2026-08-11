@@ -126,7 +126,11 @@ function ensureTransport(): BleTransport {
 }
 
 async function guard(label: string, fn: () => Promise<void>): Promise<void> {
-  if (busy) return
+  if (busy) {
+    // Silently dropping the click was indistinguishable from "the app is broken".
+    setStatus(`還在忙(上一個工作尚未結束)—— 若卡住請按「中斷」再重連`, 'busy')
+    return
+  }
   busy = true
   try {
     await fn()
@@ -152,7 +156,11 @@ async function connect(): Promise<void> {
 
 function disconnect(): void {
   transport?.disconnect()
-  setStatus('已中斷連線', 'idle')
+  transport = null
+  // Also clear the in-flight flag: "中斷" doubles as the escape hatch when a job has hung,
+  // otherwise the panel stays permanently unresponsive with no way back.
+  busy = false
+  setStatus('已中斷連線(已重置)', 'idle')
   showDiagnostics()
 }
 

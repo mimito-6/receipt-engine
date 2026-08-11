@@ -33,6 +33,21 @@ export interface PrintOptions extends WriteOptions {
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+/**
+ * Reject if `p` has not settled within `ms`. Web Bluetooth writes can hang indefinitely
+ * when a link stalls, and a hung write strands the caller's in-flight state — after which
+ * every later job is silently skipped. A loud timeout is always better than a dead UI.
+ */
+function withTimeout<T>(p: Promise<T>, ms: number, message: string): Promise<T> {
+  let timer: ReturnType<typeof setTimeout>
+  return Promise.race([
+    p,
+    new Promise<never>((_, reject) => {
+      timer = setTimeout(() => reject(new Error(message)), ms)
+    }),
+  ]).finally(() => clearTimeout(timer)) as Promise<T>
+}
+
 interface FoundCharacteristic {
   characteristic: any
   serviceUuid: string
@@ -179,12 +194,14 @@ export class BleTransport implements Transport {
           !opts.requireAck &&
           found.writeMode === 'writeWithoutResponse' &&
           !!found.characteristic.writeValueWithoutResponse
+        const timeoutMs = opts.writeTimeoutMs ?? 8000
         for (const part of parts) {
-          if (useNoResponse) {
-            await found.characteristic.writeValueWithoutResponse(part)
-          } else {
-            await found.characteristic.writeValue(part)
-          }
+          const write = useNoResponse
+            ? found.characteristic.writeValueWithoutResponse(part)
+            : found.characteristic.writeValue(part)
+          // A GATT write that never settles would otherwise hang this job forever, leaving the
+          // caller's "busy" state stuck and every later print silently ignored. Fail loudly.
+          await withTimeout(write, timeoutMs, `GATT 寫入逾時(${timeoutMs}ms)`)
           sent += part.length
           this.stats.bytesSent = sent
           opts.onProgress?.(sent, bytes.length)

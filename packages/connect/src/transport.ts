@@ -51,6 +51,11 @@ export interface WriteOptions {
    * succeeded" and "the printer actually took it".
    */
   requireAck?: boolean
+  /**
+   * Per-chunk write timeout in ms (default 8000). A stalled GATT write that never settles
+   * would otherwise leave the job — and any UI gating on it — hung forever.
+   */
+  writeTimeoutMs?: number
 }
 
 export interface Transport {

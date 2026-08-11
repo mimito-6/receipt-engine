@@ -194,6 +194,36 @@ describe('BLE write path', () => {
   })
 })
 
+describe('stalled writes', () => {
+  it('times out instead of hanging forever', async () => {
+    // A GATT write that never settles used to strand the job — and any UI gating on it —
+    // permanently, so every later print was silently skipped.
+    const hung = {
+      uuid: 'aaaa' + BASE,
+      properties: { write: true, writeWithoutResponse: true },
+      writeValueWithoutResponse: () => new Promise<never>(() => {}),
+      writeValue: () => new Promise<never>(() => {}),
+    }
+    installFakeBluetooth([fakeService('0000fee7' + BASE, [hung as never])])
+
+    const t = new BleTransport(GPRINTER_BLE_80)
+    await t.connect()
+    await expect(
+      t.write(Uint8Array.from({ length: 40 }, () => 1), { writeTimeoutMs: 30, delayMs: 0 }),
+    ).rejects.toThrow(/逾時|timeout/i)
+    expect(t.state).toBe('error')
+  })
+
+  it('accepts a new job after a timed-out one', async () => {
+    const ok = fakeCharacteristic({ uuid: 'bbbb' + BASE, writeWithoutResponse: true })
+    installFakeBluetooth([fakeService('0000fee7' + BASE, [ok])])
+    const t = new BleTransport(GPRINTER_BLE_80)
+    await t.connect()
+    await expect(t.write(Uint8Array.from({ length: 20 }, () => 2), { delayMs: 0 })).resolves.toBeUndefined()
+    expect(ok.writes.length).toBe(1)
+  })
+})
+
 describe('connection lifecycle', () => {
   it('goes disconnected when the GATT server drops', async () => {
     const c = fakeCharacteristic({ uuid: 'aaaa' + BASE, writeWithoutResponse: true })
