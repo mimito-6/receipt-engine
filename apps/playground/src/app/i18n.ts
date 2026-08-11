@@ -83,6 +83,12 @@ const EXTRA: Record<string, { zh: string; ja: string; en: string }> = {
   'ble.connect': { zh: '連線印表機', ja: 'プリンター接続', en: 'Connect printer' },
   'ble.disconnect': { zh: '中斷', ja: '切断', en: 'Disconnect' },
   'ble.estimate': { zh: '估算長度', ja: '長さを試算', en: 'Estimate length' },
+  'ble.selftest': { zh: '自我測試(純文字)', ja: 'セルフテスト(文字)', en: 'Self test (plain text)' },
+  'ble.ack': {
+    zh: '可靠模式(每包等印表機確認,較慢但不會靜默丟包)',
+    ja: '確実モード(応答待ち。低速だが取りこぼしなし)',
+    en: 'Reliable mode (wait for each ack — slower, but no silent drops)',
+  },
   'ble.print': { zh: '印出這張', ja: 'これを印刷', en: 'Print this' },
   'ble.note': {
     zh: '需要 Chrome / Edge + HTTPS,手機或桌機都可以(電腦需有藍牙 BLE)。Safari、Firefox 不支援。連線必須由你按下按鈕觸發。',

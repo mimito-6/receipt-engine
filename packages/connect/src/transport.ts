@@ -41,6 +41,16 @@ export interface WriteOptions {
   delayMs?: number
   /** Progress callback, fired after each acknowledged chunk. */
   onProgress?: (sent: number, total: number) => void
+  /**
+   * Force acknowledged writes (`writeValue`) even when the characteristic supports
+   * `writeWithoutResponse`.
+   *
+   * Unacknowledged writes resolve as soon as the OS queues them, so a printer whose
+   * buffer is full silently drops bytes and the page still reports "sent". Acknowledged
+   * writes are slower but give real backpressure — the difference between "the transfer
+   * succeeded" and "the printer actually took it".
+   */
+  requireAck?: boolean
 }
 
 export interface Transport {

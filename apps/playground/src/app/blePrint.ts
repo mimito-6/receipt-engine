@@ -152,6 +152,7 @@ async function printCurrent(): Promise<void> {
     const t = ensureTransport()
     await t.write(escposBytes, {
       mode: sel('ble-mode').value as TransmissionModeName,
+      requireAck: checked('ble-ack'),
       onProgress: (sent, total) => {
         setStatus(`列印中… ${sent} / ${total} bytes`, 'busy')
         showDiagnostics(stats)
@@ -160,6 +161,38 @@ async function printCurrent(): Promise<void> {
     setStatus(`已送出 ${escposBytes.length} bytes(${metadata.widthDots} dots)`, 'ok')
     toast('已送到印表機')
     showDiagnostics(stats)
+  })
+}
+
+/**
+ * Smallest possible proof that the write channel reaches the printer's parser: init,
+ * a few lines of plain ASCII, then feed. ~60 bytes, no raster, no fonts, no images.
+ *
+ * If this prints, the BLE path is sound and any failure is in the image data. If it
+ * does NOT print, the bytes are not reaching the printer at all — a different problem
+ * (wrong characteristic, dropped writes, printer asleep) and no amount of raster
+ * tweaking will help.
+ */
+function selfTestBytes(): Uint8Array {
+  const ESC = 0x1b
+  const text = 'receipt-engine\nBLE SELF TEST OK\n1234567890\n'
+  const out: number[] = [ESC, 0x40] // ESC @  initialize
+  for (let i = 0; i < text.length; i++) out.push(text.charCodeAt(i) & 0xff)
+  out.push(ESC, 0x64, 4) // ESC d 4  feed 4 lines
+  return Uint8Array.from(out)
+}
+
+async function selfTest(): Promise<void> {
+  await guard('自我測試', async () => {
+    const bytes = selfTestBytes()
+    const t = ensureTransport()
+    setStatus(`自我測試:送出 ${bytes.length} bytes 純文字…`, 'busy')
+    await t.write(bytes, {
+      mode: sel('ble-mode').value as TransmissionModeName,
+      requireAck: checked('ble-ack'),
+    })
+    setStatus(`自我測試已送出 ${bytes.length} bytes — 印表機有吐紙嗎?`, 'ok')
+    showDiagnostics({ '自我測試 bytes': bytes.length })
   })
 }
 
@@ -197,6 +230,7 @@ export function initBlePrint(): void {
   $('ble-disconnect').addEventListener('click', () => disconnect())
   $('ble-print-btn').addEventListener('click', () => void printCurrent())
   $('ble-estimate').addEventListener('click', () => void estimate())
+  $('ble-selftest').addEventListener('click', () => void selfTest())
   $('ble-printer').addEventListener('change', () => {
     // A different printer means a different device and paper default.
     sel('ble-paper').value = printerProfile().paper.id

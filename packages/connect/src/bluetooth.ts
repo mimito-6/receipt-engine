@@ -173,8 +173,14 @@ export class BleTransport implements Transport {
       this.setState('printing')
       try {
         let sent = 0
+        // requireAck downgrades to acknowledged writes: slower, but the printer's own flow
+        // control then throttles us instead of the OS silently dropping overflow.
+        const useNoResponse =
+          !opts.requireAck &&
+          found.writeMode === 'writeWithoutResponse' &&
+          !!found.characteristic.writeValueWithoutResponse
         for (const part of parts) {
-          if (found.writeMode === 'writeWithoutResponse' && found.characteristic.writeValueWithoutResponse) {
+          if (useNoResponse) {
             await found.characteristic.writeValueWithoutResponse(part)
           } else {
             await found.characteristic.writeValue(part)
