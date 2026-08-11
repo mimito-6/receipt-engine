@@ -90,6 +90,13 @@ const EXTRA: Record<string, { zh: string; ja: string; en: string }> = {
     en: 'Reliable mode (wait for each ack — slower, but no silent drops)',
   },
   'ble.print': { zh: '印出這張', ja: 'これを印刷', en: 'Print this' },
+  'ble.threshold': { zh: '黑白門檻', ja: '白黒しきい値', en: 'Black/white threshold' },
+  'ble.thresholdHint': {
+    zh: '熱感只有黑與白,沒有灰。調高 = 淺色(底圖/淡線稿)也會印出來,但整體更黑;調低 = 只留深色,更乾淨。',
+    ja: 'サーマルは白か黒のみ。上げる=薄い線画も出るが全体が濃く、下げる=濃い部分だけで綺麗。',
+    en: 'Thermal is pure black or white — no grey. Higher = faint artwork prints too (but everything darkens); lower = only dark ink, cleaner.',
+  },
+  'ble.feed': { zh: '列印後送紙(mm)', ja: '印刷後の送り(mm)', en: 'Feed after print (mm)' },
   'ble.dither': {
     zh: '圖片抖色(有照片/漸層時勾;純文字收據不要勾,會變灰)',
     ja: 'ディザ(写真・グラデ用。文字中心なら off の方が鮮明)',

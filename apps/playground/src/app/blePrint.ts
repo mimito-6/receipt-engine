@@ -112,9 +112,15 @@ function buildPrintSvg(_paper: PaperProfile): string {
  * opt-in for designs carrying photos or gradients.
  */
 function bitmapOpts(): { dither: 'none' | 'floyd-steinberg'; threshold: number } {
-  return checked('ble-dither')
-    ? { dither: 'floyd-steinberg', threshold: 128 }
-    : { dither: 'none', threshold: 170 }
+  const threshold = Number(($('ble-threshold') as HTMLInputElement).value) || 170
+  // Dithering is opt-in: it renders light artwork as stipple, at the cost of turning solid
+  // glyphs grey. Threshold alone is binary — anything lighter than it simply disappears.
+  return { dither: checked('ble-dither') ? 'floyd-steinberg' : 'none', threshold }
+}
+
+/** Blank paper advanced after the image, so the receipt clears the tear bar. */
+function feedMm(): number {
+  return Number(($('ble-feed') as HTMLInputElement).value) || 0
 }
 
 function ensureTransport(): BleTransport {
@@ -174,6 +180,7 @@ async function printCurrent(): Promise<void> {
       printer,
       dots: paper.printableWidthDots,
       bitmap: bitmapOpts(),
+      job: { feedAfterPrintMm: feedMm() },
     })
     const stats = {
       '版面寬 Width (dots)': metadata.widthDots,
@@ -248,6 +255,7 @@ async function estimate(): Promise<void> {
       printer,
       dots: paper.printableWidthDots,
       bitmap: bitmapOpts(),
+      job: { feedAfterPrintMm: feedMm() },
     })
     setStatus(
       `${metadata.widthDots}×${metadata.heightDots} dots · ${metadata.estimatedLengthMm}mm · ` +
@@ -274,6 +282,17 @@ export function initBlePrint(): void {
   $('ble-print-btn').addEventListener('click', () => void printCurrent())
   $('ble-estimate').addEventListener('click', () => void estimate())
   $('ble-selftest').addEventListener('click', () => void selfTest())
+  const bindRange = (id: string, out: string): void => {
+    const i = $(id) as HTMLInputElement
+    const o = $(out)
+    const sync = (): void => {
+      o.textContent = i.value
+    }
+    i.addEventListener('input', sync)
+    sync()
+  }
+  bindRange('ble-threshold', 'ble-threshold-v')
+  bindRange('ble-feed', 'ble-feed-v')
   $('ble-printer').addEventListener('change', () => {
     // A different printer means a different device and paper default.
     sel('ble-paper').value = printerProfile().paper.id
