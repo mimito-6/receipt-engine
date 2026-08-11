@@ -76,9 +76,9 @@ const EXTRA: Record<string, { zh: string; ja: string; en: string }> = {
   'ble.paper': { zh: '紙寬', ja: '用紙幅', en: 'Paper width' },
   'ble.mode': { zh: '傳輸速度', ja: '転送速度', en: 'Transfer speed' },
   'ble.mono': {
-    zh: '白底黑字(熱感模式,省紙墨)',
-    ja: '白地に黒(サーマル向け)',
-    en: 'Black on white (thermal-friendly)',
+    zh: '白底黑字(深色版型必開,否則印出一片黑)',
+    ja: '白地に黒(暗い配色では必須。でないと真っ黒に印刷される)',
+    en: 'Black on white (required for dark themes, which otherwise print as a black slab)',
   },
   'ble.connect': { zh: '連線印表機', ja: 'プリンター接続', en: 'Connect printer' },
   'ble.disconnect': { zh: '中斷', ja: '切断', en: 'Disconnect' },

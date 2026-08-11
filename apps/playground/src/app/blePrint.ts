@@ -83,7 +83,7 @@ function buildPrintSvg(_paper: PaperProfile): string {
     // background never prints.
     transparentBackground: true,
     monochromeImages: true,
-    backgroundInkGain: bgDensity().gain,
+    backgroundInkBoost: bgDensity().inkBoost,
   }
   // "白底黑字" forces a printable palette but KEEPS the design's own fonts and spacing.
   // Swapping in the whole thermal theme also swapped its tighter section/row spacing, which
@@ -121,23 +121,49 @@ function buildPrintSvg(_paper: PaperProfile): string {
  * 50%  fully opaque, original tones
  * 100% fully opaque and driven close to solid black
  */
-function bgDensity(): { opacityScale: number; gain: number } {
+const INK_BOOST_MAX = 4
+
+/** Assets of the live design, or undefined — the panel wires up before the editor boots. */
+function bgAssets(): Record<string, unknown> | undefined {
+  const doc = state.receipt as unknown as { assets?: Record<string, unknown> } | null | undefined
+  return doc?.assets
+}
+
+/** The design's own background opacity, floored so it can be used as a ratio. */
+function baseBgOpacity(): number {
+  const a = bgAssets()
+  const v = a && typeof a.backgroundOpacity === 'number' ? a.backgroundOpacity : 1
+  return Math.min(1, Math.max(0.02, v))
+}
+
+/**
+ * One 0-100% artwork density control, expressed as a single total ink multiplier.
+ *
+ * Ink on paper is strictly multiplicative here: coverage tracks opacity x boost x the
+ * artwork's own ink, because error diffusion conserves tone and the band clamps only gate
+ * which pixels dither at all. So both levers are the same knob, and splitting the slider at
+ * a fixed midpoint would put a kink in it — worse, a design already at full opacity would
+ * have a dead first half, which is the exact bug being fixed.
+ *
+ * A geometric ramp avoids both: T = base * (MAX/base)^d passes through the design's own
+ * opacity at 0 and MAX at 100 whatever the starting point, so the whole travel always does
+ * something. Opacity absorbs it up to 1 and the ink boost carries on from there.
+ */
+function bgDensity(): { opacity: number; inkBoost: number } {
   const d = Math.min(1, Math.max(0, (Number(($('ble-bgdensity') as HTMLInputElement).value) || 0) / 100))
-  return {
-    opacityScale: Math.min(1, d * 2),
-    gain: d <= 0.5 ? 1 : 1 - (d - 0.5) * 2 * 0.8,
-  }
+  const base = baseBgOpacity()
+  const total = base * Math.pow(INK_BOOST_MAX / base, d)
+  return { opacity: Math.min(1, total), inkBoost: Math.max(1, total) }
 }
 
 /** The design document as it should print: same content, artwork lifted out of the wash. */
 function printDoc(): unknown {
   const doc = state.receipt as unknown as { assets?: Record<string, unknown> }
-  const assets = doc.assets
+  const assets = bgAssets()
   if (!assets || !assets.backgroundImage) return doc
-  const base = typeof assets.backgroundOpacity === 'number' ? assets.backgroundOpacity : 1
-  const lifted = base + (1 - base) * bgDensity().opacityScale
-  if (lifted === base) return doc
-  return { ...doc, assets: { ...assets, backgroundOpacity: lifted } }
+  const opacity = bgDensity().opacity
+  if (opacity === assets.backgroundOpacity) return doc
+  return { ...doc, assets: { ...assets, backgroundOpacity: opacity } }
 }
 
 /**
@@ -362,6 +388,26 @@ export function initBlePrint(): void {
   bindRange('ble-threshold', 'ble-threshold-v')
   bindRange('ble-bgdensity', 'ble-bgdensity-v')
   bindRange('ble-feed', 'ble-feed-v')
+
+  // Every control here must visibly do something, or it reads as a broken app. Two of them
+  // are conditionally inert, so say so instead of leaving a live-looking slider that moves
+  // nothing: the threshold cannot shift average tone under error diffusion (it conserves
+  // input tone, so only the dot PATTERN changes), and artwork density needs artwork.
+  const setLive = (id: string, live: boolean): void => {
+    const el = $(id) as HTMLInputElement
+    el.disabled = !live
+    const row = el.closest('label') as HTMLElement | null
+    if (row) row.style.opacity = live ? '1' : '0.4'
+  }
+  const ink = $('ble-ink') as HTMLSelectElement
+  const syncLive = (): void => {
+    setLive('ble-threshold', ink.value !== 'floyd-steinberg')
+    setLive('ble-bgdensity', !!bgAssets()?.backgroundImage)
+  }
+  ink.addEventListener('change', syncLive)
+  $('ble-print').addEventListener('toggle', syncLive)
+  $('ble-estimate').addEventListener('click', syncLive)
+  syncLive()
   $('ble-printer').addEventListener('change', () => {
     // A different printer means a different device and paper default.
     sel('ble-paper').value = printerProfile().paper.id

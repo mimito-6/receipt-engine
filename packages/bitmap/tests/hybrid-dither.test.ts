@@ -87,6 +87,20 @@ describe('hybrid dithering', () => {
     expect(countIn(bold, TYPE)).toBe(TYPE_AREA)
   })
 
+  it('cannot be driven into burning the whole sheet by a bad inkFloor', () => {
+    // The ink test runs before the paper test, so inkFloor >= paperCeil makes the paper
+    // branch unreachable and every non-black pixel prints solid. A UI that feeds one slider
+    // into both must not be able to reach that state, so the clamp lives here.
+    const clean = sheet(255)
+    for (const inkFloor of [250, 254, 300]) {
+      const m = toBlackMap(clean, W, H, { dither: 'hybrid', inkFloor, paperCeil: 250 })
+      expect(countOutside(m), `inkFloor ${inkFloor} burned the paper`).toBe(0)
+    }
+    // A near-white sheet is likewise still paper, not a black slab.
+    const nearWhite = toBlackMap(sheet(252), W, H, { dither: 'hybrid', inkFloor: 250, paperCeil: 250 })
+    expect(countOutside(nearWhite)).toBe(0)
+  })
+
   it('darker artwork produces more ink than lighter artwork', () => {
     const light = countOutside(toBlackMap(sheet(240), W, H, { dither: 'hybrid' }))
     const dark = countOutside(toBlackMap(sheet(180), W, H, { dither: 'hybrid' }))

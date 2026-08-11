@@ -41,8 +41,11 @@ export function toBlackMap(
   const threshold = opts.threshold ?? 128
   const mode = opts.dither ?? 'none'
   // hybrid only: at or below inkFloor is solid ink, at or above paperCeil is bare paper.
-  const inkFloor = opts.inkFloor ?? 96
   const paperCeil = opts.paperCeil ?? 250
+  // Clamped BELOW paperCeil: the ink test runs first, so inkFloor >= paperCeil makes the
+  // paper branch unreachable and burns the whole sheet solid black. A UI that feeds one
+  // slider into both must not be able to reach that state.
+  const inkFloor = Math.min(opts.inkFloor ?? 96, paperCeil - 1)
   const gray = toGray(rgba, width, height)
   // The clamp decision must read the ORIGINAL luminance. Judging it on the error-modified
   // value is exactly how diffusion eats into solid strokes.

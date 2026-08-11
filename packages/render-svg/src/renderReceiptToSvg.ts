@@ -66,14 +66,18 @@ export interface RenderSvgOptions {
    *  theme default (thermal = mono, custom = colour) when set. */
   monochromeImages?: boolean
   /**
-   * Luminance multiplier applied to the background image only (1 = untouched, lower = darker).
+   * Ink multiplier for the background image only. 1 = untouched, higher = denser. Clamped
+   * to [1, 8]; values below 1 are ignored because brightening pale artwork toward the paper
+   * helps nothing on a two-tone printer.
    *
-   * A two-tone printer cannot reproduce a pale wash: raising the artwork's opacity lifts it
-   * only until the opacity clamps at 1, after which the source image's own tone is the
-   * ceiling. This darkens the artwork itself, so "print the background stronger" keeps
-   * working past that point instead of the control going dead.
+   * Anchored at WHITE, not black: L' = 255 - K(255 - L). Scaling luminance instead would
+   * darken white, so an opaque photo's white areas would print as a solid black slab.
+   * Anchoring at white keeps paper as paper and black as black, and deepens only the tones
+   * in between — which is what "print the artwork stronger" has to mean on a medium with no
+   * grey. Raising the artwork's opacity does the same job until opacity clamps at 1; this
+   * carries on past that point so the control does not go dead half way along its travel.
    */
-  backgroundInkGain?: number
+  backgroundInkBoost?: number
   /** Omit ONLY the page background (the desk behind the card). The card itself —
    *  its shape, surface colour, border, torn edges and background image — is kept,
    *  so a clean PNG is just the receipt card on a transparent backdrop, ready to print. */
@@ -166,17 +170,44 @@ function tornCardPath(
 }
 
 /** Black & white image filter (luminance-weighted grayscale), resvg-supported. */
-function monoFilter(id: string, gain = 1): string {
-  // Desaturate by luminance, optionally scaling it: gain < 1 darkens without touching alpha,
-  // so transparent regions of the artwork stay transparent.
-  // Full precision, NOT the layout number formatter: rounding coefficients to 2 decimals
-  // skews the sum (0.4 gain became 0.41), so the gain would not be the gain asked for.
-  const c = (v: number): string => String(Number((v * gain).toFixed(6)))
-  const row = `${c(0.2126)} ${c(0.7152)} ${c(0.0722)} 0 0`
+// Full precision, NOT the layout number formatter: rounding filter coefficients to 2
+// decimals skews their sum (a 0.4 factor emitted a matrix summing to 0.41), so the caller
+// would not get the factor it asked for.
+const coef = (v: number): string => String(Number(v.toFixed(6)))
+
+function wrapFilter(id: string, rows: string): string {
   return (
     `<filter id="${id}" x="0%" y="0%" width="100%" height="100%" color-interpolation-filters="sRGB">` +
-    `<feColorMatrix type="matrix" values="${row} ${row} ${row} 0 0 0 1 0"/>` +
+    `<feColorMatrix type="matrix" values="${rows}"/>` +
     `</filter>`
+  )
+}
+
+function monoFilter(id: string): string {
+  const row = `${coef(0.2126)} ${coef(0.7152)} ${coef(0.0722)} 0 0`
+  return wrapFilter(id, `${row} ${row} ${row} 0 0 0 1 0`)
+}
+
+/**
+ * Multiply INK rather than luminance: L' = 255 - K(255 - L), i.e. offset 1-K in the last
+ * column. White is a fixed point, so bare paper stays bare however hard the artwork is
+ * pushed, and black is already saturated. Alpha passes through untouched, so transparent
+ * artwork stays transparent instead of turning into a grey box.
+ *
+ * Only desaturates when the caller actually asked for monochrome images — folding the
+ * luminance matrix in unconditionally would silently strip the colour from a boosted
+ * background on every other render path.
+ */
+function inkBoostFilter(id: string, boost: number, monochrome: boolean): string {
+  const off = coef(1 - boost)
+  if (monochrome) {
+    const row = `${coef(0.2126 * boost)} ${coef(0.7152 * boost)} ${coef(0.0722 * boost)} 0 ${off}`
+    return wrapFilter(id, `${row} ${row} ${row} 0 0 0 1 0`)
+  }
+  const k = coef(boost)
+  return wrapFilter(
+    id,
+    `${k} 0 0 0 ${off} 0 ${k} 0 0 ${off} 0 0 ${k} 0 ${off} 0 0 0 1 0`,
   )
 }
 
@@ -389,12 +420,12 @@ function renderInternal(
 
   // Background image (clipped to the card; opacity / scale / offset adjustable).
   // Kept on a clean export too — it's part of the card, not the page background.
-  // Clamped: 0 would erase the artwork entirely (that is what removing it is for), and the
-  // gain only ever darkens — brightening pale artwork toward white helps nothing on paper.
-  const bgInkGain = Math.min(1, Math.max(0.05, options.backgroundInkGain ?? 1))
-  // The background gets its own filter when it is being darkened, so boosting the artwork
+  // Only ever darkens, and capped: past ~8x even near-white artwork goes solid, which is a
+  // black slab rather than a stronger design.
+  const bgInkBoost = Math.min(8, Math.max(1, options.backgroundInkBoost ?? 1))
+  // The background gets its own filter when it is being boosted, so pushing the artwork
   // cannot drag the logo and stickers down with it.
-  const bgFilterId = bgInkGain < 1 ? `url(#${BG_INK_FILTER_ID})` : monoFilterId
+  const bgFilterId = bgInkBoost > 1 ? `url(#${BG_INK_FILTER_ID})` : monoFilterId
   const bgSrc = doc.assets?.backgroundImage
   let bgImage = ''
   let bgClip = ''
@@ -427,7 +458,7 @@ function renderInternal(
 
   const defsInner =
     (monoImages ? monoFilter(MONO_FILTER_ID) : '') +
-    (bgInkGain < 1 ? monoFilter(BG_INK_FILTER_ID, bgInkGain) : '') +
+    (bgInkBoost > 1 ? inkBoostFilter(BG_INK_FILTER_ID, bgInkBoost, monoImages) : '') +
     bgClip
   const defs = defsInner ? `<defs>${defsInner}</defs>` : ''
   // Optional embedded @font-face CSS — lets a rasterizer (e.g. canvas PNG export)
