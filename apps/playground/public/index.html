@@ -923,9 +923,9 @@
         <span class="insp-size-row"><input type="range" id="ble-threshold" min="100" max="250" step="5" value="170" />
         <output id="ble-threshold-v">170</output></span>
       </label>
-      <label class="field" style="margin-top:8px"><span data-i18n="ble.paperCeil">淡色保留</span>
-        <span class="insp-size-row"><input type="range" id="ble-paperceil" min="200" max="254" step="2" value="250" />
-        <output id="ble-paperceil-v">250</output></span>
+      <label class="field" style="margin-top:8px"><span data-i18n="ble.bgDensity">底圖濃度(%)</span>
+        <span class="insp-size-row"><input type="range" id="ble-bgdensity" min="0" max="100" step="5" value="50" />
+        <output id="ble-bgdensity-v">50</output></span>
       </label>
       <div class="muted-note" data-i18n="ble.thresholdHint">熱感只有黑與白,沒有灰。混合模式下:門檻決定多深算「實心黑」(字的粗細),淡色保留決定多淡的底圖還印得出來(調低 = 底圖消失、紙面更乾淨)。</div>
       <label class="field" style="margin-top:8px"><span data-i18n="ble.feed">列印後送紙(mm)</span>
@@ -950,6 +950,6 @@
 <footer data-i18n="footer.text">純前端 · 收據不上傳伺服器 · 由 @receipt-engine/render-svg 在瀏覽器內渲染</footer>
 
 <!-- Editor app (bundles the engine). Built from src/app/main.ts -> public/playground.global.js -->
-<script src="./playground.global.js?b=30"></script>
+<script src="./playground.global.js?b=33"></script>
 </body>
 </html>

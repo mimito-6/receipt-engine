@@ -65,6 +65,15 @@ export interface RenderSvgOptions {
   /** Force all embedded images B&W (true) or full colour (false). Overrides the
    *  theme default (thermal = mono, custom = colour) when set. */
   monochromeImages?: boolean
+  /**
+   * Luminance multiplier applied to the background image only (1 = untouched, lower = darker).
+   *
+   * A two-tone printer cannot reproduce a pale wash: raising the artwork's opacity lifts it
+   * only until the opacity clamps at 1, after which the source image's own tone is the
+   * ceiling. This darkens the artwork itself, so "print the background stronger" keeps
+   * working past that point instead of the control going dead.
+   */
+  backgroundInkGain?: number
   /** Omit ONLY the page background (the desk behind the card). The card itself —
    *  its shape, surface colour, border, torn edges and background image — is kept,
    *  so a clean PNG is just the receipt card on a transparent backdrop, ready to print. */
@@ -111,6 +120,7 @@ const LEGACY_BLOCK_ALIASES: Record<string, BlockKey[]> = {
 const DEFAULT_CARD_WIDTH = 720
 const THERMAL_WIDTH = 384
 const MONO_FILTER_ID = 're-mono'
+const BG_INK_FILTER_ID = 're-bg-ink'
 
 function resolveTheme(option: RenderSvgOptions['theme']): ReceiptTheme {
   if (!option) return getTheme('custom')
@@ -156,10 +166,16 @@ function tornCardPath(
 }
 
 /** Black & white image filter (luminance-weighted grayscale), resvg-supported. */
-function monoFilter(id: string): string {
+function monoFilter(id: string, gain = 1): string {
+  // Desaturate by luminance, optionally scaling it: gain < 1 darkens without touching alpha,
+  // so transparent regions of the artwork stay transparent.
+  // Full precision, NOT the layout number formatter: rounding coefficients to 2 decimals
+  // skews the sum (0.4 gain became 0.41), so the gain would not be the gain asked for.
+  const c = (v: number): string => String(Number((v * gain).toFixed(6)))
+  const row = `${c(0.2126)} ${c(0.7152)} ${c(0.0722)} 0 0`
   return (
     `<filter id="${id}" x="0%" y="0%" width="100%" height="100%" color-interpolation-filters="sRGB">` +
-    `<feColorMatrix type="matrix" values="0.2126 0.7152 0.0722 0 0 0.2126 0.7152 0.0722 0 0 0.2126 0.7152 0.0722 0 0 0 0 0 1 0"/>` +
+    `<feColorMatrix type="matrix" values="${row} ${row} ${row} 0 0 0 1 0"/>` +
     `</filter>`
   )
 }
@@ -373,6 +389,12 @@ function renderInternal(
 
   // Background image (clipped to the card; opacity / scale / offset adjustable).
   // Kept on a clean export too — it's part of the card, not the page background.
+  // Clamped: 0 would erase the artwork entirely (that is what removing it is for), and the
+  // gain only ever darkens — brightening pale artwork toward white helps nothing on paper.
+  const bgInkGain = Math.min(1, Math.max(0.05, options.backgroundInkGain ?? 1))
+  // The background gets its own filter when it is being darkened, so boosting the artwork
+  // cannot drag the logo and stickers down with it.
+  const bgFilterId = bgInkGain < 1 ? `url(#${BG_INK_FILTER_ID})` : monoFilterId
   const bgSrc = doc.assets?.backgroundImage
   let bgImage = ''
   let bgClip = ''
@@ -392,7 +414,7 @@ function renderInternal(
     const bgH = cardHeight * scale
     const bgX = cardX + (cardWidth - bgW) / 2 + panX
     const bgY = cardTop + (cardHeight - bgH) / 2 + panY
-    const filterAttr = monoFilterId ? ` filter="${monoFilterId}"` : ''
+    const filterAttr = bgFilterId ? ` filter="${bgFilterId}"` : ''
     // Rotate around the image's (box) centre; the card clip still trims the result.
     const rotAttr = rot ? ` transform="rotate(${n(rot)} ${n(bgX + bgW / 2)} ${n(bgY + bgH / 2)})"` : ''
     bgClip =
@@ -403,7 +425,10 @@ function renderInternal(
       `width="${n(bgW)}" height="${n(bgH)}" preserveAspectRatio="xMidYMid meet" opacity="${op}"${rotAttr}${filterAttr} /></g>`
   }
 
-  const defsInner = (monoImages ? monoFilter(MONO_FILTER_ID) : '') + bgClip
+  const defsInner =
+    (monoImages ? monoFilter(MONO_FILTER_ID) : '') +
+    (bgInkGain < 1 ? monoFilter(BG_INK_FILTER_ID, bgInkGain) : '') +
+    bgClip
   const defs = defsInner ? `<defs>${defsInner}</defs>` : ''
   // Optional embedded @font-face CSS — lets a rasterizer (e.g. canvas PNG export)
   // use the intended fonts instead of falling back to a system font.

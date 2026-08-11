@@ -83,6 +83,7 @@ function buildPrintSvg(_paper: PaperProfile): string {
     // background never prints.
     transparentBackground: true,
     monochromeImages: true,
+    backgroundInkGain: bgDensity().gain,
   }
   // "白底黑字" forces a printable palette but KEEPS the design's own fonts and spacing.
   // Swapping in the whole thermal theme also swapped its tighter section/row spacing, which
@@ -103,7 +104,40 @@ function buildPrintSvg(_paper: PaperProfile): string {
       },
     } as never)
   }
-  return renderReceiptToSvg(state.receipt as never, renderOpts(extra) as never)
+  return renderReceiptToSvg(printDoc() as never, renderOpts(extra) as never)
+}
+
+/**
+ * One 0-100% artwork density control, split across the two levers that actually move ink.
+ *
+ * A background at 30% opacity reads as a subtle wash on screen, but SVG opacity blends it
+ * with the white card, so the luminance reaching the 1-bpp conversion is ~240 and error
+ * diffusion renders it as ~6% dots: effectively nothing. Raising opacity fixes that — but
+ * only until it clamps at 1, after which the artwork's own grey is the ceiling and any
+ * further travel on the slider does nothing. A control with a dead half is the bug this is
+ * fixing, so past that point the second lever takes over and darkens the artwork itself.
+ *
+ * 0%   design's own opacity, untouched
+ * 50%  fully opaque, original tones
+ * 100% fully opaque and driven close to solid black
+ */
+function bgDensity(): { opacityScale: number; gain: number } {
+  const d = Math.min(1, Math.max(0, (Number(($('ble-bgdensity') as HTMLInputElement).value) || 0) / 100))
+  return {
+    opacityScale: Math.min(1, d * 2),
+    gain: d <= 0.5 ? 1 : 1 - (d - 0.5) * 2 * 0.8,
+  }
+}
+
+/** The design document as it should print: same content, artwork lifted out of the wash. */
+function printDoc(): unknown {
+  const doc = state.receipt as unknown as { assets?: Record<string, unknown> }
+  const assets = doc.assets
+  if (!assets || !assets.backgroundImage) return doc
+  const base = typeof assets.backgroundOpacity === 'number' ? assets.backgroundOpacity : 1
+  const lifted = base + (1 - base) * bgDensity().opacityScale
+  if (lifted === base) return doc
+  return { ...doc, assets: { ...assets, backgroundOpacity: lifted } }
 }
 
 /**
@@ -118,7 +152,10 @@ function bitmapOpts(): {
   paperCeil: number
 } {
   const threshold = Number(($('ble-threshold') as HTMLInputElement).value) || 170
-  const paperCeil = Number(($('ble-paperceil') as HTMLInputElement).value) || 250
+  // Pinned, not exposed: 255 is bare paper, so this clamp has almost no usable travel and
+  // only decides whether faint tone prints AT ALL — never how strongly. Density is set in
+  // the vector domain by printDoc(), where the control has real range.
+  const paperCeil = 250
   const dither = ($('ble-ink') as HTMLSelectElement).value as 'none' | 'floyd-steinberg' | 'hybrid'
   // In hybrid the threshold names the solid-ink floor: everything darker prints solid, so the
   // slider reads as glyph weight rather than as a global on/off point.
@@ -323,17 +360,8 @@ export function initBlePrint(): void {
     sync()
   }
   bindRange('ble-threshold', 'ble-threshold-v')
-  bindRange('ble-paperceil', 'ble-paperceil-v')
+  bindRange('ble-bgdensity', 'ble-bgdensity-v')
   bindRange('ble-feed', 'ble-feed-v')
-  // 淡色保留 only means anything in hybrid; grey it out elsewhere rather than lying about it.
-  const ink = $('ble-ink') as HTMLSelectElement
-  const syncInk = (): void => {
-    const row = ($('ble-paperceil') as HTMLInputElement).closest('label') as HTMLElement | null
-    if (row) row.style.opacity = ink.value === 'hybrid' ? '1' : '0.4'
-    ;($('ble-paperceil') as HTMLInputElement).disabled = ink.value !== 'hybrid'
-  }
-  ink.addEventListener('change', syncInk)
-  syncInk()
   $('ble-printer').addEventListener('change', () => {
     // A different printer means a different device and paper default.
     sel('ble-paper').value = printerProfile().paper.id

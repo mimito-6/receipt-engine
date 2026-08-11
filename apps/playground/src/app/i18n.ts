@@ -98,12 +98,12 @@ const EXTRA: Record<string, { zh: string; ja: string; en: string }> = {
   },
   'ble.inkSharp': { zh: '銳利 — 只留深色,最乾淨', ja: 'シャープ — 濃い部分のみ', en: 'Sharp — dark ink only, cleanest' },
   'ble.inkDither': { zh: '全抖色 — 照片用,字會變灰', ja: '全体ディザ — 写真向き、文字は灰色に', en: 'Full dither — for photos; type goes grey' },
-  'ble.paperCeil': { zh: '淡色保留', ja: '淡色の保持', en: 'Faint-tone retention' },
+  'ble.bgDensity': { zh: '底圖濃度(%)', ja: '背景の濃度(%)', en: 'Artwork density (%)' },
   'ble.threshold': { zh: '黑白門檻', ja: '白黒しきい値', en: 'Black/white threshold' },
   'ble.thresholdHint': {
-    zh: '熱感只有黑與白,沒有灰。混合模式下:「黑白門檻」決定多深算實心黑(字的粗細),「淡色保留」決定多淡的底圖還印得出來 — 調低底圖會消失、紙面更乾淨。',
-    ja: 'サーマルは白か黒のみ。ハイブリッドでは「しきい値」が文字の太さ、「淡色の保持」が薄い背景をどこまで出すかを決める。',
-    en: 'Thermal is pure black or white — no grey. In hybrid, the threshold sets how dark counts as solid ink (glyph weight); faint-tone retention sets how light artwork can be and still print.',
+    zh: '熱感只有黑與白,沒有灰。「黑白門檻」決定多深算實心黑(字的粗細);「底圖濃度」把底圖印得比螢幕上更濃 — 螢幕上的淡灰在只有黑白的紙上等於不存在。0% = 照設計原樣,50% = 不透明,100% = 壓到接近全黑。',
+    ja: 'サーマルは白か黒のみ。「しきい値」は文字の太さ、「背景の濃度」は背景を画面より濃く印刷する。0%=設計どおり、50%=不透明、100%=ほぼ真っ黒まで。',
+    en: 'Thermal is pure black or white — no grey. The threshold sets how dark counts as solid ink (glyph weight); artwork density prints the background stronger than it looks on screen, because a light grey wash does not exist on a two-tone medium. 0% keeps the design as-is, 50% is fully opaque, 100% drives it close to solid.',
   },
   'ble.feed': { zh: '列印後送紙(mm)', ja: '印刷後の送り(mm)', en: 'Feed after print (mm)' },
   'ble.dither': {
