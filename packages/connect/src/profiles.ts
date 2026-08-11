@@ -125,14 +125,28 @@ export interface PrinterProfile {
   feedAfterPrintMm: number
   /** Image encoding this printer accepts. Only `GS v 0` raster is implemented. */
   rasterMode: 'gs-v0'
+  /**
+   * Largest GATT write this printer accepts, in bytes, where known from testing.
+   *
+   * Web Bluetooth does not expose the negotiated MTU, so this cannot be read at runtime —
+   * it can only be measured once and recorded. Offering sizes above it is worse than
+   * useless: every one of them fails, and a control that cannot succeed is a trap.
+   */
+  maxChunkSize?: number
 }
 
 /**
- * Gprinter 80mm portable BLE (the target device). No cutter, conservative pacing:
- * these units are the ones most prone to dropping a fast burst.
+ * Gprinter 80mm portable BLE (the target device). No cutter.
+ *
+ * Measured on hardware: 180-byte writes succeed; 244 and 320 fail with "GATT operation failed
+ * for unknown reason" both at full rate and paced, which rules out buffer flooding and places
+ * the ceiling below 244. That is consistent with a negotiated MTU of 185 (185 - 3 = 182), a
+ * common value. Packet size is therefore maxed out on this device — throughput gains have to
+ * come from sending fewer bytes, not larger ones.
  */
 export const GPRINTER_BLE_80: PrinterProfile = {
   id: 'gprinter-ble-80',
+  maxChunkSize: 180,
   name: 'Gprinter BLE 80mm',
   serviceUuids: [...GPRINTER_SERVICE_UUIDS],
   paper: PAPER_80,

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { MemoryTransport, Mutex, resolvePacing } from '../src/transport'
-import { TRANSMISSION_MODES, getTransmissionMode, normalizeUuid, sameUuid } from '../src/profiles'
+import { GENERIC_BLE_58, GENERIC_BLE_80, GPRINTER_BLE_80, TRANSMISSION_MODES, getTransmissionMode, normalizeUuid, sameUuid } from '../src/profiles'
 
 const bytes = (n: number): Uint8Array => Uint8Array.from({ length: n }, (_, i) => i & 0xff)
 
@@ -123,5 +123,25 @@ describe('UUID normalization', () => {
     expect(sameUuid(0xfee7, '0000FEE7-0000-1000-8000-00805F9B34FB')).toBe(true)
     expect(sameUuid('49535343-FE7D-4AE5-8FA9-9FAFD205E455', '49535343-fe7d-4ae5-8fa9-9fafd205e455')).toBe(true)
     expect(sameUuid(0xfee7, 0x18f0)).toBe(false)
+  })
+})
+
+// The MTU is not observable through Web Bluetooth, so a device's write ceiling can only be
+// measured once and recorded. Offering sizes above it is worse than useless — every one of
+// them fails.
+describe('measured chunk ceiling', () => {
+  it('records the Gprinter ceiling below the sizes that failed on hardware', () => {
+    expect(GPRINTER_BLE_80.maxChunkSize).toBe(180)
+    // 244 and 320 both failed, paced and unpaced; the profile must not claim they are fine.
+    expect(GPRINTER_BLE_80.maxChunkSize!).toBeLessThan(244)
+  })
+
+  it('keeps the default pacing within the ceiling it declares', () => {
+    for (const p of [GPRINTER_BLE_80, GENERIC_BLE_58, GENERIC_BLE_80]) {
+      const size = TRANSMISSION_MODES[p.defaultMode].chunkSize
+      if (p.maxChunkSize != null) {
+        expect(size, `${p.id} defaults above its own ceiling`).toBeLessThanOrEqual(p.maxChunkSize)
+      }
+    }
   })
 })

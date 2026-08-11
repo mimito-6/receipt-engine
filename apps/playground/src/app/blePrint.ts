@@ -430,11 +430,21 @@ export function initBlePrint(): void {
   syncLive()
   // Seed the pacing from the profile on load, not only when the printer is changed —
   // otherwise the panel opens on the first <option> regardless of what the profile says.
-  sel('ble-mode').value = printerProfile().defaultMode
+  const syncPacing = (): void => {
+    const cap = printerProfile().maxChunkSize
+    for (const opt of [...sel('ble-mode').options]) {
+      const size = getTransmissionMode(opt.value as TransmissionModeName).chunkSize
+      const tooBig = cap != null && size > cap
+      opt.disabled = tooBig
+      opt.textContent = opt.textContent.replace(/ — 此機型不支援$/, '') + (tooBig ? ' — 此機型不支援' : '')
+    }
+    sel('ble-mode').value = printerProfile().defaultMode
+  }
+  syncPacing()
   $('ble-printer').addEventListener('change', () => {
     // A different printer means a different device and paper default.
     sel('ble-paper').value = printerProfile().paper.id
-    sel('ble-mode').value = printerProfile().defaultMode
+    syncPacing()
     transport?.disconnect()
     transport = null
     showDiagnostics()
