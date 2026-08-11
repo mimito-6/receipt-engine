@@ -3,7 +3,7 @@
 // in an actual printer.
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { BleTransport } from '../src/bluetooth'
-import { GPRINTER_BLE_80, normalizeUuid } from '../src/profiles'
+import { GPRINTER_BLE_80, TRANSMISSION_MODES, normalizeUuid } from '../src/profiles'
 
 interface FakeCharOpts {
   uuid: string
@@ -143,7 +143,7 @@ describe('requestDevice options', () => {
 })
 
 describe('BLE write path', () => {
-  it('chunks at the profile default (conservative = 20 bytes) and preserves bytes', async () => {
+  it('chunks at the profile default and preserves bytes', async () => {
     const c = fakeCharacteristic({ uuid: 'aaaa' + BASE, writeWithoutResponse: true })
     installFakeBluetooth([fakeService('0000fee7' + BASE, [c])])
 
@@ -152,7 +152,11 @@ describe('BLE write path', () => {
     const payload = Uint8Array.from({ length: 105 }, (_, i) => i & 0xff)
     await t.write(payload)
 
-    expect(c.writes.length).toBe(6) // ceil(105/20)
+    // Read the size from the profile rather than hardcoding it: the default is a tuning
+    // decision that moves, but "chunked at the default, losslessly" must hold whatever it is.
+    const size = TRANSMISSION_MODES[GPRINTER_BLE_80.defaultMode].chunkSize
+    const expected = Math.ceil(105 / size)
+    expect(c.writes.length).toBe(expected)
     const joined = new Uint8Array(c.writes.reduce((n, w) => n + w.length, 0))
     let at = 0
     for (const w of c.writes) {
@@ -160,7 +164,7 @@ describe('BLE write path', () => {
       at += w.length
     }
     expect(joined).toEqual(payload)
-    expect(t.getDiagnostics().chunkCount).toBe(6)
+    expect(t.getDiagnostics().chunkCount).toBe(expected)
     expect(t.getDiagnostics().bytesSent).toBe(105)
   })
 

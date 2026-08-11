@@ -51,7 +51,7 @@ describe('encodeRaster (GS v 0)', () => {
   it('slices tall images into ≤maxBand-row bands', () => {
     const width = 8
     const height = 300
-    const data = new Uint8Array(height) // 1 byte/row
+    const data = new Uint8Array(height).fill(0xff) // 1 byte/row, inked so no run is elided
     const out = encodeRaster({ width, height, data }, { maxBand: 255 })
     // two GS v 0 headers
     const headers = []

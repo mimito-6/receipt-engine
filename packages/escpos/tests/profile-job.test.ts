@@ -7,7 +7,8 @@ const ESC = 0x1b
 /** A blank bitmap of the given dot width — only the header maths is under test. */
 function blank(widthDots: number, height = 4) {
   const bytesPerRow = Math.ceil(widthDots / 8)
-  return { width: widthDots, height, data: new Uint8Array(bytesPerRow * height) }
+  // Inked: blank rows are elided by design, so a blank fixture would have no bands to check.
+  return { width: widthDots, height, data: new Uint8Array(bytesPerRow * height).fill(0xff) }
 }
 
 /** Index of the first `GS v 0` header in a byte stream. */

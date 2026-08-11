@@ -91,6 +91,17 @@ export interface RenderSvgOptions {
    * is cropped with it — on paper the card edge IS the paper edge.
    */
   cropToCard?: boolean
+  /**
+   * Drop the card's outline stroke.
+   *
+   * The outline draws the card's edge against the surface behind it. Cropped to the card
+   * there is no surface and no edge to draw — the stroke becomes two lines running the full
+   * length of the receipt, sitting exactly where a thermal head prints least reliably. It is
+   * also ruinous for transfer size: an inked pixel in every row means no row is ever blank,
+   * which on a real receipt was the difference between 0 and 635 elidable rows — half the
+   * bytes, and the difference between a smooth print and a stuttering one.
+   */
+  hideCardBorder?: boolean
   /** Omit ONLY the page background (the desk behind the card). The card itself —
    *  its shape, surface colour, border, torn edges and background image — is kept,
    *  so a clean PNG is just the receipt card on a transparent backdrop, ready to print. */
@@ -389,7 +400,8 @@ function renderInternal(
   const background = transparent ? '' : svgRect(0, 0, width, totalHeight, { fill: theme.palette.background })
   // The card frame is always a SOLID hairline (never dashed) — borderStyle only styles
   // the inner divider lines. Thermal has no frame; a theme with borderStyle 'none' opts out.
-  const cardStroke = !isThermal && borderStyle !== 'none' ? theme.palette.border : undefined
+  const cardStroke =
+    !isThermal && borderStyle !== 'none' && !options.hideCardBorder ? theme.palette.border : undefined
 
   let card: string
   if (showEdges) {

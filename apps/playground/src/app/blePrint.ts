@@ -87,6 +87,9 @@ function buildPrintSvg(_paper: PaperProfile): string {
     // The design's outer margin is the desk the card sits on. There is no desk on a roll —
     // printing it just gives away 7% of the paper width and shrinks the type to match.
     cropToCard: true,
+    // Cropped to the card, the outline is no longer an edge against anything — just two lines
+    // down the paper. Worse, it inks every single row, so nothing can be elided as blank.
+    hideCardBorder: true,
   }
   // "白底黑字" forces a printable palette but KEEPS the design's own fonts and spacing.
   // Swapping in the whole thermal theme also swapped its tighter section/row spacing, which
@@ -411,6 +414,9 @@ export function initBlePrint(): void {
   $('ble-print').addEventListener('toggle', syncLive)
   $('ble-estimate').addEventListener('click', syncLive)
   syncLive()
+  // Seed the pacing from the profile on load, not only when the printer is changed —
+  // otherwise the panel opens on the first <option> regardless of what the profile says.
+  sel('ble-mode').value = printerProfile().defaultMode
   $('ble-printer').addEventListener('change', () => {
     // A different printer means a different device and paper default.
     sel('ble-paper').value = printerProfile().paper.id

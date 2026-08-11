@@ -22,7 +22,10 @@ const GS = 0x1d
  * Header: 1D 76 30 m xL xH yL yH, then the band's packed bytes.
  *  m = 0 (normal), x = bytesPerRow = ceil(width/8), y = band height.
  */
-export function encodeRaster(bmp: Bitmap1bpp, opts: { maxBand?: number } = {}): number[] {
+export function encodeRaster(
+  bmp: Bitmap1bpp,
+  opts: { maxBand?: number; skipBlankRuns?: number | false } = {},
+): number[] {
   const { width, height, data } = bmp
   const maxBand = Math.max(1, Math.min(255, opts.maxBand ?? 255))
   const bytesPerRow = Math.ceil(width / 8)
@@ -34,12 +37,57 @@ export function encodeRaster(bmp: Bitmap1bpp, opts: { maxBand?: number } = {}): 
   const out: number[] = []
   const xL = bytesPerRow & 0xff
   const xH = (bytesPerRow >> 8) & 0xff
-  for (let row = 0; row < height; row += maxBand) {
-    const bandH = Math.min(maxBand, height - row)
-    out.push(GS, 0x76, 0x30, 0x00, xL, xH, bandH & 0xff, (bandH >> 8) & 0xff)
+
+  const band = (row: number, rows: number): void => {
+    out.push(GS, 0x76, 0x30, 0x00, xL, xH, rows & 0xff, (rows >> 8) & 0xff)
     const start = row * bytesPerRow
-    const end = start + bandH * bytesPerRow
+    const end = start + rows * bytesPerRow
     for (let i = start; i < end; i++) out.push(data[i]!)
+  }
+
+  const minBlank = opts.skipBlankRuns === false ? 0 : Math.max(0, opts.skipBlankRuns ?? 8)
+  if (!minBlank) {
+    for (let row = 0; row < height; row += maxBand) band(row, Math.min(maxBand, height - row))
+    return out
+  }
+
+  // A receipt is mostly whitespace, and a blank row still costs a full bytesPerRow of zeros —
+  // 72 of them on an 80mm head. Feeding past a blank run with ESC J costs 3 bytes plus 8 to
+  // reopen the band, so any run longer than ~1 row is already cheaper to skip than to send.
+  // This matters far more than transfer pacing: the head consumes ~29 KB/s at 203 dpi while
+  // BLE supplies a fraction of that, so the only way to stop the motor stuttering is to have
+  // fewer bytes to send.
+  const blankRow = (row: number): boolean => {
+    const start = row * bytesPerRow
+    for (let i = start; i < start + bytesPerRow; i++) if (data[i] !== 0) return false
+    return true
+  }
+
+  let row = 0
+  while (row < height) {
+    let blank = 0
+    while (row + blank < height && blankRow(row + blank)) blank++
+    if (blank >= minBlank) {
+      // Trailing blank rows are fed too: dropping them would shorten the receipt.
+      out.push(...feedDots(blank))
+      row += blank
+      continue
+    }
+    // Short gaps stay inside the band — breaking on every one would shred the image into
+    // hundreds of tiny bands and cost more in headers than the zeros are worth.
+    let solid = 0
+    while (row + solid < height && solid < maxBand) {
+      if (blankRow(row + solid)) {
+        let ahead = 0
+        while (row + solid + ahead < height && blankRow(row + solid + ahead)) ahead++
+        if (ahead >= minBlank) break
+        solid += ahead
+        continue
+      }
+      solid++
+    }
+    band(row, Math.min(solid, maxBand))
+    row += Math.min(solid, maxBand)
   }
   return out
 }
@@ -71,6 +119,11 @@ export interface PrintJobOptions {
   feedAfterPrintMm?: number
   /** Resolution used to convert `feedAfterPrintMm` to dots (default 203 dpi). */
   dpi?: number
+  /**
+   * Replace runs of this many fully blank rows with an `ESC J` feed instead of transmitting
+   * them (default 8; `false` disables). Identical output on paper, materially fewer bytes.
+   */
+  skipBlankRuns?: number | false
 }
 
 /** 203 dpi ≈ 7.99 dots/mm — mirrors core's DEFAULT_DPI without adding a dependency. */
@@ -91,7 +144,7 @@ export function buildPrintJob(bmp: Bitmap1bpp, opts: PrintJobOptions = {}): Uint
   const segments: number[][] = [
     init(),
     align(opts.align ?? 'center'),
-    encodeRaster(bmp, { maxBand: opts.maxBand }),
+    encodeRaster(bmp, { maxBand: opts.maxBand, skipBlankRuns: opts.skipBlankRuns }),
     align('left'),
     opts.feedAfterPrintMm != null
       ? feedDots(Math.round(opts.feedAfterPrintMm * ((opts.dpi ?? DEFAULT_DPI) / 25.4)))

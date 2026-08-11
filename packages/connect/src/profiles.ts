@@ -10,7 +10,14 @@ import { PAPER_58, PAPER_80, type PaperProfile } from '@receipt-engine/core'
  * BLE write pacing. Cheap printers drop bytes when a burst outruns their buffer, and the
  * safe rate is per-model, so it is a named mode rather than a magic number.
  */
-export type TransmissionModeName = 'conservative' | 'standard' | 'fast' | 'turbo'
+export type TransmissionModeName =
+  | 'conservative'
+  | 'standard'
+  | 'fast'
+  | 'turbo'
+  | 'turbo244'
+  | 'turbo320'
+  | 'turbo512'
 
 export interface TransmissionMode {
   name: TransmissionModeName
@@ -29,6 +36,14 @@ export const TRANSMISSION_MODES: Record<TransmissionModeName, TransmissionMode> 
   // a typical negotiated MTU allows with no artificial delay. If the link rejects the
   // size the write throws — visibly — rather than corrupting the print.
   turbo: { name: 'turbo', chunkSize: 180, delayMs: 0 },
+  // 180 is a guess at a "typical" negotiated MTU, not a measured ceiling: Web Bluetooth does
+  // not expose the MTU, so the only way to find a device's real limit is to try. These are
+  // the rungs above it — 244 is the practical cap on a 247-byte MTU, 512 the spec maximum for
+  // a characteristic write. A link that refuses the size throws on the first packet, which is
+  // the point: the failure is visible, so the ceiling can be found rather than guessed at.
+  turbo244: { name: 'turbo244', chunkSize: 244, delayMs: 0 },
+  turbo320: { name: 'turbo320', chunkSize: 320, delayMs: 0 },
+  turbo512: { name: 'turbo512', chunkSize: 512, delayMs: 0 },
 }
 
 export function getTransmissionMode(name: TransmissionModeName): TransmissionMode {
@@ -113,7 +128,7 @@ export const GPRINTER_BLE_80: PrinterProfile = {
   name: 'Gprinter BLE 80mm',
   serviceUuids: [...GPRINTER_SERVICE_UUIDS],
   paper: PAPER_80,
-  defaultMode: 'conservative',
+  defaultMode: 'turbo',
   supportsCut: false,
   feedAfterPrintMm: 12,
   rasterMode: 'gs-v0',
