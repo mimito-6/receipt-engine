@@ -6,7 +6,7 @@
 // text stays crisp instead of being an upscaled 384-dot bitmap.
 import { PAPER_58, PAPER_80, type PaperProfile } from '@receipt-engine/core'
 import { renderReceiptToSvg } from '@receipt-engine/render-svg'
-import { getTheme } from '@receipt-engine/themes'
+import { mergeTheme } from '@receipt-engine/themes'
 import {
   BleTransport,
   getPrinterProfile,
@@ -15,7 +15,7 @@ import {
   type TransmissionModeName,
 } from '@receipt-engine/connect'
 import { $ } from './dom'
-import { renderOpts } from './render'
+import { currentTheme, renderOpts } from './render'
 import { curPad, curWidth, state } from './state'
 import { toast } from './feel'
 
@@ -84,9 +84,25 @@ function buildPrintSvg(paper: PaperProfile): string {
     transparentBackground: true,
     monochromeImages: true,
   }
-  // "白底黑字" re-renders the design through the thermal theme: a dark template would
-  // otherwise burn a solid black receipt.
-  if (checked('ble-mono')) extra.theme = getTheme('thermal')
+  // "白底黑字" forces a printable palette but KEEPS the design's own fonts and spacing.
+  // Swapping in the whole thermal theme also swapped its tighter section/row spacing, which
+  // re-flowed the layout so the print no longer matched what the user designed.
+  if (checked('ble-mono')) {
+    const base = currentTheme()
+    extra.theme = mergeTheme(base, {
+      palette: {
+        ...base.palette,
+        background: '#ffffff',
+        surface: '#ffffff',
+        text: '#000000',
+        primary: '#000000',
+        secondary: '#000000',
+        accent: '#000000',
+        mutedText: '#555555',
+        border: '#999999',
+      },
+    } as never)
+  }
   return renderReceiptToSvg(state.receipt as never, renderOpts(extra) as never)
 }
 

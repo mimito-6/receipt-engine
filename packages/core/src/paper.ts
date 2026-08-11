@@ -42,8 +42,11 @@ export interface PaperProfile {
 }
 
 /**
- * 58mm / 384 dots. The layout numbers deliberately match what the renderer used
- * before paper profiles existed, so selecting this profile is a no-op visually.
+ * 58mm / 384 dots.
+ *
+ * `outerMarginDots` is 0: on screen a card floats on a desk, but on thermal paper the
+ * printable width IS the paper — an outer margin is just wasted roll. Breathing room
+ * comes from `sidePaddingDots` inside the card.
  */
 export const PAPER_58: PaperProfile = {
   id: '58mm',
@@ -52,8 +55,8 @@ export const PAPER_58: PaperProfile = {
   printableWidthDots: 384,
   dpi: DEFAULT_DPI,
   feedAfterPrintMm: 12,
-  outerMarginDots: 22,
-  sidePaddingDots: 18,
+  outerMarginDots: 0,
+  sidePaddingDots: 16,
   qrSizeDots: 120,
   logoMaxWidthDots: 160,
   logoMaxHeightDots: 76,
@@ -71,8 +74,8 @@ export const PAPER_80: PaperProfile = {
   printableWidthDots: 576,
   dpi: DEFAULT_DPI,
   feedAfterPrintMm: 12,
-  outerMarginDots: 33,
-  sidePaddingDots: 27,
+  outerMarginDots: 0,
+  sidePaddingDots: 24,
   qrSizeDots: 180,
   logoMaxWidthDots: 240,
   logoMaxHeightDots: 114,

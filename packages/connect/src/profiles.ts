@@ -10,7 +10,7 @@ import { PAPER_58, PAPER_80, type PaperProfile } from '@receipt-engine/core'
  * BLE write pacing. Cheap printers drop bytes when a burst outruns their buffer, and the
  * safe rate is per-model, so it is a named mode rather than a magic number.
  */
-export type TransmissionModeName = 'conservative' | 'standard' | 'fast'
+export type TransmissionModeName = 'conservative' | 'standard' | 'fast' | 'turbo'
 
 export interface TransmissionMode {
   name: TransmissionModeName
@@ -24,6 +24,11 @@ export const TRANSMISSION_MODES: Record<TransmissionModeName, TransmissionMode> 
   conservative: { name: 'conservative', chunkSize: 20, delayMs: 20 },
   standard: { name: 'standard', chunkSize: 50, delayMs: 10 },
   fast: { name: 'fast', chunkSize: 100, delayMs: 5 },
+  // A thermal head prints far faster than BLE can feed it, so a slow stream makes the
+  // motor stop and restart between bands ("stuttering"). Turbo pushes the largest packet
+  // a typical negotiated MTU allows with no artificial delay. If the link rejects the
+  // size the write throws — visibly — rather than corrupting the print.
+  turbo: { name: 'turbo', chunkSize: 180, delayMs: 0 },
 }
 
 export function getTransmissionMode(name: TransmissionModeName): TransmissionMode {
