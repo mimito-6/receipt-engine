@@ -20,6 +20,10 @@ export interface ToBitmapOptions {
   threshold?: number
   /** Error-diffusion mode. Default 'floyd-steinberg' (good for logos/photos). */
   dither?: DitherMode
+  /** hybrid only: at or below this luminance a pixel is solid ink. Default 96. */
+  inkFloor?: number
+  /** hybrid only: at or above this luminance a pixel is bare paper. Default 250. */
+  paperCeil?: number
 }
 
 /**
@@ -40,6 +44,8 @@ export function imageDataToBitmap(
   const black = toBlackMap(rgba, width, height, {
     threshold: opts.threshold,
     dither: opts.dither ?? 'floyd-steinberg',
+    inkFloor: opts.inkFloor,
+    paperCeil: opts.paperCeil,
   })
   return { width, height, data: packBits(black, width, height) }
 }

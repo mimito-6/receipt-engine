@@ -90,11 +90,20 @@ const EXTRA: Record<string, { zh: string; ja: string; en: string }> = {
     en: 'Reliable mode (wait for each ack — slower, but no silent drops)',
   },
   'ble.print': { zh: '印出這張', ja: 'これを印刷', en: 'Print this' },
+  'ble.ink': { zh: '影像處理', ja: '画像処理', en: 'Image processing' },
+  'ble.inkHybrid': {
+    zh: '混合(推薦)— 字銳利 + 保留底圖',
+    ja: 'ハイブリッド(推奨)— 文字くっきり+背景も残す',
+    en: 'Hybrid (recommended) — crisp type, keeps artwork',
+  },
+  'ble.inkSharp': { zh: '銳利 — 只留深色,最乾淨', ja: 'シャープ — 濃い部分のみ', en: 'Sharp — dark ink only, cleanest' },
+  'ble.inkDither': { zh: '全抖色 — 照片用,字會變灰', ja: '全体ディザ — 写真向き、文字は灰色に', en: 'Full dither — for photos; type goes grey' },
+  'ble.paperCeil': { zh: '淡色保留', ja: '淡色の保持', en: 'Faint-tone retention' },
   'ble.threshold': { zh: '黑白門檻', ja: '白黒しきい値', en: 'Black/white threshold' },
   'ble.thresholdHint': {
-    zh: '熱感只有黑與白,沒有灰。調高 = 淺色(底圖/淡線稿)也會印出來,但整體更黑;調低 = 只留深色,更乾淨。',
-    ja: 'サーマルは白か黒のみ。上げる=薄い線画も出るが全体が濃く、下げる=濃い部分だけで綺麗。',
-    en: 'Thermal is pure black or white — no grey. Higher = faint artwork prints too (but everything darkens); lower = only dark ink, cleaner.',
+    zh: '熱感只有黑與白,沒有灰。混合模式下:「黑白門檻」決定多深算實心黑(字的粗細),「淡色保留」決定多淡的底圖還印得出來 — 調低底圖會消失、紙面更乾淨。',
+    ja: 'サーマルは白か黒のみ。ハイブリッドでは「しきい値」が文字の太さ、「淡色の保持」が薄い背景をどこまで出すかを決める。',
+    en: 'Thermal is pure black or white — no grey. In hybrid, the threshold sets how dark counts as solid ink (glyph weight); faint-tone retention sets how light artwork can be and still print.',
   },
   'ble.feed': { zh: '列印後送紙(mm)', ja: '印刷後の送り(mm)', en: 'Feed after print (mm)' },
   'ble.dither': {

@@ -111,11 +111,18 @@ function buildPrintSvg(_paper: PaperProfile): string {
  * solid glyphs into grey stipple, so a hard threshold is the default and dithering is
  * opt-in for designs carrying photos or gradients.
  */
-function bitmapOpts(): { dither: 'none' | 'floyd-steinberg'; threshold: number } {
+function bitmapOpts(): {
+  dither: 'none' | 'floyd-steinberg' | 'hybrid'
+  threshold: number
+  inkFloor: number
+  paperCeil: number
+} {
   const threshold = Number(($('ble-threshold') as HTMLInputElement).value) || 170
-  // Dithering is opt-in: it renders light artwork as stipple, at the cost of turning solid
-  // glyphs grey. Threshold alone is binary — anything lighter than it simply disappears.
-  return { dither: checked('ble-dither') ? 'floyd-steinberg' : 'none', threshold }
+  const paperCeil = Number(($('ble-paperceil') as HTMLInputElement).value) || 250
+  const dither = ($('ble-ink') as HTMLSelectElement).value as 'none' | 'floyd-steinberg' | 'hybrid'
+  // In hybrid the threshold names the solid-ink floor: everything darker prints solid, so the
+  // slider reads as glyph weight rather than as a global on/off point.
+  return { dither, threshold, inkFloor: threshold, paperCeil }
 }
 
 /** Blank paper advanced after the image, so the receipt clears the tear bar. */
@@ -245,6 +252,25 @@ async function selfTest(): Promise<void> {
   })
 }
 
+/**
+ * Share of dots that will actually be burned, as a percentage. Thermal output is binary, so
+ * this is the only honest read on what the threshold/dither controls just did: near 0% means
+ * faint artwork is being dropped entirely, and a high number means the sheet will come out
+ * muddy and slow. Header bytes are counted too — a few dozen out of tens of thousands.
+ */
+function inkCoverage(bytes: Uint8Array, widthDots: number, heightDots: number): string {
+  let bits = 0
+  for (const b of bytes) {
+    let v = b
+    while (v) {
+      v &= v - 1
+      bits++
+    }
+  }
+  const total = widthDots * heightDots
+  return total > 0 ? `${((bits / total) * 100).toFixed(1)}%` : '—'
+}
+
 /** Measure the current design for the selected paper without touching Bluetooth. */
 async function estimate(): Promise<void> {
   await guard('估算', async () => {
@@ -257,12 +283,14 @@ async function estimate(): Promise<void> {
       bitmap: bitmapOpts(),
       job: { feedAfterPrintMm: feedMm() },
     })
+    const ink = inkCoverage(escposBytes, metadata.widthDots, metadata.heightDots)
     setStatus(
       `${metadata.widthDots}×${metadata.heightDots} dots · ${metadata.estimatedLengthMm}mm · ` +
-        `一捲 20m 約 ${metadata.estimatedReceiptsPerRoll} 張`,
+        `墨點 ${ink} · 一捲 20m 約 ${metadata.estimatedReceiptsPerRoll} 張`,
       'ok',
     )
     showDiagnostics({
+      '墨點覆蓋 Ink': ink,
       '版面寬 Width (dots)': metadata.widthDots,
       '版面高 Height (dots)': metadata.heightDots,
       'Bytes / row': metadata.bytesPerRow,
@@ -292,7 +320,17 @@ export function initBlePrint(): void {
     sync()
   }
   bindRange('ble-threshold', 'ble-threshold-v')
+  bindRange('ble-paperceil', 'ble-paperceil-v')
   bindRange('ble-feed', 'ble-feed-v')
+  // 淡色保留 only means anything in hybrid; grey it out elsewhere rather than lying about it.
+  const ink = $('ble-ink') as HTMLSelectElement
+  const syncInk = (): void => {
+    const row = ($('ble-paperceil') as HTMLInputElement).closest('label') as HTMLElement | null
+    if (row) row.style.opacity = ink.value === 'hybrid' ? '1' : '0.4'
+    ;($('ble-paperceil') as HTMLInputElement).disabled = ink.value !== 'hybrid'
+  }
+  ink.addEventListener('change', syncInk)
+  syncInk()
   $('ble-printer').addEventListener('change', () => {
     // A different printer means a different device and paper default.
     sel('ble-paper').value = printerProfile().paper.id

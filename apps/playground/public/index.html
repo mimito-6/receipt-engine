@@ -912,16 +912,26 @@
         </label>
       </div>
       <label class="dl-clean"><input type="checkbox" id="ble-mono" checked /> <span data-i18n="ble.mono">白底黑字(熱感模式,省紙墨)</span></label>
+      <label class="field" style="margin-top:8px"><span data-i18n="ble.ink">影像處理</span>
+        <select id="ble-ink">
+          <option value="hybrid" selected data-i18n="ble.inkHybrid">混合(推薦)— 字銳利 + 保留底圖</option>
+          <option value="none" data-i18n="ble.inkSharp">銳利 — 只留深色,最乾淨</option>
+          <option value="floyd-steinberg" data-i18n="ble.inkDither">全抖色 — 照片用,字會變灰</option>
+        </select>
+      </label>
       <label class="field" style="margin-top:8px"><span data-i18n="ble.threshold">黑白門檻</span>
         <span class="insp-size-row"><input type="range" id="ble-threshold" min="100" max="250" step="5" value="170" />
         <output id="ble-threshold-v">170</output></span>
       </label>
-      <div class="muted-note" data-i18n="ble.thresholdHint">熱感只有黑與白,沒有灰。調高 = 淺色(底圖/淡線稿)也會印出來,但整體更黑;調低 = 只留深色,更乾淨。</div>
+      <label class="field" style="margin-top:8px"><span data-i18n="ble.paperCeil">淡色保留</span>
+        <span class="insp-size-row"><input type="range" id="ble-paperceil" min="200" max="254" step="2" value="250" />
+        <output id="ble-paperceil-v">250</output></span>
+      </label>
+      <div class="muted-note" data-i18n="ble.thresholdHint">熱感只有黑與白,沒有灰。混合模式下:門檻決定多深算「實心黑」(字的粗細),淡色保留決定多淡的底圖還印得出來(調低 = 底圖消失、紙面更乾淨)。</div>
       <label class="field" style="margin-top:8px"><span data-i18n="ble.feed">列印後送紙(mm)</span>
         <span class="insp-size-row"><input type="range" id="ble-feed" min="0" max="40" step="2" value="12" />
         <output id="ble-feed-v">12</output></span>
       </label>
-      <label class="dl-clean"><input type="checkbox" id="ble-dither" /> <span data-i18n="ble.dither">圖片抖色(有照片/漸層時勾;純文字收據不要勾,會變灰)</span></label>
       <label class="dl-clean"><input type="checkbox" id="ble-ack" /> <span data-i18n="ble.ack">可靠模式(每包等印表機確認,較慢但不會靜默丟包)</span></label>
       <div class="ble-btns">
         <button class="btn" id="ble-connect" type="button" data-i18n="ble.connect">連線印表機</button>
@@ -940,6 +950,6 @@
 <footer data-i18n="footer.text">純前端 · 收據不上傳伺服器 · 由 @receipt-engine/render-svg 在瀏覽器內渲染</footer>
 
 <!-- Editor app (bundles the engine). Built from src/app/main.ts -> public/playground.global.js -->
-<script src="./playground.global.js?b=26"></script>
+<script src="./playground.global.js?b=29"></script>
 </body>
 </html>
