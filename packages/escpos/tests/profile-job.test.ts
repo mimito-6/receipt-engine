@@ -97,3 +97,31 @@ describe('feedDots', () => {
     expect(feedDots(0)).toEqual([])
   })
 })
+
+// The failure this guards against was a function of receipt LENGTH, not of anything the
+// caller could see: buildPrintJob spread the raster into Array.prototype.push, passing one
+// argument per byte. 72 bytes/row survived 1102 rows and threw "Maximum call stack size
+// exceeded" at 1143 — so a design got longer and printing simply stopped working.
+describe('long receipts', () => {
+  const solid = (width: number, height: number) => {
+    const bytesPerRow = Math.ceil(width / 8)
+    return { width, height, data: new Uint8Array(bytesPerRow * height).fill(0xa5) }
+  }
+
+  it.each([1102, 1143, 4000, 20000])('builds a %i-row job without blowing the stack', (height) => {
+    const bmp = solid(576, height)
+    const job = buildPrintJob(bmp, { supportsCut: false, feedAfterPrintMm: 20 })
+    const bands = Math.ceil(height / 255)
+    // init(2) + align(3) + band headers + pixels + align(3) + ESC J(3)
+    expect(job.length).toBe(2 + 3 + bands * 8 + 72 * height + 3 + 3)
+  })
+
+  it('keeps every pixel byte — the payload is concatenated, not truncated', () => {
+    const bmp = solid(576, 1200)
+    const job = buildPrintJob(bmp, { supportsCut: false, feedAfterPrintMm: 20 })
+    // Tail is align-left (ESC a 0) then the ESC J feed; the pixels end just before those.
+    expect([...job.slice(-6)]).toEqual([0x1b, 0x61, 0x00, 0x1b, 0x4a, 160])
+    expect(job[job.length - 7]).toBe(0xa5)
+    expect(job.filter((b) => b === 0xa5).length).toBe(72 * 1200)
+  })
+})

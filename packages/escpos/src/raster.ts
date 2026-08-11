@@ -84,18 +84,28 @@ const DEFAULT_DPI = 203
  * `ESC d` feed is used. A printer declared `supportsCut: false` never gets a cut.
  */
 export function buildPrintJob(bmp: Bitmap1bpp, opts: PrintJobOptions = {}): Uint8Array {
-  const bytes: number[] = []
-  bytes.push(...init())
-  bytes.push(...align(opts.align ?? 'center'))
-  bytes.push(...encodeRaster(bmp, { maxBand: opts.maxBand }))
-  bytes.push(...align('left'))
-  if (opts.feedAfterPrintMm != null) {
-    const dpi = opts.dpi ?? DEFAULT_DPI
-    bytes.push(...feedDots(Math.round(opts.feedAfterPrintMm * (dpi / 25.4))))
-  } else {
-    bytes.push(...feed(opts.feedLines ?? 3))
-  }
+  // Segments are concatenated, never spread. `push(...raster)` passes one ARGUMENT per byte,
+  // and a receipt's raster is tens of thousands of them — past the engine's argument limit it
+  // throws "Maximum call stack size exceeded". That made the failure a function of receipt
+  // LENGTH: 72 bytes/row survived 1102 rows and died at 1143.
+  const segments: number[][] = [
+    init(),
+    align(opts.align ?? 'center'),
+    encodeRaster(bmp, { maxBand: opts.maxBand }),
+    align('left'),
+    opts.feedAfterPrintMm != null
+      ? feedDots(Math.round(opts.feedAfterPrintMm * ((opts.dpi ?? DEFAULT_DPI) / 25.4)))
+      : feed(opts.feedLines ?? 3),
+  ]
   const canCut = opts.supportsCut !== false
-  if (canCut && opts.cut !== false) bytes.push(...cut({ partial: opts.partialCut ?? true }))
-  return Uint8Array.from(bytes)
+  if (canCut && opts.cut !== false) segments.push(cut({ partial: opts.partialCut ?? true }))
+
+  const total = segments.reduce((n, s) => n + s.length, 0)
+  const out = new Uint8Array(total)
+  let at = 0
+  for (const s of segments) {
+    out.set(s, at)
+    at += s.length
+  }
+  return out
 }
