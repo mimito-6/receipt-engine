@@ -929,8 +929,8 @@
       </label>
       <div class="muted-note" data-i18n="ble.thresholdHint">熱感只有黑與白,沒有灰。混合模式下:門檻決定多深算「實心黑」(字的粗細),淡色保留決定多淡的底圖還印得出來(調低 = 底圖消失、紙面更乾淨)。</div>
       <label class="field" style="margin-top:8px"><span data-i18n="ble.feed">列印後送紙(mm)</span>
-        <span class="insp-size-row"><input type="range" id="ble-feed" min="0" max="40" step="2" value="12" />
-        <output id="ble-feed-v">12</output></span>
+        <span class="insp-size-row"><input type="range" id="ble-feed" min="0" max="40" step="2" value="20" />
+        <output id="ble-feed-v">20</output></span>
       </label>
       <label class="dl-clean"><input type="checkbox" id="ble-ack" /> <span data-i18n="ble.ack">可靠模式(每包等印表機確認,較慢但不會靜默丟包)</span></label>
       <div class="ble-btns">
@@ -950,6 +950,6 @@
 <footer data-i18n="footer.text">純前端 · 收據不上傳伺服器 · 由 @receipt-engine/render-svg 在瀏覽器內渲染</footer>
 
 <!-- Editor app (bundles the engine). Built from src/app/main.ts -> public/playground.global.js -->
-<script src="./playground.global.js?b=29"></script>
+<script src="./playground.global.js?b=30"></script>
 </body>
 </html>

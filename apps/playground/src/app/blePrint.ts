@@ -125,7 +125,10 @@ function bitmapOpts(): {
   return { dither, threshold, inkFloor: threshold, paperCeil }
 }
 
-/** Blank paper advanced after the image, so the receipt clears the tear bar. */
+/**
+ * Blank paper advanced after the image. Defaults to 20mm rather than the library's neutral
+ * 12mm: this printer has no cutter, so the trailing edge has to clear the tear bar by hand.
+ */
 function feedMm(): number {
   return Number(($('ble-feed') as HTMLInputElement).value) || 0
 }
