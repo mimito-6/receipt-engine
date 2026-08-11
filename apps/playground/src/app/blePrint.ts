@@ -10,6 +10,7 @@ import { mergeTheme } from '@receipt-engine/themes'
 import {
   BleTransport,
   getPrinterProfile,
+  getTransmissionMode,
   receiptSvgToEscposWithMetadata,
   type PrinterProfile,
   type TransmissionModeName,
@@ -210,6 +211,19 @@ function ensureTransport(): BleTransport {
   return transport
 }
 
+/**
+ * A GATT failure is only actionable if the message says what to change. Chrome reports both
+ * "packet exceeded the negotiated MTU" and "the module's buffer overflowed" as the same
+ * opaque string, and the two want opposite responses — smaller packet vs slower pacing — so
+ * point at the rung that distinguishes them instead of leaving the user to guess.
+ */
+function nextStepHint(msg: string): string {
+  if (!/GATT operation failed|not supported|longer than/i.test(msg)) return ''
+  const size = getTransmissionMode(sel('ble-mode').value as TransmissionModeName).chunkSize
+  if (size <= 180) return ' — 這台機器連 180B 都吃不下,請退到 Fast · 100B / 5ms'
+  return ` — ${size}B 送不出去。先試「大包慢送」(同樣大小但有間隔):若通過就是送太快、不是封包太大;若一樣失敗,退回 Turbo · 180B`
+}
+
 async function guard(label: string, fn: () => Promise<void>): Promise<void> {
   if (busy) {
     // Silently dropping the click was indistinguishable from "the app is broken".
@@ -221,7 +235,7 @@ async function guard(label: string, fn: () => Promise<void>): Promise<void> {
     await fn()
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err)
-    setStatus(`${label} 失敗:${msg}`, 'err')
+    setStatus(`${label} 失敗:${msg}${nextStepHint(msg)}`, 'err')
     toast(`${label} 失敗`)
     showDiagnostics()
   } finally {

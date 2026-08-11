@@ -18,6 +18,8 @@ export type TransmissionModeName =
   | 'turbo244'
   | 'turbo320'
   | 'turbo512'
+  | 'wide244'
+  | 'wide320'
 
 export interface TransmissionMode {
   name: TransmissionModeName
@@ -44,6 +46,12 @@ export const TRANSMISSION_MODES: Record<TransmissionModeName, TransmissionMode> 
   turbo244: { name: 'turbo244', chunkSize: 244, delayMs: 0 },
   turbo320: { name: 'turbo320', chunkSize: 320, delayMs: 0 },
   turbo512: { name: 'turbo512', chunkSize: 512, delayMs: 0 },
+  // Same packet sizes, paced. "GATT operation failed for unknown reason" has two causes that
+  // look identical from JS: a packet over the negotiated MTU, and a module whose receive
+  // buffer was flooded. These rungs separate them — if 244 fails at 0ms but passes at 3ms,
+  // the constraint was rate, not size, and the larger packet is usable after all.
+  wide244: { name: 'wide244', chunkSize: 244, delayMs: 3 },
+  wide320: { name: 'wide320', chunkSize: 320, delayMs: 6 },
 }
 
 export function getTransmissionMode(name: TransmissionModeName): TransmissionMode {
