@@ -84,6 +84,9 @@ function buildPrintSvg(_paper: PaperProfile): string {
     transparentBackground: true,
     monochromeImages: true,
     backgroundInkBoost: bgDensity().inkBoost,
+    // The design's outer margin is the desk the card sits on. There is no desk on a roll —
+    // printing it just gives away 7% of the paper width and shrinks the type to match.
+    cropToCard: true,
   }
   // "白底黑字" forces a printable palette but KEEPS the design's own fonts and spacing.
   // Swapping in the whole thermal theme also swapped its tighter section/row spacing, which

@@ -78,6 +78,19 @@ export interface RenderSvgOptions {
    * carries on past that point so the control does not go dead half way along its travel.
    */
   backgroundInkBoost?: number
+  /**
+   * Crop the canvas to the card, dropping the outer margin.
+   *
+   * The margin exists so the card can read as an object sitting on a surface. Paper has no
+   * surface behind it: there the margin is just blank roll, and on a fixed-width head it is
+   * spent width — a 26px margin on a 720px design gives away 7% of every receipt and shrinks
+   * the type by the same amount. This is a viewBox change only; nothing re-flows, so the
+   * composition is identical to the design, just without the border of nothing.
+   *
+   * Anything the design places outside the card (stickers deliberately overhanging the edge)
+   * is cropped with it — on paper the card edge IS the paper edge.
+   */
+  cropToCard?: boolean
   /** Omit ONLY the page background (the desk behind the card). The card itself —
    *  its shape, surface colour, border, torn edges and background image — is kept,
    *  so a clean PNG is just the receipt card on a transparent backdrop, ready to print. */
@@ -465,9 +478,15 @@ function renderInternal(
   // use the intended fonts instead of falling back to a system font.
   const fontStyle = options.fontFaceCss ? `<style>${options.fontFaceCss}</style>` : ''
   const xmlDecl = options.includeXmlDeclaration ? '<?xml version="1.0" encoding="UTF-8"?>\n' : ''
+  // Crop is expressed purely as a viewBox window over the same coordinates, so every element
+  // keeps the position the design gave it.
+  const crop = options.cropToCard
+    ? { x: cardX, y: cardTop, w: cardWidth, h: cardHeight }
+    : { x: 0, y: 0, w: width, h: totalHeight }
   const open =
-    `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${totalHeight}" ` +
-    `viewBox="0 0 ${width} ${totalHeight}" font-family="${escapeXml(theme.typography.fontFamily)}">`
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${n(crop.w)}" height="${n(crop.h)}" ` +
+    `viewBox="${n(crop.x)} ${n(crop.y)} ${n(crop.w)} ${n(crop.h)}" ` +
+    `font-family="${escapeXml(theme.typography.fontFamily)}">`
 
   const svg =
     xmlDecl +
@@ -482,7 +501,7 @@ function renderInternal(
     stickerLayer +
     '</svg>'
 
-  return { svg, widthDots: width, heightDots: totalHeight }
+  return { svg, widthDots: Math.round(crop.w), heightDots: Math.round(crop.h) }
 }
 
 /** Render a validated, normalized receipt to a deterministic SVG string. */
