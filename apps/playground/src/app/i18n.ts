@@ -85,9 +85,9 @@ const EXTRA: Record<string, { zh: string; ja: string; en: string }> = {
   'ble.estimate': { zh: '估算長度', ja: '長さを試算', en: 'Estimate length' },
   'ble.print': { zh: '印出這張', ja: 'これを印刷', en: 'Print this' },
   'ble.note': {
-    zh: '需要 Android Chrome + HTTPS(iOS Safari 不支援藍牙列印)。連線必須由你按下按鈕觸發。',
-    ja: 'Android Chrome + HTTPS が必要(iOS Safari は非対応)。接続はボタン操作から。',
-    en: 'Needs Android Chrome + HTTPS (iOS Safari has no Web Bluetooth). Connect must start from your tap.',
+    zh: '需要 Chrome / Edge + HTTPS,手機或桌機都可以(電腦需有藍牙 BLE)。Safari、Firefox 不支援。連線必須由你按下按鈕觸發。',
+    ja: 'Chrome / Edge + HTTPS が必要(スマホ・PC どちらも可)。Safari / Firefox は非対応。接続はボタン操作から。',
+    en: 'Needs Chrome/Edge + HTTPS — phone or desktop (desktop needs BLE hardware). Safari and Firefox are unsupported. Connect must start from your tap.',
   },
   'canvas.hint.touch': {
     zh: '點文字改樣式 · 拖貼紙縮放旋轉 · 用「尺寸」卡改大小 · 用「版面順序」↑↓ 排序',

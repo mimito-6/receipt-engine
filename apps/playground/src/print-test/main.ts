@@ -50,7 +50,7 @@ const NA = '—'
 function renderDiagnostics(extra: Record<string, string | number | undefined> = {}): void {
   const d = transport?.getDiagnostics()
   const rows: Array<[string, string | number | undefined]> = [
-    ['Web Bluetooth supported', BleTransport.supported ? 'yes' : 'NO (use Android Chrome)'],
+    ['Web Bluetooth supported', BleTransport.supported ? 'yes' : 'NO — use Chrome/Edge (phone or desktop)'],
     ['State', d?.state ?? 'disconnected'],
     ['Device name', d?.deviceName],
     ['Service UUID', d?.serviceUuid],
@@ -297,7 +297,7 @@ function init(): void {
   $('mode').addEventListener('change', () => renderDiagnostics())
 
   if (!BleTransport.supported) {
-    setStatus('unsupported', '此瀏覽器沒有 Web Bluetooth(請用 Android Chrome;iOS 不支援)')
+    setStatus('unsupported', '此瀏覽器沒有 Web Bluetooth。請用 Chrome / Edge(手機或桌機皆可);Safari、Firefox 不支援')
     log('Web Bluetooth unavailable — rendering still works, printing does not.')
   } else {
     setStatus('disconnected')

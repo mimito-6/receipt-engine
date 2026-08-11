@@ -1,6 +1,7 @@
-// Web Bluetooth transport for ESC/POS thermal printers (Android Chrome/Edge; NOT iOS
-// Safari, which has no Web Bluetooth at all). The API is experimental and largely
-// untyped in TS, so the GATT surface is treated loosely.
+// Web Bluetooth transport for ESC/POS thermal printers. Works in Chrome/Edge on Android
+// AND on desktop (Windows/macOS/Linux) given BLE hardware; Safari and Firefox implement no
+// Web Bluetooth at all. The API is experimental and largely untyped in TS, so the GATT
+// surface is treated loosely.
 //
 // Characteristics are DISCOVERED, never hard-coded: every printer family puts its write
 // characteristic under a different UUID, and a hard-coded guess silently fails on the
@@ -123,7 +124,7 @@ export class BleTransport implements Transport {
   async connect(): Promise<void> {
     if (!BleTransport.supported) {
       this.setState('unsupported')
-      throw new Error('此瀏覽器不支援 Web Bluetooth(iPhone / Safari 不支援;請用 Android Chrome)')
+      throw new Error('此瀏覽器不支援 Web Bluetooth。請用 Chrome 或 Edge(Android 手機或桌機皆可);Safari / Firefox 不支援')
     }
     this.setState('connecting')
     try {

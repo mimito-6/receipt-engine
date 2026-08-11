@@ -207,7 +207,7 @@ export function initBlePrint(): void {
   })
 
   if (!BleTransport.supported) {
-    setStatus('此瀏覽器不支援 Web Bluetooth(請用 Android Chrome;iOS 不支援)', 'err')
+    setStatus('此瀏覽器不支援 Web Bluetooth。請用 Chrome / Edge(手機或桌機皆可);Safari、Firefox 不支援', 'err')
     ;($('ble-connect') as HTMLButtonElement).disabled = true
     ;($('ble-print-btn') as HTMLButtonElement).disabled = true
   } else {
