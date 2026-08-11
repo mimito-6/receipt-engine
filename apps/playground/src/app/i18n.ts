@@ -90,6 +90,11 @@ const EXTRA: Record<string, { zh: string; ja: string; en: string }> = {
     en: 'Reliable mode (wait for each ack — slower, but no silent drops)',
   },
   'ble.print': { zh: '印出這張', ja: 'これを印刷', en: 'Print this' },
+  'ble.dither': {
+    zh: '圖片抖色(有照片/漸層時勾;純文字收據不要勾,會變灰)',
+    ja: 'ディザ(写真・グラデ用。文字中心なら off の方が鮮明)',
+    en: 'Dither images (for photos/gradients — leave off for text, it greys glyphs)',
+  },
   'ble.note': {
     zh: '需要 Chrome / Edge + HTTPS,手機或桌機都可以(電腦需有藍牙 BLE)。Safari、Firefox 不支援。連線必須由你按下按鈕觸發。',
     ja: 'Chrome / Edge + HTTPS が必要(スマホ・PC どちらも可)。Safari / Firefox は非対応。接続はボタン操作から。',

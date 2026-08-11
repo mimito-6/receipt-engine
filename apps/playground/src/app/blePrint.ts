@@ -1,9 +1,9 @@
 // BLE thermal printing for the design currently open in the editor.
 //
 // The point of this panel (versus the standalone print-test page) is that it prints
-// WHAT YOU DESIGNED — the live receipt, look, padding and block order — re-laid-out at
-// the printer's dot width. Nothing is scaled: a 576-dot print is a 576-dot layout, so
-// text stays crisp instead of being an upscaled 384-dot bitmap.
+// WHAT YOU DESIGNED — the live receipt, look, padding, stickers and block order — with its
+// composition intact. The design's SVG is rasterized straight to the head width, which keeps
+// the exact proportions AND is natively 576 dots (vector re-render, not a bitmap upscale).
 import { PAPER_58, PAPER_80, type PaperProfile } from '@receipt-engine/core'
 import { renderReceiptToSvg } from '@receipt-engine/render-svg'
 import { mergeTheme } from '@receipt-engine/themes'
@@ -16,7 +16,7 @@ import {
 } from '@receipt-engine/connect'
 import { $ } from './dom'
 import { currentTheme, renderOpts } from './render'
-import { curPad, curWidth, state } from './state'
+import { state } from './state'
 import { toast } from './feel'
 
 let transport: BleTransport | null = null
@@ -64,21 +64,21 @@ function showDiagnostics(extra: Record<string, string | number> = {}): void {
 }
 
 /**
- * Render the CURRENT editor design at the printer's dot width.
+ * Render the CURRENT editor design EXACTLY as designed — its own width, padding and
+ * block flow, untouched.
  *
- * The user's own padding is scaled by the width ratio so the design keeps its
- * proportions on a narrower/wider head, rather than inheriting 720px-tuned margins.
+ * It is deliberately NOT re-laid-out at the printer's dot width. Re-flowing at 576
+ * changed the composition (different wrapping, different proportions) and, worse, moved
+ * every sticker: sticker x/y are absolute coordinates in the design's own canvas, so
+ * narrowing the canvas slides them across the receipt.
+ *
+ * Instead the SVG is rasterized to the head width downstream. That is a VECTOR
+ * rasterization — the browser re-renders the text at the final resolution — not the
+ * bitmap upscale we must avoid, so the print keeps the design's exact proportions while
+ * still being natively 576 dots wide.
  */
-function buildPrintSvg(paper: PaperProfile): string {
-  const dots = paper.printableWidthDots
-  const ratio = dots / Math.max(1, curWidth())
-  const pad = curPad()
+function buildPrintSvg(_paper: PaperProfile): string {
   const extra: Record<string, unknown> = {
-    paper,
-    width: dots,
-    padX: Math.round(pad.x * ratio),
-    padTop: Math.round(pad.top * ratio),
-    padBottom: Math.round(pad.bottom * ratio),
     // Thermal paper is already white and every dot costs ink and battery, so the page
     // background never prints.
     transparentBackground: true,
@@ -104,6 +104,17 @@ function buildPrintSvg(paper: PaperProfile): string {
     } as never)
   }
   return renderReceiptToSvg(state.receipt as never, renderOpts(extra) as never)
+}
+
+/**
+ * 1-bpp conversion settings. Receipts are type, not photographs: error diffusion turns
+ * solid glyphs into grey stipple, so a hard threshold is the default and dithering is
+ * opt-in for designs carrying photos or gradients.
+ */
+function bitmapOpts(): { dither: 'none' | 'floyd-steinberg'; threshold: number } {
+  return checked('ble-dither')
+    ? { dither: 'floyd-steinberg', threshold: 128 }
+    : { dither: 'none', threshold: 170 }
 }
 
 function ensureTransport(): BleTransport {
@@ -154,6 +165,7 @@ async function printCurrent(): Promise<void> {
     const { escposBytes, metadata } = await receiptSvgToEscposWithMetadata(svg, {
       printer,
       dots: paper.printableWidthDots,
+      bitmap: bitmapOpts(),
     })
     const stats = {
       '版面寬 Width (dots)': metadata.widthDots,
@@ -166,10 +178,16 @@ async function printCurrent(): Promise<void> {
     setStatus(`列印中… ${escposBytes.length} bytes`, 'busy')
     showDiagnostics(stats)
     const t = ensureTransport()
+    // Repaint at most ~10×/s: refreshing on every chunk meant thousands of innerHTML
+    // rebuilds mid-transfer, which starved the very stream we were trying to keep fed.
+    let lastPaint = 0
     await t.write(escposBytes, {
       mode: sel('ble-mode').value as TransmissionModeName,
       requireAck: checked('ble-ack'),
       onProgress: (sent, total) => {
+        const now = Date.now()
+        if (now - lastPaint < 100 && sent < total) return
+        lastPaint = now
         setStatus(`列印中… ${sent} / ${total} bytes`, 'busy')
         showDiagnostics(stats)
       },
@@ -221,6 +239,7 @@ async function estimate(): Promise<void> {
     const { escposBytes, metadata } = await receiptSvgToEscposWithMetadata(svg, {
       printer,
       dots: paper.printableWidthDots,
+      bitmap: bitmapOpts(),
     })
     setStatus(
       `${metadata.widthDots}×${metadata.heightDots} dots · ${metadata.estimatedLengthMm}mm · ` +
