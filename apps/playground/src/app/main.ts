@@ -77,11 +77,19 @@ function setTheme(t: ThemeName): void {
 }
 
 /** Replay the top-down "re-print" reveal on the receipt SVG (theme swap + example swap). */
-function replayPrint(): void {
+export function replayPrint(): void {
   const host = $('svg-host')
   host.classList.remove('theme-swap')
   void host.offsetWidth
   host.classList.add('theme-swap')
+  // Strictly one-shot. The class used to be left on the host permanently, and since render()
+  // replaces the canvas wholesale, every later re-render built a fresh <svg> inside a host
+  // that still carried it — so the reveal replayed on every keystroke.
+  const clear = (): void => host.classList.remove('theme-swap')
+  host.addEventListener('animationend', clear, { once: true })
+  // Under reduced-motion the rule never applies, so animationend never fires and the class
+  // would linger for the next render to trip over.
+  setTimeout(clear, 600)
 }
 
 function loadExample(key: string): void {

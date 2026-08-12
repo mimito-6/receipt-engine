@@ -538,6 +538,7 @@ export function initBlePrint(): void {
   }
   syncLiveControls = syncLive
   ink.addEventListener('change', syncLive)
+  document.addEventListener('re:design-changed', syncLive)
   $('ble-print').addEventListener('toggle', () => {
     syncLive()
     if (($('ble-print') as HTMLDetailsElement).open) schedulePreview()

@@ -137,6 +137,10 @@ export function render(): void {
       if (aria) el.setAttribute('aria-label', aria)
     })
   applyScale()
+  // Anything keyed off the design (the print panel's artwork controls, for one) needs a hook
+  // that cannot be forgotten. Wiring each mutation site by hand is how the artwork-density
+  // slider ended up stuck greyed out after a background was added with the panel already open.
+  document.dispatchEvent(new CustomEvent('re:design-changed'))
   layoutOverlay()
   refreshInspector()
   positionEdgeHandles()

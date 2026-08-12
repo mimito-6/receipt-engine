@@ -337,6 +337,14 @@
   /* White plate behind it: the preview IS the paper, so it must not pick up the page tint. */
   #ble-preview { display: block; width: 100%; height: auto; background: #fff; border: 1px solid var(--line);
     border-radius: 6px; image-rendering: auto; min-height: 60px; }
+  /* A 16px-tall range input is a fine mouse target and a poor finger one. Grow the hit area on
+     touch pointers only, leaving the visual track alone — the panel is used on a phone next to
+     the printer, which is exactly where a missed drag costs a sheet of paper. */
+  @media (pointer: coarse) {
+    .ble-card input[type="range"] { height: 44px; }
+    .ble-card select, .ble-card button { min-height: 44px; }
+    .ble-card input[type="checkbox"] { width: 22px; height: 22px; }
+  }
   #ble-diag .ble-row span:first-child { color: var(--muted); flex: none; }
   #ble-diag .ble-row span:last-child { text-align: right; word-break: break-all; }
   @media (prefers-reduced-motion: no-preference) { .re-sheet-scrim { animation: sel-box-in var(--dur-tap) var(--ease-out); } }
@@ -965,6 +973,6 @@
 <footer data-i18n="footer.text">純前端 · 收據不上傳伺服器 · 由 @receipt-engine/render-svg 在瀏覽器內渲染</footer>
 
 <!-- Editor app (bundles the engine). Built from src/app/main.ts -> public/playground.global.js -->
-<script src="./playground.global.js?b=46"></script>
+<script src="./playground.global.js?b=48"></script>
 </body>
 </html>
