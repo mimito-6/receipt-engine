@@ -25,6 +25,12 @@ const MAX_IMG_DIM = 1600
 export function readFile(file: File | undefined, cb: (dataUrl: string) => void): void {
   if (!file) return
   const fr = new FileReader()
+  // A read can fail — an unreadable file, a revoked permission, a file removed mid-read. With
+  // no handler the upload simply did nothing and gave no reason, which reads as the app being
+  // broken rather than as the file being unusable.
+  fr.onerror = () => {
+    showError(t('error.imageReadFailed'))
+  }
   fr.onload = () => {
     const url = String(fr.result)
     if (!/^data:image\/(png|jpe?g|webp|bmp)/i.test(url)) {

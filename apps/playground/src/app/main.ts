@@ -62,15 +62,26 @@ function expandHex(h: string): string {
   return '#' + h.slice(1).split('').map((c) => c + c).join('')
 }
 
-function setTheme(t: ThemeName): void {
-  state.theme = t
+/**
+ * Repaint the theme segmented control from state.
+ *
+ * Split out because the theme is part of an undo snapshot: restoring one changed state.theme
+ * while the control kept showing the old choice, so the app disagreed with itself about which
+ * theme was selected.
+ */
+export function paintThemeControl(): void {
   $('theme-seg')
     .querySelectorAll('button')
     .forEach((b) => {
-      const on = (b as HTMLElement).dataset.theme === t
+      const on = (b as HTMLElement).dataset.theme === state.theme
       b.classList.toggle('on', on)
       b.setAttribute('aria-pressed', String(on)) // expose selected state to AT (colour alone fails WCAG)
     })
+}
+
+function setTheme(t: ThemeName): void {
+  state.theme = t
+  paintThemeControl()
   syncFormFromState()
   render()
   replayPrint() // top-down clip re-print so a theme change reads as a fresh print (rect-safe)

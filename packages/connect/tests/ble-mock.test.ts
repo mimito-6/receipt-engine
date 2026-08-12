@@ -214,7 +214,7 @@ describe('stalled writes', () => {
     await t.connect()
     await expect(
       t.write(Uint8Array.from({ length: 40 }, () => 1), { writeTimeoutMs: 30, delayMs: 0 }),
-    ).rejects.toThrow(/逾時|timeout/i)
+    ).rejects.toThrow(/timed out/i)
     expect(t.state).toBe('error')
   })
 
@@ -236,7 +236,7 @@ describe('stalled writes', () => {
 
     await expect(
       t.write(Uint8Array.from({ length: 40 }, () => 1), { writeTimeoutMs: 20, delayMs: 0 }),
-    ).rejects.toThrow(/逾時|timeout/i)
+    ).rejects.toThrow(/timed out/i)
 
     expect(device.gatt.connected, 'a timed-out job left the link open').toBe(false)
     expect(t.connected).toBe(false)

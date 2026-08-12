@@ -2,7 +2,7 @@
 // schedules a (debounced, de-duped) snapshot, so a whole slider drag or a burst of
 // typing collapses into one history step. Applying a snapshot suppresses recording.
 import { render } from './render'
-import { replayPrint } from './main'
+import { paintThemeControl, replayPrint } from './main'
 import { state } from './state'
 import { syncFormFromState } from './form'
 import { announce } from './feel'
@@ -104,6 +104,7 @@ function apply(json: string, dir?: 'undo' | 'redo'): void {
   }
   // undo/redo are otherwise a silent hard-cut — confirm the change with the rect-safe
   // opacity flash (same trick as setTheme) + a screen-reader announce
+  paintThemeControl()
   replayPrint()
   if (dir) announce(t(dir === 'undo' ? 'nav.undo' : 'nav.redo'))
 }

@@ -53,7 +53,9 @@ the browser editor and let them design their own.
 - ✶ **Borderless vector stickers** — a clean, solid-fill mark set (no emoji), scalable / rotatable on the canvas.
 - 🖨️ **Thermal printing** — ESC/POS raster (GS v 0) over **Web Bluetooth**, straight from the browser.
 - 📲 **Browser PNG & share** — rasterize to PNG client-side (canvas) and share via Web Share — no server.
-- 🌏 **i18n** — the editor UI ships in 中文 / 日本語 / English.
+- 🌏 **i18n** — the editor UI ships in 中文 / 日本語 / English. One gap: in the Bluetooth
+  print panel only the *controls* are translated — its runtime status line, error hints and
+  diagnostics labels are Traditional Chinese only.
 - 🔗 **QR codes**, 🔢 **smart totals**, 🧱 **custom blocks**, 🧩 **React component** + **CLI** + typed core.
 - 🛡️ **Safe & deterministic** — every user value is escaped; the receipt never leaves the browser for a server.
 
@@ -75,8 +77,13 @@ Or run it locally (pnpm monorepo — packages aren't published to npm yet):
 pnpm install
 pnpm build
 pnpm test
-# then open apps/playground/public/index.html in any browser
+# serve the static editor (any static file server works), then open the printed URL:
+npx serve apps/playground/public
 ```
+
+Serve it rather than opening `apps/playground/public/index.html` from `file://`: font
+embedding fetches the bundled faces same-origin, which a `file://` page can't do, and Web
+Bluetooth needs a secure context — `localhost` counts, `file://` doesn't.
 
 <details>
 <summary><b>What you can do in the editor</b></summary>
@@ -107,7 +114,7 @@ The editor only mutates the receipt model — exports stay deterministic and edi
 | `@receipt-engine/render-png` | Receipt → PNG `Buffer` (resvg, server-side). |
 | `@receipt-engine/bitmap` | 1-bit dithering + bit-packing for thermal printers. |
 | `@receipt-engine/escpos` | ESC/POS commands + raster output (GS v 0). |
-| `@receipt-engine/connect` | Browser delivery: Web Bluetooth thermal print, canvas PNG, Web Share. |
+| `@receipt-engine/connect` | Browser delivery: Web Bluetooth thermal print, canvas PNG, Web Share. API below. |
 | `@receipt-engine/import` | POS / order → receipt adapters (incl. OpenBooth) + template overlay. |
 | `@receipt-engine/react` | `<ReceiptCard />`. |
 | `@receipt-engine/cli` | `receipt-engine render …`. |
@@ -160,6 +167,91 @@ const svg = renderReceiptToSvg(receipt, { theme })
 ```
 </details>
 
+## 🖨️ Thermal printing
+
+`@receipt-engine/connect` is the browser-side delivery package. Its façade is two pieces —
+a function that turns a receipt into something you can show *and* something you can send,
+and a printer you can talk to — so a caller never has to know about `GS v 0`,
+bytes-per-row, band limits, dithering or GATT characteristics.
+
+```ts
+import { renderReceipt, Printer, GPRINTER_BLE_80 } from '@receipt-engine/connect'
+
+// preview + bytes + measurements, in one call
+const { preview, escposBytes, metadata } = await renderReceipt(receipt, {
+  printer: GPRINTER_BLE_80,   // default; also GENERIC_BLE_58 / GENERIC_BLE_80
+  dots: 576,                  // optional override of the profile's paper width
+  bitmap: { dither: 'hybrid', inkFloor: 145 },   // optional 1-bpp knobs
+  render: { cropToCard: true, hideCardBorder: true },  // optional RenderSvgOptions (minus `paper`)
+  job: { feedAfterPrintMm: 20 },                 // optional feed / cut / blank-run elision
+})
+
+document.querySelector('#preview')!.innerHTML = preview   // SVG string, safe to inject
+console.log(metadata.estimatedLengthMm, metadata.estimatedReceiptsPerRoll)
+
+const printer = new Printer({ profile: GPRINTER_BLE_80, onStateChange: showStatus })
+if (Printer.supported) {
+  await printer.connect()          // must be called from a user gesture
+  await printer.print(escposBytes) // resolves when fully written
+  printer.disconnect()
+}
+```
+
+`renderReceipt()` runs the real production path — native-width SVG → canvas raster →
+1-bpp → ESC/POS — so the preview and the bytes can never disagree. It is browser-only
+(rasterizing needs a canvas). Its defaults are the `thermal` theme, a transparent page
+background (thermal paper is already white; a background would only burn ink), and the
+`hybrid` conversion rather than error diffusion, which would stipple glyphs and roughly
+triple the bytes sent. `render` overrides the first two and accepts the rest of
+`RenderSvgOptions`; `paper` is the one thing it cannot override, since the preview and
+the bytes have to describe the same sheet as the printer they were built for.
+
+The `bitmap` knobs are `@receipt-engine/bitmap`'s `ToBitmapOptions`: `dither`
+(`'none' | 'floyd-steinberg' | 'atkinson' | 'hybrid' | 'halftone'`), `threshold` — the
+global luminance cutoff, default 128, used by the first three — and `inkFloor` /
+`paperCeil` (defaults 96 / 250), the solid-ink and bare-paper clamps that `hybrid` and
+`halftone` use instead, so type stays solid and paper stays clean while only the
+mid-tones get screened. `halftone` additionally takes `spot`
+(`round | diamond | line | heart | star`) and `cellSize` (default 8 dots, about 1mm at
+203 dpi). `ToBitmapOptions`, `DitherMode`, `SpotShape`, `PrintJobOptions`,
+`PaperProfile` and `ReceiptMetadata` are all re-exported from
+`@receipt-engine/connect`, so a caller can type these options without reaching for the
+underlying packages.
+
+`Printer` is deliberately thin: `connect()`, `print(bytes, opts?)`, `disconnect()`,
+`getState()`, `getDiagnostics()` (device name, service/characteristic UUIDs, write mode,
+byte counters), plus `Printer.supported` for "does this browser have Web Bluetooth at
+all" — Android Chrome yes, iOS Safari no. Writes are queued internally, so concurrent
+`print()` calls can't interleave into a garbled receipt, and a failed write rejects
+rather than silently reporting success. `raw` exposes the underlying transport for tests
+and custom flows.
+
+**Paper profiles** (`@receipt-engine/core`) are the single source of truth for "how wide
+is this receipt, in dots" — layout width, raster width and the `GS v 0` header all have
+to agree on that number:
+
+| Profile | Paper | Printable | Bytes/row | Side padding | QR box | Max logo |
+|---|---|---|---|---|---|---|
+| `PAPER_58` | 58mm | 384 dots | 48 | 16 dots | 120 dots | 160 × 76 dots |
+| `PAPER_80` | 80mm | 576 dots | 72 | 24 dots | 180 dots | 240 × 114 dots |
+
+Both run at 203 dpi with a 12mm post-print feed and **no outer margin** — on a roll, the
+printable width *is* the paper, so a margin is just wasted roll. Look one up by id with
+`getPaperProfile('80mm')`. Pass a profile as `renderReceiptToSvg`'s `paper` option and the
+receipt is *laid out* at that dot width, so an 80mm receipt is a genuine 576-dot design
+rather than a 384-dot one scaled up (which would smear every raster edge).
+
+**Printer profiles** (`@receipt-engine/connect`) say how to talk to a given machine —
+GATT service hints, default BLE pacing, cutter capability, post-print feed, and the
+largest GATT write it accepts where that has been measured on hardware. Built in:
+`GPRINTER_BLE_80` (`'gprinter-ble-80'`, 80mm, no cutter, 180-byte write ceiling),
+`GENERIC_BLE_58` and `GENERIC_BLE_80`; `getPrinterProfile(id)` looks them up.
+
+The playground's Bluetooth print panel is built on all of this — image-processing modes,
+threshold and artwork-density controls, feed distance, transfer pacing and a true 1-bit
+preview are documented in
+[`apps/playground/README.md`](apps/playground/README.md#thermal-printing-over-bluetooth-ble).
+
 ## 📄 Receipt JSON
 
 ```jsonc
@@ -200,9 +292,11 @@ on your phone. To embed rendering in your own app (React Native / WebView), impo
 
 ## 🗺️ Roadmap
 
-**Shipped (v0.1)** in-browser editor · browser PNG export · ESC/POS thermal print over Web Bluetooth ·
+**Shipped** in-browser editor · browser PNG export · ESC/POS thermal print over Web Bluetooth ·
+58mm / 80mm paper presets + printer profiles · test-print & length estimate ·
 OpenBooth integration · 中/日/英 i18n.
-**Next** hosted receipt pages · coupon QR · community themes · plugin system.
+**Next** resvg-wasm PNG path · more templates · hosted receipt pages · coupon QR ·
+community themes · plugin system.
 Full list in [`docs/roadmap.md`](docs/roadmap.md).
 
 ## 📜 License

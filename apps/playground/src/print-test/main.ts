@@ -165,8 +165,13 @@ async function connect(): Promise<void> {
 
 async function disconnect(): Promise<void> {
   transport?.disconnect()
+  // Disconnect doubles as the reset when a job has hung: without clearing these, every later
+  // click is silently swallowed by the busy guard and the bench looks dead. The editor panel
+  // already does this; the bench did not.
+  transport = null
+  busy = false
   setStatus('disconnected')
-  log('disconnected')
+  log('disconnected (reset)')
   renderDiagnostics()
 }
 

@@ -32,6 +32,12 @@ export async function svgToImageData(
   svg: string,
   opts: { width?: number; background?: string } = {},
 ): Promise<RasterImageData> {
+  // A zero, negative or non-finite width silently produces an empty canvas and, downstream, a
+  // print job with no image in it — a blank receipt reported as a success. Omitting width is
+  // still fine; it falls back to the SVG's natural size below.
+  if (opts.width !== undefined && (!Number.isFinite(opts.width) || opts.width <= 0)) {
+    throw new Error(`svgToImageData: width must be a positive number (got ${String(opts.width)})`)
+  }
   const img = await loadSvgImage(svg)
   const natW = img.naturalWidth || opts.width || 384
   const natH = img.naturalHeight || natW

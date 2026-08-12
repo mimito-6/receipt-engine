@@ -4,8 +4,9 @@
 // limits, dithering or GATT characteristics. It picks a printer profile, hands over a
 // receipt, and gets back something it can preview and something it can send.
 import type { ReceiptDocument, ReceiptMetadata } from '@receipt-engine/core'
-import { renderReceiptToSvg } from '@receipt-engine/render-svg'
+import { renderReceiptToSvg, type RenderSvgOptions } from '@receipt-engine/render-svg'
 import type { ToBitmapOptions } from '@receipt-engine/bitmap'
+import type { PrintJobOptions } from '@receipt-engine/escpos'
 import { receiptSvgToEscposWithMetadata } from './compose'
 import { BleTransport } from './bluetooth'
 import { GPRINTER_BLE_80, type PrinterProfile, type TransmissionModeName } from './profiles'
@@ -18,6 +19,17 @@ export interface RenderReceiptOptions {
   dots?: number
   /** 1-bpp conversion knobs (threshold / dithering) when a print looks too dark or washed out. */
   bitmap?: ToBitmapOptions
+  /**
+   * Rendering options passed through to the SVG renderer — theme, cropToCard, hideCardBorder,
+   * backgroundInkBoost and the rest.
+   *
+   * Without this the façade could only produce the default look, and a consumer wanting any of
+   * it had to bypass the façade and reassemble the whole pipeline by hand — which is exactly
+   * what the façade exists to prevent.
+   */
+  render?: Omit<RenderSvgOptions, 'paper'>
+  /** Job options: post-print feed, cutting, blank-run elision. */
+  job?: PrintJobOptions
 }
 
 export interface ReceiptResult {
@@ -43,9 +55,12 @@ export async function renderReceipt(
   const paper = printer.paper
   const preview = renderReceiptToSvg(receipt, {
     theme: 'thermal',
-    paper,
     // Thermal paper is already white; a page background would only burn ink.
     transparentBackground: true,
+    ...options.render,
+    // The paper profile is not overridable here: it has to agree with the printer the bytes
+    // are being built for, or the preview and the print describe different sheets.
+    paper,
   })
   const { escposBytes, metadata } = await receiptSvgToEscposWithMetadata(preview, {
     printer,
@@ -55,6 +70,7 @@ export async function renderReceipt(
     // and roughly triples the bytes sent. A caller who passes nothing must not get that.
     bitmap: { dither: 'hybrid', ...options.bitmap },
     dots: options.dots ?? paper.printableWidthDots,
+    job: options.job,
   })
   return { preview, escposBytes, metadata }
 }

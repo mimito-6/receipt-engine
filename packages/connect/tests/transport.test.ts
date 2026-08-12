@@ -1,5 +1,6 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { MemoryTransport, Mutex, resolvePacing } from '../src/transport'
+import { BleTransport } from '../src/bluetooth'
 import { GENERIC_BLE_58, GENERIC_BLE_80, GPRINTER_BLE_80, TRANSMISSION_MODES, getTransmissionMode, normalizeUuid, sameUuid } from '../src/profiles'
 
 const bytes = (n: number): Uint8Array => Uint8Array.from({ length: n }, (_, i) => i & 0xff)
@@ -143,5 +144,47 @@ describe('measured chunk ceiling', () => {
         expect(size, `${p.id} defaults above its own ceiling`).toBeLessThanOrEqual(p.maxChunkSize)
       }
     }
+  })
+})
+
+// A ceiling that only the UI enforces is a comment. Any caller of the library — OpenBooth,
+// a script, a future panel — must be held to the same measured limit.
+describe('the transport enforces the profile ceiling', () => {
+  it('clamps a requested chunk size down to the profile maximum', async () => {
+    const chr = {
+      uuid: 'aaaa-0000-1000-8000-00805f9b34fb',
+      properties: { write: true, writeWithoutResponse: true },
+      sizes: [] as number[],
+      async writeValueWithoutResponse(v: Uint8Array) {
+        this.sizes.push(v.length)
+      },
+      async writeValue(v: Uint8Array) {
+        this.sizes.push(v.length)
+      },
+    }
+    const svc = { uuid: '0000fee7-0000-1000-8000-00805f9b34fb', async getCharacteristics() { return [chr] } }
+    vi.stubGlobal('navigator', {
+      bluetooth: {
+        async requestDevice() {
+          return {
+            name: 'FAKE',
+            addEventListener() {},
+            removeEventListener() {},
+            gatt: {
+              connected: false,
+              async connect() { this.connected = true; return { getPrimaryServices: async () => [svc] } },
+              disconnect() { this.connected = false },
+            },
+          }
+        },
+      },
+    })
+    const t = new BleTransport(GPRINTER_BLE_80)
+    await t.connect()
+    await t.write(new Uint8Array(1000), { chunkSize: 512, delayMs: 0 })
+    const cap = GPRINTER_BLE_80.maxChunkSize!
+    expect(Math.max(...chr.sizes), `wrote past the ${cap}-byte ceiling`).toBeLessThanOrEqual(cap)
+    expect(t.getDiagnostics().chunkSize).toBe(cap)
+    vi.unstubAllGlobals()
   })
 })

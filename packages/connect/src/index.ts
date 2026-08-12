@@ -42,3 +42,9 @@ export { buildFontFaceCss } from './fonts'
 export type { FontEmbedOptions } from './fonts'
 export { renderReceipt, Printer } from './api'
 export type { RenderReceiptOptions, ReceiptResult, PrinterOptions } from './api'
+
+// Types a consumer needs in order to pass the options the façade accepts. Without these the
+// options exist but cannot be typed at the call site.
+export type { ToBitmapOptions, DitherMode, SpotShape } from '@receipt-engine/bitmap'
+export type { PrintJobOptions } from '@receipt-engine/escpos'
+export type { PaperProfile, ReceiptMetadata } from '@receipt-engine/core'

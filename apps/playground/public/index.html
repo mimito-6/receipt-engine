@@ -895,7 +895,7 @@
     <div class="spec-cap"><span aria-hidden="true">[ SPECIMEN&nbsp;№ ] · </span><span id="spec-readout" aria-hidden="true">—</span></div>
     <div id="paper"><div id="svg-host"></div><div id="sticker-overlay"></div></div>
     <div class="canvas-hint" data-i18n="canvas.hint">點文字改內容/字體 · 拖貼紙縮放旋轉 · 拖邊界改尺寸 · 拖區塊排順序</div>
-    <label class="dl-clean"><input type="checkbox" id="dl-clean" /> <span data-i18n="export.clean">去背景 PNG(保留卡片)</span> <span class="hint" data-i18n="export.cleanHint">只去掉卡片後面的頁面底色,保留卡片的形狀與顏色,適合印製</span></label>
+    <label class="dl-clean"><input type="checkbox" id="dl-clean" /> <span data-i18n="export.clean">去背景(保留卡片)</span> <span class="hint" data-i18n="export.cleanHint">只去掉卡片後面的頁面底色,保留卡片的形狀與顏色,適合印製</span></label>
     <label class="dl-clean"><input type="checkbox" id="fast-print" /> <span data-i18n="export.fastPrint">快速匯出(略過列印動畫)</span></label>
     <button id="handoff-enter" class="handoff-enter" data-i18n="handoff.enter">交給客人</button>
     <div class="export-label" aria-hidden="true">[ EXPORT ]</div>
@@ -958,7 +958,7 @@
       </label>
       <div class="ble-preview-wrap">
         <div class="ble-preview-head"><span data-i18n="ble.preview">列印預覽</span><span class="muted-note" data-i18n="ble.previewNote">實際 1-bit 輸出</span></div>
-        <canvas id="ble-preview"></canvas>
+        <canvas id="ble-preview" role="img" aria-label="列印預覽:實際 1-bit 輸出" data-i18n-aria-label="ble.previewAlt"></canvas>
       </div>
       <label class="dl-clean"><input type="checkbox" id="ble-ack" /> <span data-i18n="ble.ack">可靠模式(每包等印表機確認,較慢但不會靜默丟包)</span></label>
       <div class="ble-btns">
@@ -978,6 +978,6 @@
 <footer data-i18n="footer.text">純前端 · 收據不上傳伺服器 · 由 @receipt-engine/render-svg 在瀏覽器內渲染</footer>
 
 <!-- Editor app (bundles the engine). Built from src/app/main.ts -> public/playground.global.js -->
-<script src="./playground.global.js?b=50"></script>
+<script src="./playground.global.js?b=52"></script>
 </body>
 </html>

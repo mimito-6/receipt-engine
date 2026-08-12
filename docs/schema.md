@@ -16,6 +16,7 @@ const receipt = validateReceipt(json) // throws ReceiptValidationError on failur
 | `id` | string | | Your own identifier. |
 | `locale` | string | | Used as the HTML `lang`. |
 | `currency` | string | ✅ | ISO code, e.g. `TWD`, `USD`, `JPY`. |
+| `currencySymbol` | string | | Display-symbol override (e.g. `RM`, `NT$`). See below. |
 | `merchant` | Merchant | ✅ | |
 | `event` | Event | | Booth / market context. |
 | `transaction` | Transaction | ✅ | |
@@ -30,6 +31,17 @@ const receipt = validateReceipt(json) // throws ReceiptValidationError on failur
 | `stickers` | Sticker[] | | Emoji / image overlays drawn on top of everything. |
 | `styleOverrides` | `Record<string, TextStyle>` | | Per-element style overrides, keyed by element id. |
 | `blockOrder` | BlockKey[] | | Override the top-to-bottom order of the major sections. |
+
+## Currency
+
+`currency` is the code amounts are labelled with. It also picks the number of decimals:
+zero-decimal currencies (e.g. `TWD`, `JPY`) render as whole numbers, everything else to
+two places, with thousands separators either way.
+
+`currencySymbol` overrides the symbol drawn in front of the amount, for currencies the
+built-in code→symbol table doesn't cover or when you simply want your own mark. With a
+symbol (given or looked up) an amount renders as `NT$1,200`; with neither it falls back
+to `1,200 TWD`.
 
 ## Style overrides
 
@@ -96,7 +108,8 @@ CWT / FF / Comiket / artist alley / zine fairs / craft markets / pop-ups.
 
 ## Totals
 
-All optional and auto-derived when absent:
+Fields: `subtotal`, `discountTotal`, `taxTotal`, `serviceFee`, `total`, `paid`,
+`change` — all optional and auto-derived when absent:
 
 - `subtotal` = Σ item subtotals
 - `discountTotal` = Σ discounts
@@ -104,12 +117,17 @@ All optional and auto-derived when absent:
 - `paid` = Σ payments
 - `change` = paid − total
 
-Explicit values always override the computed ones.
+`taxTotal` and `serviceFee` have no source to derive from, so they are inputs: set them
+and they feed `total`; omit them and they contribute nothing. Explicit values always
+override the computed ones.
 
 ## QR
 
-`value` (required), `label`, `caption`. Use it for a digital receipt page,
-brand page, social link, next-visit coupon, feedback form, or product page.
+`value` (required), `label`, `caption`, `background`. Use it for a digital receipt
+page, brand page, social link, next-visit coupon, feedback form, or product page.
+
+- `background` — the QR's backing colour, any CSS colour or `transparent`. Defaults to
+  white, which is what keeps a code scannable on a dark or busy card.
 
 ## Message
 

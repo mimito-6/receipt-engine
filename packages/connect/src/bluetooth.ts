@@ -86,7 +86,9 @@ async function findWritableCharacteristic(server: any): Promise<FoundCharacteris
     }
   }
   if (fallback) return fallback
-  throw new Error('找不到可寫入的列印特徵(characteristic)')
+  // English: this is library-level and reaches every consumer, including ones with no
+  // Traditional Chinese UI. Callers that show it to a user translate on the way out.
+  throw new Error('No writable print characteristic found on this device')
 }
 
 /** A reusable Web Bluetooth printer connection implementing the Transport contract. */
@@ -139,7 +141,9 @@ export class BleTransport implements Transport {
   async connect(): Promise<void> {
     if (!BleTransport.supported) {
       this.setState('unsupported')
-      throw new Error('此瀏覽器不支援 Web Bluetooth。請用 Chrome 或 Edge(Android 手機或桌機皆可);Safari / Firefox 不支援')
+      throw new Error(
+        'Web Bluetooth is not available in this browser. Use Chrome or Edge (phone or desktop); Safari and Firefox do not support it',
+      )
     }
     this.setState('connecting')
     try {
@@ -189,7 +193,13 @@ export class BleTransport implements Transport {
       if (!this.connected) await this.connect()
       const found = this.found
       if (!found) throw new Error('BLE transport is not connected')
-      const pacing = resolvePacing(opts, this.fallbackMode)
+      const requested = resolvePacing(opts, this.fallbackMode)
+      // A profile's measured ceiling is enforced HERE, not only by whichever UI happens to be
+      // driving. Web Bluetooth cannot report the negotiated MTU, so the ceiling can only be
+      // measured once and recorded — and a recorded fact that nothing enforces is a comment.
+      const cap = this.profile?.maxChunkSize
+      const pacing =
+        cap != null && requested.chunkSize > cap ? { ...requested, chunkSize: cap } : requested
       const parts = chunk(bytes, pacing.chunkSize)
       this.stats = {
         bytesSent: 0,
@@ -214,7 +224,7 @@ export class BleTransport implements Transport {
             : found.characteristic.writeValue(part)
           // A GATT write that never settles would otherwise hang this job forever, leaving the
           // caller's "busy" state stuck and every later print silently ignored. Fail loudly.
-          await withTimeout(write, timeoutMs, `GATT 寫入逾時(${timeoutMs}ms)`)
+          await withTimeout(write, timeoutMs, `GATT write timed out after ${timeoutMs}ms`)
           sent += part.length
           this.stats.bytesSent = sent
           opts.onProgress?.(sent, bytes.length)
@@ -312,8 +322,18 @@ export class BluetoothThermalPrinter {
   }
 }
 
-/** One-shot: pick a printer and print (shows the chooser each call). */
+/**
+ * One-shot: pick a printer and print (shows the chooser each call).
+ *
+ * Disconnects afterwards. Each call builds its own transport, so leaving the link open held
+ * the printer against every later call — including the chooser this function shows next time,
+ * which would then be picking a device the page is already connected to.
+ */
 export async function printViaBluetooth(bytes: Uint8Array, opts: PrintOptions = {}): Promise<void> {
   const printer = new BluetoothThermalPrinter()
-  await printer.print(bytes, opts)
+  try {
+    await printer.print(bytes, opts)
+  } finally {
+    printer.disconnect()
+  }
 }

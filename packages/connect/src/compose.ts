@@ -6,7 +6,7 @@ import { PAPER_58, receiptMetadata, type ReceiptMetadata } from '@receipt-engine
 import type { PrintOptions } from './bluetooth'
 import type { PrinterProfile } from './profiles'
 import type { Transport, WriteOptions } from './transport'
-import { svgToImageData, svgToPngBlob } from './raster-browser'
+import { svgToImageData, svgToPngBlob, type RasterImageData } from './raster-browser'
 import { shareReceipt, type ShareOptions, type ShareResult } from './share'
 
 /** Anything that can swallow ESC/POS bytes: a Transport, or the legacy printer class. */
@@ -33,10 +33,18 @@ export interface PrintReceiptOptions {
   bitmap?: ToBitmapOptions
   job?: PrintJobOptions
   transport?: PrintOptions
+  /**
+   * Override how the SVG becomes pixels. Defaults to the browser canvas rasterizer.
+   *
+   * This is the seam that makes the production print path testable at all: rasterization is
+   * the one step that genuinely requires a browser, and without a way past it the entire
+   * chain — profile to dot width to job options to ESC/POS bytes — had no test of any kind.
+   */
+  rasterize?: (svg: string, opts: { width: number }) => Promise<RasterImageData>
 }
 
 /** Resolve the raster width + job options implied by a printer profile. */
-function resolveJob(opts: PrintReceiptOptions): { dots: number; job: PrintJobOptions } {
+export function resolveJob(opts: PrintReceiptOptions): { dots: number; job: PrintJobOptions } {
   const paper = opts.printer?.paper
   const dots = opts.dots ?? paper?.printableWidthDots ?? PAPER_58.printableWidthDots
   const job: PrintJobOptions = {
@@ -59,7 +67,7 @@ export async function printReceiptSvg(
   opts: PrintReceiptOptions = {},
 ): Promise<void> {
   const { dots, job } = resolveJob(opts)
-  const { data, width, height } = await svgToImageData(svg, { width: dots })
+  const { data, width, height } = await (opts.rasterize ?? svgToImageData)(svg, { width: dots })
   const bmp = imageDataToBitmap(data, width, height, opts.bitmap)
   await sendTo(printer, buildPrintJob(bmp, job), opts.transport)
 }
@@ -70,7 +78,7 @@ export async function receiptSvgToEscpos(
   opts: PrintReceiptOptions = {},
 ): Promise<Uint8Array> {
   const { dots, job } = resolveJob(opts)
-  const { data, width, height } = await svgToImageData(svg, { width: dots })
+  const { data, width, height } = await (opts.rasterize ?? svgToImageData)(svg, { width: dots })
   const bmp = imageDataToBitmap(data, width, height, opts.bitmap)
   return buildPrintJob(bmp, job)
 }
@@ -91,7 +99,7 @@ export async function receiptSvgToEscposWithMetadata(
   opts: PrintReceiptOptions = {},
 ): Promise<EscposBuildResult> {
   const { dots, job } = resolveJob(opts)
-  const { data, width, height } = await svgToImageData(svg, { width: dots })
+  const { data, width, height } = await (opts.rasterize ?? svgToImageData)(svg, { width: dots })
   const bmp = imageDataToBitmap(data, width, height, opts.bitmap)
   return {
     escposBytes: buildPrintJob(bmp, job),

@@ -22,6 +22,7 @@ import { $ } from './dom'
 import { currentTheme, renderOpts } from './render'
 import { state } from './state'
 import { toast } from './feel'
+import { t } from './i18n'
 
 let transport: BleTransport | null = null
 let busy = false
@@ -380,6 +381,14 @@ function ensureTransport(): BleTransport {
  * opaque string, and the two want opposite responses — smaller packet vs slower pacing — so
  * point at the rung that distinguishes them instead of leaving the user to guess.
  */
+/** Translate the library's own English failures where we recognise them. */
+function localizeError(msg: string): string {
+  if (/Web Bluetooth is not available/i.test(msg)) return t('ble.unsupported')
+  if (/No writable print characteristic/i.test(msg)) return t('ble.noCharacteristic')
+  if (/timed out after/i.test(msg)) return t('ble.writeTimeout')
+  return msg
+}
+
 function nextStepHint(msg: string): string {
   if (!/GATT operation failed|not supported|longer than/i.test(msg)) return ''
   const modes = sel('ble-mode')
@@ -389,14 +398,14 @@ function nextStepHint(msg: string): string {
   )
   // Name a rung that is actually in the list. The previous text pointed at options removed
   // when the list was cut to three, so following it was impossible.
-  if (!slower.length) return ' — 已經是最保守的速度了,請確認印表機在範圍內且電量足夠'
-  return ` — ${size}B 送不出去,請改用「${slower[0]!.textContent!.trim()}」`
+  if (!slower.length) return t('ble.hintSlowest')
+  return ` — ${size}B${t('ble.hintDropTo')}「${slower[0]!.textContent!.trim()}」`
 }
 
 async function guard(label: string, fn: () => Promise<void>): Promise<void> {
   if (busy) {
     // Silently dropping the click was indistinguishable from "the app is broken".
-    setStatus(`還在忙(上一個工作尚未結束)—— 若卡住請按「中斷」再重連`, 'busy')
+    setStatus(t('ble.busy'), 'busy')
     return
   }
   busy = true
@@ -404,7 +413,7 @@ async function guard(label: string, fn: () => Promise<void>): Promise<void> {
     await fn()
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err)
-    setStatus(`${label} 失敗:${msg}${nextStepHint(msg)}`, 'err')
+    setStatus(`${label} ${t('ble.failed')}: ${localizeError(msg)}${nextStepHint(msg)}`, 'err')
     toast(`${label} 失敗`)
     showDiagnostics()
   } finally {
@@ -413,11 +422,11 @@ async function guard(label: string, fn: () => Promise<void>): Promise<void> {
 }
 
 async function connect(): Promise<void> {
-  await guard('連線', async () => {
-    const t = ensureTransport()
-    setStatus('連線中…', 'busy')
-    await t.connect()
-    setStatus(`已連線:${t.name ?? '印表機'}`, 'ok')
+  await guard(t('ble.actConnect'), async () => {
+    const tr = ensureTransport()
+    setStatus(t('ble.connecting'), 'busy')
+    await tr.connect()
+    setStatus(t('ble.connected') + (tr.name ?? t('ble.thePrinter')), 'ok')
     showDiagnostics()
   })
 }
@@ -428,13 +437,13 @@ function disconnect(): void {
   // Also clear the in-flight flag: "中斷" doubles as the escape hatch when a job has hung,
   // otherwise the panel stays permanently unresponsive with no way back.
   busy = false
-  setStatus('已中斷連線(已重置)', 'idle')
+  setStatus(t('ble.disconnected'), 'idle')
   showDiagnostics()
 }
 
 /** Render → raster → ESC/POS → BLE for the live design. */
 async function printCurrent(): Promise<void> {
-  await guard('列印', async () => {
+  await guard(t('ble.actPrint'), async () => {
     await ensurePrintFontCss()
     const paper = paperProfile()
     const printer = printerProfile()
@@ -453,24 +462,24 @@ async function printCurrent(): Promise<void> {
       '預估長度 Length (mm)': metadata.estimatedLengthMm,
       '一捲 20m 可印': metadata.estimatedReceiptsPerRoll,
     }
-    setStatus(`列印中… ${escposBytes.length} bytes`, 'busy')
+    setStatus(`${t('ble.printing')} ${escposBytes.length} bytes`, 'busy')
     showDiagnostics(stats)
-    const t = ensureTransport()
+    const tr = ensureTransport()
     // Repaint at most ~10×/s: refreshing on every chunk meant thousands of innerHTML
     // rebuilds mid-transfer, which starved the very stream we were trying to keep fed.
     let lastPaint = 0
-    await t.write(escposBytes, {
+    await tr.write(escposBytes, {
       mode: sel('ble-mode').value as TransmissionModeName,
       requireAck: checked('ble-ack'),
       onProgress: (sent, total) => {
         const now = Date.now()
         if (now - lastPaint < 100 && sent < total) return
         lastPaint = now
-        setStatus(`列印中… ${sent} / ${total} bytes`, 'busy')
+        setStatus(`${t('ble.printing')} ${sent} / ${total} bytes`, 'busy')
         showDiagnostics(stats)
       },
     })
-    setStatus(`已送出 ${escposBytes.length} bytes(${metadata.widthDots} dots)`, 'ok')
+    setStatus(`${t('ble.sent')} ${escposBytes.length} bytes (${metadata.widthDots} dots)`, 'ok')
     toast('已送到印表機')
     showDiagnostics(stats)
   })
@@ -495,15 +504,15 @@ function selfTestBytes(): Uint8Array {
 }
 
 async function selfTest(): Promise<void> {
-  await guard('自我測試', async () => {
+  await guard(t('ble.actSelfTest'), async () => {
     const bytes = selfTestBytes()
-    const t = ensureTransport()
-    setStatus(`自我測試:送出 ${bytes.length} bytes 純文字…`, 'busy')
-    await t.write(bytes, {
+    const tr = ensureTransport()
+    setStatus(`${t('ble.selfTestSending')} — ${bytes.length} bytes`, 'busy')
+    await tr.write(bytes, {
       mode: sel('ble-mode').value as TransmissionModeName,
       requireAck: checked('ble-ack'),
     })
-    setStatus(`自我測試已送出 ${bytes.length} bytes — 印表機有吐紙嗎?`, 'ok')
+    setStatus(`${t('ble.selfTestDone')} (${bytes.length} bytes)`, 'ok')
     showDiagnostics({ '自我測試 bytes': bytes.length })
   })
 }
@@ -529,7 +538,7 @@ function inkCoverage(bytes: Uint8Array, widthDots: number, heightDots: number): 
 
 /** Measure the current design for the selected paper without touching Bluetooth. */
 async function estimate(): Promise<void> {
-  await guard('估算', async () => {
+  await guard(t('ble.actEstimate'), async () => {
     await ensurePrintFontCss()
     const paper = paperProfile()
     const printer = printerProfile()
@@ -642,11 +651,11 @@ export function initBlePrint(): void {
   })
 
   if (!BleTransport.supported) {
-    setStatus('此瀏覽器不支援 Web Bluetooth。請用 Chrome / Edge(手機或桌機皆可);Safari、Firefox 不支援', 'err')
+    setStatus(t('ble.unsupported'), 'err')
     ;($('ble-connect') as HTMLButtonElement).disabled = true
     ;($('ble-print-btn') as HTMLButtonElement).disabled = true
   } else {
-    setStatus('尚未連線', 'idle')
+    setStatus(t('ble.notConnected'), 'idle')
   }
   showDiagnostics()
 }

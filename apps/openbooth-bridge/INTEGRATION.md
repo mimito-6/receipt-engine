@@ -12,7 +12,7 @@ OpenBooth complete(savedTx)
        importOpenBoothOrder(tx, {settings, event})   → ReceiptDocument (order data)
        applyTemplate(doc, savedDesign)               → merged (your design)
        renderReceiptToSvg(...)
-         ├─ 🖨 thermal SVG(384) → 1-bpp → ESC/POS GS v 0 → Web Bluetooth printer
+         ├─ 🖨 thermal SVG → 1-bpp → ESC/POS GS v 0 → Web Bluetooth printer
          └─ 📲 custom SVG → PNG → navigator.share({files}) → customer's phone
 ```
 
@@ -87,7 +87,8 @@ gracefully falls back.
 
 - **HTTPS** (or `localhost`) is required for both Web Bluetooth and Web Share, and
   both need a user tap (the sheet buttons provide that).
-- **Thermal print** needs **Web Bluetooth** → Android Chrome/Edge. iOS/Safari has
+- **Thermal print** needs **Web Bluetooth** → Chrome/Edge, on Android **and on desktop**
+  (Windows/macOS/Linux with BLE hardware). iOS/Safari has
   no Web Bluetooth, so on iPhone the print button can't reach a BLE printer; the
   **share** path works everywhere (iOS Safari 15+ included). For iPhone printing
   you'd wrap OpenBooth in a native shell (Capacitor + a BLE plugin) — out of scope
@@ -95,7 +96,64 @@ gracefully falls back.
 - **Printers**: targets generic 58/80mm ESC/POS BLE printers (`GS v 0` raster).
   Cat-printers / some Phomemo models use a custom BLE packet protocol and aren't
   covered yet.
-- Set print width via `dots` (384 for 58mm, 576 for 80mm) — the glue uses 384.
+- **Paper is a profile, not a number.** Pass `PAPER_58` (384 dots) or `PAPER_80` (576 dots)
+  and every downstream dimension follows it — SVG width, padding, wrapping, QR and logo size,
+  raster bytes per row, and the ESC/POS width bytes. Do not hardcode a dot count.
+
+## Bridge API (v0.2.0)
+
+Everything below hangs off `window.ReceiptBridge`. Nothing was removed in 0.2.0 — 0.1.x
+callers keep working — but the whole 80mm path, the printer profiles and the one-call print
+façade were previously unreachable from OpenBooth, which is why the integration was pinned to
+58mm.
+
+### The short path
+
+```js
+const { preview, escposBytes, metadata } = await ReceiptBridge.renderReceipt(receipt, {
+  printer: ReceiptBridge.GPRINTER_BLE_80,   // 80mm, no cutter, measured 180-byte write ceiling
+})
+// preview      — SVG string, for the on-screen confirmation
+// escposBytes  — Uint8Array, ready to write
+// metadata     — { widthDots, heightDots, dpi, estimatedLengthMm, estimatedReceiptsPerRoll, … }
+
+const printer = new ReceiptBridge.Printer({ profile: ReceiptBridge.GPRINTER_BLE_80 })
+await printer.connect()          // must be called from a user gesture
+await printer.print(escposBytes) // resolves only when every byte is acknowledged
+```
+
+The caller never needs to know about `GS v 0`, rasterization or 1-bit conversion.
+
+### Profiles
+
+| Export | Paper | Notes |
+| --- | --- | --- |
+| `GPRINTER_BLE_80` | 80mm / 576 dots | The tested device. No cutter; 20mm feed so the receipt clears the tear bar. Measured maximum GATT write: **180 bytes** — larger packets are refused. |
+| `GENERIC_BLE_80` | 80mm / 576 dots | Unknown device, conservative pacing. |
+| `GENERIC_BLE_58` | 58mm / 384 dots | Unknown device, conservative pacing. |
+
+`getPrinterProfile(id)` looks one up by id; `TRANSMISSION_MODES` / `getTransmissionMode()`
+expose the pacing table.
+
+### Image quality
+
+`renderReceipt` accepts `bitmap` options, defaulting to `hybrid` — solid ink stays solid,
+bare paper stays bare, and only the mid-tones between them are dithered, so type prints crisp
+while artwork survives. Thermal paper has no grey, so this is the only real choice available:
+
+- `{ dither: 'hybrid' }` — the default. Best for a receipt that mixes type and artwork.
+- `{ dither: 'halftone', spot: 'round' | 'diamond' | 'line' | 'heart' | 'star' }` — newsprint-
+  style screening. Clustered dots burn more solidly on a thermal head than scattered ones, and
+  the spot shape is a design choice.
+- `{ dither: 'none', threshold }` — hard threshold. Cleanest for pure type; erases faint art.
+- `{ dither: 'floyd-steinberg' }` — full error diffusion. For photographs; greys out type.
+
+`inkFloor` / `paperCeil` move the boundaries of the untouched-ink and untouched-paper bands.
+
+### Measuring before printing
+
+`renderReceiptWithMetadata()` and `receiptMetadata()` report `estimatedLengthMm` and
+`estimatedReceiptsPerRoll` for a 20m roll, so a POS can warn before it runs out of paper.
 
 ## Try it now
 
