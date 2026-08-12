@@ -9,6 +9,7 @@ import { currentTheme, renderOpts } from './render'
 import { type Draft, type Look, type Pad, type ThemeName, deepClone, isImg, state } from './state'
 import { toast } from './feel'
 import { t } from './i18n'
+import { getPrintSettings } from './blePrint'
 
 export function defaultPad(theme: ThemeName): Pad {
   const p = getTheme(theme).spacing.page || 30
@@ -142,6 +143,10 @@ export function buildConfig(): Record<string, unknown> {
     cleanExport: state.cleanExport,
     look: state.look,
     receipt: state.receipt,
+    // The print settings are part of the design in practice: threshold and artwork density
+    // are tuned against a specific look on a specific paper, and re-dialling them by hand
+    // after every import is exactly the kind of lost work a config file exists to prevent.
+    print: getPrintSettings(),
   }
 }
 export function normPad(pd: Partial<Pad> | undefined, theme: ThemeName): Pad {

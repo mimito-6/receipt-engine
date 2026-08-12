@@ -325,6 +325,18 @@
   #ble-diag { margin-top: 8px; font-family: var(--font-label); font-size: 11px; }
   #ble-diag .ble-row { display: flex; justify-content: space-between; gap: 10px; padding: 3px 0; border-bottom: 1px dotted var(--line); }
   #ble-diag .ble-row:last-child { border-bottom: 0; }
+  /* Value lives in the label, so the number is read with its name rather than hunted for
+     at the end of the track; the end captions say which way is which without a legend. */
+  .ble-slider { margin-top: 12px; }
+  .ble-slabel { display: block; margin-bottom: 2px; font-weight: 600; }
+  .ble-slabel output { font-variant-numeric: tabular-nums; }
+  .ble-ends { display: flex; justify-content: space-between; margin-top: 2px; font-size: 11px; opacity: 0.6; }
+  .ble-preview-wrap { margin-top: 12px; }
+  .ble-preview-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; font-weight: 600; }
+  .ble-preview-head .muted-note { font-weight: 400; }
+  /* White plate behind it: the preview IS the paper, so it must not pick up the page tint. */
+  #ble-preview { display: block; width: 100%; height: auto; background: #fff; border: 1px solid var(--line);
+    border-radius: 6px; image-rendering: auto; min-height: 60px; }
   #ble-diag .ble-row span:first-child { color: var(--muted); flex: none; }
   #ble-diag .ble-row span:last-child { text-align: right; word-break: break-all; }
   @media (prefers-reduced-motion: no-preference) { .re-sheet-scrim { animation: sel-box-in var(--dur-tap) var(--ease-out); } }
@@ -904,16 +916,11 @@
         </label>
         <label class="field"><span data-i18n="ble.mode">傳輸速度</span>
           <select id="ble-mode">
-            <option value="conservative">Conservative · 20B / 20ms</option>
-            <option value="standard">Standard · 50B / 10ms</option>
+            <option value="turbo">Turbo · 180B / 0ms</option>
             <option value="fast">Fast · 100B / 5ms</option>
-            <option value="turbo">Turbo · 180B / 0ms(已驗證可用)</option>
-            <option value="turbo244">極速 · 244B / 0ms(試試看)</option>
-            <option value="turbo320">極速 · 320B / 0ms(試試看)</option>
-            <option value="turbo512">極速 · 512B / 0ms(上限,可能失敗)</option>
-            <option value="wide244">大包慢送 · 244B / 3ms(244 失敗時試這個)</option>
-            <option value="wide320">大包慢送 · 320B / 6ms</option>
+            <option value="conservative">Safe · 20B / 20ms</option>
           </select>
+          <div class="muted-note" data-i18n="ble.modeHint">預設 Turbo 最順。列印失敗時再往下調一階。</div>
         </label>
       </div>
       <label class="dl-clean"><input type="checkbox" id="ble-mono" checked /> <span data-i18n="ble.mono">白底黑字(深色版型必開,否則印出一片黑)</span></label>
@@ -924,19 +931,22 @@
           <option value="floyd-steinberg" data-i18n="ble.inkDither">全抖色 — 照片用,字會變灰</option>
         </select>
       </label>
-      <label class="field" style="margin-top:8px"><span data-i18n="ble.threshold">黑白門檻</span>
-        <span class="insp-size-row"><input type="range" id="ble-threshold" min="100" max="250" step="5" value="145" />
-        <output id="ble-threshold-v">145</output></span>
+      <label class="field ble-slider"><span class="ble-slabel"><span data-i18n="ble.threshold">黑白門檻</span>:<output id="ble-threshold-v">145</output></span>
+        <input type="range" id="ble-threshold" min="100" max="250" step="5" value="145" />
+        <span class="ble-ends"><span data-i18n="ble.endThin">更白 · 字細</span><span data-i18n="ble.endBold">更黑 · 字粗</span></span>
       </label>
-      <label class="field" style="margin-top:8px"><span data-i18n="ble.bgDensity">底圖濃度(%)</span>
-        <span class="insp-size-row"><input type="range" id="ble-bgdensity" min="0" max="100" step="5" value="30" />
-        <output id="ble-bgdensity-v">30</output></span>
+      <label class="field ble-slider"><span class="ble-slabel"><span data-i18n="ble.bgDensity">底圖濃度</span>:<output id="ble-bgdensity-v">30</output>%</span>
+        <input type="range" id="ble-bgdensity" min="0" max="100" step="5" value="30" />
+        <span class="ble-ends"><span data-i18n="ble.endFaint">看不見</span><span data-i18n="ble.endSolid">接近全黑</span></span>
       </label>
-      <div class="muted-note" data-i18n="ble.thresholdHint">熱感只有黑與白,沒有灰。混合模式下:門檻決定多深算「實心黑」(字的粗細),淡色保留決定多淡的底圖還印得出來(調低 = 底圖消失、紙面更乾淨)。</div>
-      <label class="field" style="margin-top:8px"><span data-i18n="ble.feed">列印後送紙(mm)</span>
-        <span class="insp-size-row"><input type="range" id="ble-feed" min="0" max="40" step="2" value="20" />
-        <output id="ble-feed-v">20</output></span>
+      <label class="field ble-slider"><span class="ble-slabel"><span data-i18n="ble.feed">列印後送紙</span>:<output id="ble-feed-v">20</output>mm</span>
+        <input type="range" id="ble-feed" min="0" max="40" step="2" value="20" />
+        <span class="ble-ends"><span data-i18n="ble.endTight">貼齊</span><span data-i18n="ble.endLoose">好撕</span></span>
       </label>
+      <div class="ble-preview-wrap">
+        <div class="ble-preview-head"><span data-i18n="ble.preview">列印預覽</span><span class="muted-note" data-i18n="ble.previewNote">實際 1-bit 輸出</span></div>
+        <canvas id="ble-preview"></canvas>
+      </div>
       <label class="dl-clean"><input type="checkbox" id="ble-ack" /> <span data-i18n="ble.ack">可靠模式(每包等印表機確認,較慢但不會靜默丟包)</span></label>
       <div class="ble-btns">
         <button class="btn" id="ble-connect" type="button" data-i18n="ble.connect">連線印表機</button>
@@ -955,6 +965,6 @@
 <footer data-i18n="footer.text">純前端 · 收據不上傳伺服器 · 由 @receipt-engine/render-svg 在瀏覽器內渲染</footer>
 
 <!-- Editor app (bundles the engine). Built from src/app/main.ts -> public/playground.global.js -->
-<script src="./playground.global.js?b=43"></script>
+<script src="./playground.global.js?b=45"></script>
 </body>
 </html>

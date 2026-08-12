@@ -45,7 +45,7 @@ import { applyI18n, setLang, t, type Lang } from './i18n'
 import { fastPrint, playPrintReveal, setFastPrint } from './printReveal'
 import { isMuted, primeAudio, setMuted } from './sound'
 import { isHandoffOpen, openHandoff } from './handoff'
-import { initBlePrint } from './blePrint'
+import { applyPrintSettings, initBlePrint } from './blePrint'
 import { prefersReducedMotion, releaseFocus, setEditorInert, stampPress, toast, trapFocus } from './feel'
 
 // Expose the engine under the historical global so embedders/docs keep working.
@@ -134,6 +134,8 @@ function applyConfig(cfg: any): void {
   }
   if (typeof cfg.scale === 'number') state.scale = cfg.scale
   if (typeof cfg.cleanExport === 'boolean') state.cleanExport = cfg.cleanExport
+  // Older configs predate this and simply have no `print` key — restore nothing, keep defaults.
+  applyPrintSettings(cfg.print)
   state.sel = -1
   state.selection = null
   resetAutosave() // loaded design may be smaller — re-arm autosave if a prior quota fail latched it off

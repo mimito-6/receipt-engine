@@ -7,11 +7,13 @@
 import { PAPER_58, PAPER_80, type PaperProfile } from '@receipt-engine/core'
 import { renderReceiptToSvg } from '@receipt-engine/render-svg'
 import { mergeTheme } from '@receipt-engine/themes'
+import { toBlackMap } from '@receipt-engine/bitmap'
 import {
   BleTransport,
   getPrinterProfile,
   getTransmissionMode,
   receiptSvgToEscposWithMetadata,
+  svgToImageData,
   type PrinterProfile,
   type TransmissionModeName,
 } from '@receipt-engine/connect'
@@ -202,6 +204,112 @@ function bitmapOpts(): {
 function feedMm(): number {
   return Number(($('ble-feed') as HTMLInputElement).value) || 0
 }
+
+// Rasterizing the SVG is the slow step; thresholding the pixels is not. Cache by the SVG
+// itself so dragging the threshold re-thresholds cached pixels, while a density change (which
+// alters the SVG) correctly invalidates and re-renders.
+let previewCache: { key: string; width: number; height: number; data: Uint8ClampedArray } | null = null
+let previewTimer: ReturnType<typeof setTimeout> | undefined
+
+/**
+ * Draw what will actually come out of the printer: the same render, the same rasterization to
+ * the head width, the same 1-bit conversion. Not an approximation of the print — the print.
+ * On a medium with no grey, a colour preview cannot tell you whether type will hold together
+ * or artwork will survive, and those are exactly the two things these sliders decide.
+ */
+async function drawPreview(): Promise<void> {
+  const canvas = $('ble-preview') as HTMLCanvasElement
+  const cx = canvas.getContext('2d')
+  if (!cx) return
+  const paper = paperProfile()
+  const svg = buildPrintSvg(paper)
+  if (!previewCache || previewCache.key !== svg) {
+    const img = await svgToImageData(svg, { width: paper.printableWidthDots })
+    previewCache = { key: svg, width: img.width, height: img.height, data: img.data }
+  }
+  const { width, height, data } = previewCache
+  const black = toBlackMap(data, width, height, bitmapOpts())
+  const out = cx.createImageData(width, height)
+  for (let i = 0; i < black.length; i++) {
+    const v = black[i] ? 0 : 255
+    const o = i * 4
+    out.data[o] = v
+    out.data[o + 1] = v
+    out.data[o + 2] = v
+    out.data[o + 3] = 255
+  }
+  canvas.width = width
+  canvas.height = height
+  cx.putImageData(out, 0, 0)
+}
+
+/** Coalesce drags: one render per pause, not one per pixel of slider travel. */
+function schedulePreview(): void {
+  clearTimeout(previewTimer)
+  previewTimer = setTimeout(() => {
+    void drawPreview().catch(() => {
+      /* a preview that fails must never break printing */
+    })
+  }, 220)
+}
+
+/** The print settings, for the saved config file. */
+export function getPrintSettings(): Record<string, unknown> {
+  return {
+    printer: sel('ble-printer').value,
+    paper: sel('ble-paper').value,
+    mode: sel('ble-mode').value,
+    ink: sel('ble-ink').value,
+    threshold: Number(($('ble-threshold') as HTMLInputElement).value),
+    bgDensity: Number(($('ble-bgdensity') as HTMLInputElement).value),
+    feedMm: Number(($('ble-feed') as HTMLInputElement).value),
+    mono: checked('ble-mono'),
+    requireAck: checked('ble-ack'),
+  }
+}
+
+/** Restore print settings from a config file, ignoring anything unrecognised. */
+export function applyPrintSettings(cfg: unknown): void {
+  const p = cfg as Record<string, unknown> | null | undefined
+  if (!p) return
+  const setSel = (id: string, v: unknown): void => {
+    if (typeof v !== 'string') return
+    const el = sel(id)
+    // A config written on another printer may name an option this build no longer offers.
+    if ([...el.options].some((o) => o.value === v && !o.disabled)) el.value = v
+  }
+  const setNum = (id: string, v: unknown): void => {
+    if (typeof v === 'number' && Number.isFinite(v)) ($(id) as HTMLInputElement).value = String(v)
+  }
+  const setChk = (id: string, v: unknown): void => {
+    if (typeof v === 'boolean') ($(id) as HTMLInputElement).checked = v
+  }
+  setSel('ble-printer', p.printer)
+  setSel('ble-paper', p.paper)
+  setSel('ble-mode', p.mode)
+  setSel('ble-ink', p.ink)
+  setNum('ble-threshold', p.threshold)
+  setNum('ble-bgdensity', p.bgDensity)
+  setNum('ble-feed', p.feedMm)
+  setChk('ble-mono', p.mono)
+  setChk('ble-ack', p.requireAck)
+  refreshPrintPanel()
+}
+
+/** Re-sync the panel's derived UI (readouts, enablement, preview) after any external change. */
+export function refreshPrintPanel(): void {
+  for (const [id, out] of [
+    ['ble-threshold', 'ble-threshold-v'],
+    ['ble-bgdensity', 'ble-bgdensity-v'],
+    ['ble-feed', 'ble-feed-v'],
+  ] as const) {
+    $(out).textContent = ($(id) as HTMLInputElement).value
+  }
+  syncLiveControls?.()
+  schedulePreview()
+}
+
+let syncLiveControls: (() => void) | undefined
 
 function ensureTransport(): BleTransport {
   if (!transport) {
@@ -408,6 +516,10 @@ export function initBlePrint(): void {
   bindRange('ble-threshold', 'ble-threshold-v')
   bindRange('ble-bgdensity', 'ble-bgdensity-v')
   bindRange('ble-feed', 'ble-feed-v')
+  for (const id of ['ble-threshold', 'ble-bgdensity', 'ble-ink', 'ble-mono', 'ble-paper']) {
+    $(id).addEventListener('input', schedulePreview)
+    $(id).addEventListener('change', schedulePreview)
+  }
 
   // Every control here must visibly do something, or it reads as a broken app. Two of them
   // are conditionally inert, so say so instead of leaving a live-looking slider that moves
@@ -424,8 +536,12 @@ export function initBlePrint(): void {
     setLive('ble-threshold', ink.value !== 'floyd-steinberg')
     setLive('ble-bgdensity', !!bgAssets()?.backgroundImage)
   }
+  syncLiveControls = syncLive
   ink.addEventListener('change', syncLive)
-  $('ble-print').addEventListener('toggle', syncLive)
+  $('ble-print').addEventListener('toggle', () => {
+    syncLive()
+    if (($('ble-print') as HTMLDetailsElement).open) schedulePreview()
+  })
   $('ble-estimate').addEventListener('click', syncLive)
   syncLive()
   // Seed the pacing from the profile on load, not only when the printer is changed —
