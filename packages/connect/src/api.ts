@@ -49,8 +49,12 @@ export async function renderReceipt(
   })
   const { escposBytes, metadata } = await receiptSvgToEscposWithMetadata(preview, {
     printer,
+    // Receipts are type, not photographs. imageDataToBitmap defaults to error diffusion,
+    // which scatters isolated dots across the whole sheet — visible grey haze on thermal
+    // paper — and, because no row is then fully blank, it also disables blank-run elision
+    // and roughly triples the bytes sent. A caller who passes nothing must not get that.
+    bitmap: { dither: 'hybrid', ...options.bitmap },
     dots: options.dots ?? paper.printableWidthDots,
-    bitmap: options.bitmap,
   })
   return { preview, escposBytes, metadata }
 }

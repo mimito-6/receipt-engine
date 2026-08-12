@@ -218,13 +218,39 @@ describe('stalled writes', () => {
     expect(t.state).toBe('error')
   })
 
-  it('accepts a new job after a timed-out one', async () => {
-    const ok = fakeCharacteristic({ uuid: 'bbbb' + BASE, writeWithoutResponse: true })
-    installFakeBluetooth([fakeService('0000fee7' + BASE, [ok])])
+  it('drops the link on timeout, because a stalled write cannot be cancelled', async () => {
+    // Web Bluetooth has no cancel. The abandoned write is still in flight and the printer is
+    // still counting down bytes for a band it never finished, so anything sent next — the
+    // ESC @ reset included — is swallowed as image data. Only dropping the connection makes
+    // the printer discard the partial band, so the transport must do that itself.
+    const hung = {
+      uuid: 'aaaa' + BASE,
+      properties: { write: true, writeWithoutResponse: true },
+      writeValueWithoutResponse: () => new Promise<never>(() => {}),
+      writeValue: () => new Promise<never>(() => {}),
+    }
+    const { device } = installFakeBluetooth([fakeService('0000fee7' + BASE, [hung as never])])
     const t = new BleTransport(GPRINTER_BLE_80)
     await t.connect()
-    await expect(t.write(Uint8Array.from({ length: 20 }, () => 2), { delayMs: 0 })).resolves.toBeUndefined()
-    expect(ok.writes.length).toBe(1)
+    expect(device.gatt.connected).toBe(true)
+
+    await expect(
+      t.write(Uint8Array.from({ length: 40 }, () => 1), { writeTimeoutMs: 20, delayMs: 0 }),
+    ).rejects.toThrow(/逾時|timeout/i)
+
+    expect(device.gatt.connected, 'a timed-out job left the link open').toBe(false)
+    expect(t.connected).toBe(false)
+  })
+
+  it('closes a half-open link when discovery fails', async () => {
+    // GATT connects, then service discovery finds nothing writable. Leaving that connection
+    // open holds the printer against other clients and against our own retry.
+    const { device } = installFakeBluetooth([
+      fakeService('0000fee7' + BASE, [fakeCharacteristic({ uuid: 'eeee' + BASE })]),
+    ])
+    const t = new BleTransport(GPRINTER_BLE_80)
+    await expect(t.connect()).rejects.toThrow(/characteristic/i)
+    expect(device.gatt.connected, 'failed connect left GATT open').toBe(false)
   })
 })
 

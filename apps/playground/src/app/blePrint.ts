@@ -8,6 +8,7 @@ import { PAPER_58, PAPER_80, type PaperProfile } from '@receipt-engine/core'
 import { renderReceiptToSvg } from '@receipt-engine/render-svg'
 import { mergeTheme } from '@receipt-engine/themes'
 import { toBlackMap, type SpotShape } from '@receipt-engine/bitmap'
+import { buildFontFaceCss } from './pngExport'
 import {
   BleTransport,
   getPrinterProfile,
@@ -58,10 +59,17 @@ function showDiagnostics(extra: Record<string, string | number> = {}): void {
     ...(Object.entries(extra) as Array<[string, string | number]>),
     ['錯誤 Error', d?.lastError],
   ]
+  // The device name and the error text come from the peripheral and from the browser — not
+  // from us — so they are escaped. A printer that advertises itself with markup in its name
+  // would otherwise inject it into the page.
+  const esc = (v: string): string =>
+    v.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!)
   $('ble-diag').innerHTML = rows
     .map(
       ([k, v]) =>
-        `<div class="ble-row"><span>${k}</span><span>${v === undefined || v === '' ? '—' : String(v)}</span></div>`,
+        `<div class="ble-row"><span>${esc(k)}</span><span>${
+          v === undefined || v === '' ? '—' : esc(String(v))
+        }</span></div>`,
     )
     .join('')
 }
@@ -80,8 +88,31 @@ function showDiagnostics(extra: Record<string, string | number> = {}): void {
  * bitmap upscale we must avoid, so the print keeps the design's exact proportions while
  * still being natively 576 dots wide.
  */
+let printFontCss: string | null = null
+
+/**
+ * Subsetted @font-face CSS for the print render, fetched once per design.
+ *
+ * The raster path loads the SVG as an isolated document from a blob: URL, so it cannot see
+ * the page's own @font-face rules — a bare `font-family` name resolves to whatever the
+ * machine happens to have, which for the bundled pixel faces is nothing at all. Both other
+ * export paths already embed; this one printed in a system fallback while claiming to print
+ * what you designed. Best-effort: a failed fetch costs the typeface, never the print.
+ */
+async function ensurePrintFontCss(): Promise<string> {
+  if (printFontCss !== null) return printFontCss
+  try {
+    printFontCss = await buildFontFaceCss()
+  } catch {
+    printFontCss = ''
+  }
+  return printFontCss
+}
+
 function buildPrintSvg(_paper: PaperProfile): string {
   const extra: Record<string, unknown> = {
+    // Embed the design's own faces; without this the print is a different typeface entirely.
+    ...(printFontCss ? { fontFaceCss: printFontCss } : {}),
     // Thermal paper is already white and every dot costs ink and battery, so the page
     // background never prints.
     transparentBackground: true,
@@ -231,11 +262,17 @@ async function drawPreview(): Promise<void> {
   const canvas = $('ble-preview') as HTMLCanvasElement
   const cx = canvas.getContext('2d')
   if (!cx) return
+  await ensurePrintFontCss()
   const paper = paperProfile()
   const svg = buildPrintSvg(paper)
-  if (!previewCache || previewCache.key !== svg) {
+  // Keyed on the paper too: the SVG is identical across paper sizes (it is rasterized to the
+  // head width downstream, not re-laid-out), so keying on it alone served a 384-dot raster
+  // for an 80mm print.
+  const key = `${paper.printableWidthDots}
+${svg}`
+  if (!previewCache || previewCache.key !== key) {
     const img = await svgToImageData(svg, { width: paper.printableWidthDots })
-    previewCache = { key: svg, width: img.width, height: img.height, data: img.data }
+    previewCache = { key, width: img.width, height: img.height, data: img.data }
   }
   const { width, height, data } = previewCache
   const black = toBlackMap(data, width, height, bitmapOpts())
@@ -258,7 +295,15 @@ function schedulePreview(): void {
   clearTimeout(previewTimer)
   previewTimer = setTimeout(() => {
     void drawPreview().catch(() => {
-      /* a preview that fails must never break printing */
+      // A preview that fails must never break printing — but it must not leave the last
+      // good image on screen either, or it silently misrepresents what will be printed.
+      const canvas = $('ble-preview') as HTMLCanvasElement
+      const cx = canvas.getContext('2d')
+      if (!cx) return
+      canvas.width = 8
+      canvas.height = 8
+      cx.clearRect(0, 0, 8, 8)
+      previewCache = null
     })
   }, 220)
 }
@@ -337,9 +382,15 @@ function ensureTransport(): BleTransport {
  */
 function nextStepHint(msg: string): string {
   if (!/GATT operation failed|not supported|longer than/i.test(msg)) return ''
-  const size = getTransmissionMode(sel('ble-mode').value as TransmissionModeName).chunkSize
-  if (size <= 180) return ' — 這台機器連 180B 都吃不下,請退到 Fast · 100B / 5ms'
-  return ` — ${size}B 送不出去。先試「大包慢送」(同樣大小但有間隔):若通過就是送太快、不是封包太大;若一樣失敗,退回 Turbo · 180B`
+  const modes = sel('ble-mode')
+  const size = getTransmissionMode(modes.value as TransmissionModeName).chunkSize
+  const slower = [...modes.options].filter(
+    (o) => !o.disabled && getTransmissionMode(o.value as TransmissionModeName).chunkSize < size,
+  )
+  // Name a rung that is actually in the list. The previous text pointed at options removed
+  // when the list was cut to three, so following it was impossible.
+  if (!slower.length) return ' — 已經是最保守的速度了,請確認印表機在範圍內且電量足夠'
+  return ` — ${size}B 送不出去,請改用「${slower[0]!.textContent!.trim()}」`
 }
 
 async function guard(label: string, fn: () => Promise<void>): Promise<void> {
@@ -384,6 +435,7 @@ function disconnect(): void {
 /** Render → raster → ESC/POS → BLE for the live design. */
 async function printCurrent(): Promise<void> {
   await guard('列印', async () => {
+    await ensurePrintFontCss()
     const paper = paperProfile()
     const printer = printerProfile()
     const svg = buildPrintSvg(paper)
@@ -478,6 +530,7 @@ function inkCoverage(bytes: Uint8Array, widthDots: number, heightDots: number): 
 /** Measure the current design for the selected paper without touching Bluetooth. */
 async function estimate(): Promise<void> {
   await guard('估算', async () => {
+    await ensurePrintFontCss()
     const paper = paperProfile()
     const printer = printerProfile()
     const svg = buildPrintSvg(paper)
@@ -548,7 +601,12 @@ export function initBlePrint(): void {
   }
   syncLiveControls = syncLive
   ink.addEventListener('change', syncLive)
-  document.addEventListener('re:design-changed', syncLive)
+  document.addEventListener('re:design-changed', () => {
+    // The embedded faces are subsetted to the glyphs actually used, so changing the text or
+    // the font picker invalidates them.
+    printFontCss = null
+    syncLive()
+  })
   $('ble-print').addEventListener('toggle', () => {
     syncLive()
     if (($('ble-print') as HTMLDetailsElement).open) schedulePreview()
@@ -558,14 +616,20 @@ export function initBlePrint(): void {
   // Seed the pacing from the profile on load, not only when the printer is changed —
   // otherwise the panel opens on the first <option> regardless of what the profile says.
   const syncPacing = (): void => {
-    const cap = printerProfile().maxChunkSize
-    for (const opt of [...sel('ble-mode').options]) {
+    const profile = printerProfile()
+    const cap = profile.maxChunkSize
+    const modes = sel('ble-mode')
+    for (const opt of [...modes.options]) {
       const size = getTransmissionMode(opt.value as TransmissionModeName).chunkSize
-      const tooBig = cap != null && size > cap
-      opt.disabled = tooBig
-      opt.textContent = opt.textContent.replace(/ — 此機型不支援$/, '') + (tooBig ? ' — 此機型不支援' : '')
+      opt.disabled = cap != null && size > cap
     }
-    sel('ble-mode').value = printerProfile().defaultMode
+    // A profile's default may name a pacing this build no longer offers — the generic
+    // profiles ask for 'standard', which was dropped when the list was cut to three rungs.
+    // Assigning it blanks the select and silently ignores whatever the user had chosen, so
+    // fall back to the fastest rung the profile actually allows.
+    const usable = [...modes.options].filter((o) => !o.disabled)
+    const wanted = usable.find((o) => o.value === profile.defaultMode)
+    modes.value = (wanted ?? usable[0])?.value ?? modes.options[0]!.value
   }
   syncPacing()
   $('ble-printer').addEventListener('change', () => {

@@ -161,6 +161,19 @@ export class BleTransport implements Transport {
       this.setState('connected')
     } catch (err) {
       this.lastError = err instanceof Error ? err.message : String(err)
+      // Drop the half-open link. GATT may already be connected — the failure is usually in
+      // service discovery — and leaving it open holds the printer against other clients and
+      // against our own retry, which would then find a connection it has no characteristic for.
+      try {
+        if (this.onDisconnected) {
+          this.device?.removeEventListener?.('gattserverdisconnected', this.onDisconnected)
+        }
+        this.device?.gatt?.disconnect()
+      } catch {
+        /* already gone */
+      }
+      this.onDisconnected = undefined
+      this.found = null
       this.setState('error')
       throw err
     }
@@ -209,6 +222,13 @@ export class BleTransport implements Transport {
         }
         this.setState('connected')
       } catch (err) {
+        this.lastError = err instanceof Error ? err.message : String(err)
+        // Web Bluetooth cannot cancel a write, so a timed-out one is still in flight and the
+        // printer is still counting down bytes for a band it never received in full. Anything
+        // sent next — including the ESC @ meant to reset it — would be swallowed as image
+        // data and print as garbage. Dropping the link is the only reset available: the
+        // printer discards its partial band when the connection goes.
+        this.disconnect()
         this.lastError = err instanceof Error ? err.message : String(err)
         this.setState('error')
         throw err
