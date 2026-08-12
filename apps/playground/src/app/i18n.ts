@@ -107,6 +107,9 @@ const EXTRA: Record<string, { zh: string; ja: string; en: string }> = {
   'ble.inkDotStar': { zh: '網點 · 星星', ja: '網点 · 星', en: 'Halftone · star' },
   'ble.inkSharp': { zh: '銳利 — 只留深色,最乾淨', ja: 'シャープ — 濃い部分のみ', en: 'Sharp — dark ink only, cleanest' },
   'ble.inkDither': { zh: '全抖色 — 照片用,字會變灰', ja: '全体ディザ — 写真向き、文字は灰色に', en: 'Full dither — for photos; type goes grey' },
+  'ble.dotSize': { zh: '網點顆粒大小', ja: '網点の粒の大きさ', en: 'Screen dot size' },
+  'ble.endFine': { zh: '細密', ja: '細かい', en: 'Fine' },
+  'ble.endCoarse': { zh: '大顆 · 形狀明顯', ja: '粗い・形がはっきり', en: 'Coarse · shape reads clearly' },
   'ble.bgDensity': { zh: '底圖濃度', ja: '背景の濃度', en: 'Artwork density' },
   'error.imageReadFailed': {
     zh: '讀取這個檔案失敗,請換一個檔案再試',

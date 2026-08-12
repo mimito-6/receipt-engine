@@ -98,3 +98,76 @@ describe('shaped halftone', () => {
     }
   })
 })
+
+// The defect that made this feature look like a broken printer: at a faint tone each cell got
+// only a pixel or two, so a "heart screen" printed as grit. Tone was correct throughout, which
+// is why nothing caught it — the shape was simply too small to be a shape.
+describe('marks stay recognisable at faint tones', () => {
+  const CELL = 16
+
+  /** The distinct mark sizes present in a screened flat field, largest first. */
+  function markSizes(l: number): number[] {
+    const size = CELL * 8
+    const rgba = new Uint8Array(size * size * 4)
+    for (let i = 0; i < size * size; i++) {
+      rgba[i * 4] = rgba[i * 4 + 1] = rgba[i * 4 + 2] = l
+      rgba[i * 4 + 3] = 255
+    }
+    const m = toBlackMap(rgba, size, size, {
+      dither: 'halftone',
+      spot: 'heart',
+      cellSize: CELL,
+      inkFloor: 8,
+      paperCeil: 250,
+    })
+    const counts: number[] = []
+    for (let cy = 0; cy < size / CELL; cy++) {
+      for (let cx = 0; cx < size / CELL; cx++) {
+        let n = 0
+        for (let y = 0; y < CELL; y++)
+          for (let x = 0; x < CELL; x++) n += m[(cy * CELL + y) * size + cx * CELL + x]!
+        counts.push(n)
+      }
+    }
+    return counts.sort((a, b) => b - a)
+  }
+
+  it('never prints a mark too small to read as its shape', () => {
+    for (const l of [246, 240, 230, 215]) {
+      const sizes = markSizes(l).filter((n) => n > 0)
+      if (!sizes.length) continue
+      const smallest = sizes[sizes.length - 1]!
+      // A mark is either absent or big enough to be a heart — never a speck.
+      expect(smallest / (CELL * CELL), `L${l} printed a speck`).toBeGreaterThan(0.25)
+    }
+  })
+
+  it('thins the marks out rather than shrinking them, keeping tone exact', () => {
+    // Fewer cells carry a mark as the tone lightens, but the marks themselves hold their size.
+    const faint = markSizes(244).filter((n) => n > 0)
+    const mid = markSizes(215).filter((n) => n > 0)
+    expect(faint.length, 'faint tone should use fewer marks').toBeLessThan(mid.length)
+    // Average coverage still tracks the tone it was asked for.
+    const size = CELL * 8
+    for (const l of [244, 230, 215]) {
+      const rgba = new Uint8Array(size * size * 4)
+      for (let i = 0; i < size * size; i++) {
+        rgba[i * 4] = rgba[i * 4 + 1] = rgba[i * 4 + 2] = l
+        rgba[i * 4 + 3] = 255
+      }
+      const m = toBlackMap(rgba, size, size, { dither: 'halftone', spot: 'heart', cellSize: CELL, inkFloor: 8, paperCeil: 250 })
+      const cov = m.reduce((n, v) => n + v, 0) / m.length
+      expect(cov, `tone drifted at L${l}`).toBeCloseTo(1 - (l - 8) / (250 - 8), 1)
+    }
+  })
+
+  it('leaves type alone whatever the grain', () => {
+    for (const cellSize of [6, 12, 24]) {
+      const size = 48
+      const black = new Uint8Array(size * size * 4)
+      for (let i = 0; i < size * size; i++) black[i * 4 + 3] = 255 // pure black, alpha 255
+      const m = toBlackMap(black, size, size, { dither: 'halftone', spot: 'star', cellSize, inkFloor: 145, paperCeil: 250 })
+      expect(m.every((v) => v === 1), `cellSize ${cellSize} punched holes in solid ink`).toBe(true)
+    }
+  })
+})

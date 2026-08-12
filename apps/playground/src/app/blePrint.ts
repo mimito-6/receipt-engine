@@ -232,11 +232,12 @@ function bitmapOpts(): {
   if (mode !== 'halftone') {
     return { ...base, dither: mode as 'none' | 'floyd-steinberg' | 'hybrid' }
   }
-  // Cell size is a legibility decision, not a preference worth another slider. A round dot
-  // reads at 8 dots (1mm at 203 dpi) and finer is better for tone; a heart or a star needs
-  // roughly half again as much before it is recognisable as anything but a blob.
+  // Cell size is a look, so it belongs to whoever is designing the receipt rather than being
+  // decided here. Bigger cells make the shape unmistakable and the texture coarse; smaller
+  // ones reproduce tone more finely and eventually stop reading as a shape at all.
   const shape = (spot ?? 'round') as SpotShape
-  return { ...base, dither: 'halftone', spot: shape, cellSize: shape === 'heart' || shape === 'star' ? 12 : 8 }
+  const cellSize = Number(($('ble-dotsize') as HTMLInputElement).value) || 12
+  return { ...base, dither: 'halftone', spot: shape, cellSize }
 }
 
 /**
@@ -587,8 +588,9 @@ export function initBlePrint(): void {
   }
   bindRange('ble-threshold', 'ble-threshold-v')
   bindRange('ble-bgdensity', 'ble-bgdensity-v')
+  bindRange('ble-dotsize', 'ble-dotsize-v')
   bindRange('ble-feed', 'ble-feed-v')
-  for (const id of ['ble-threshold', 'ble-bgdensity', 'ble-ink', 'ble-mono', 'ble-paper']) {
+  for (const id of ['ble-threshold', 'ble-bgdensity', 'ble-dotsize', 'ble-ink', 'ble-mono', 'ble-paper']) {
     $(id).addEventListener('input', schedulePreview)
     $(id).addEventListener('change', schedulePreview)
   }
@@ -606,6 +608,9 @@ export function initBlePrint(): void {
   const ink = $('ble-ink') as HTMLSelectElement
   const syncLive = (): void => {
     setLive('ble-threshold', ink.value !== 'floyd-steinberg')
+    // Grain only means anything to a screen.
+    const row = $('ble-dot-row')
+    row.style.display = ink.value.startsWith('halftone') ? '' : 'none'
     setLive('ble-bgdensity', !!bgAssets()?.backgroundImage)
   }
   syncLiveControls = syncLive

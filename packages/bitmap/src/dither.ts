@@ -1,5 +1,5 @@
 // RGBA → grayscale → 1-bit black map, via threshold, error diffusion, or shaped screening.
-import { spotMatrix, type SpotShape } from './halftone'
+import { cellFill, spotMatrix, type SpotShape } from './halftone'
 
 /**
  * `hybrid` exists because a single global threshold cannot satisfy a receipt that mixes
@@ -78,10 +78,12 @@ export function toBlackMap(
           black[i] = 0
           continue
         }
-        // t is 0 at solid ink and 1 at bare paper, so a darker tone clears a higher threshold
-        // and more of the cell fills.
-        const t = (l - inkFloor) / span
-        black[i] = t < matrix[row * size + (x % size)]! ? 1 : 0
+        // Coverage is how much of the cell this tone wants inked. Below the size at which the
+        // shape is still recognisable, cellFill holds the mark's size and thins out how many
+        // cells carry one — same average coverage, but hearts instead of grit.
+        const coverage = 1 - (l - inkFloor) / span
+        const fill = cellFill(coverage, (x / size) | 0, (y / size) | 0)
+        black[i] = matrix[row * size + (x % size)]! > 1 - fill ? 1 : 0
       }
     }
     return black

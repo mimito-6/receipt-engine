@@ -116,3 +116,40 @@ describe('printer profile drives the print', () => {
     expect(ink(sharp)).toBeLessThan(ink(hybrid))
   })
 })
+
+// A feature reachable only from inside the playground is not shipped. Halftone screening has
+// to be selectable by a consumer through the same options everything else uses.
+describe('the public options actually reach the pipeline', () => {
+  const grey = async (_svg: string, o: { width: number }) => {
+    const data = new Uint8ClampedArray(o.width * 48 * 4).fill(190)
+    for (let i = 0; i < o.width * 48; i++) data[i * 4 + 3] = 255
+    return { width: o.width, height: 48, data }
+  }
+
+  it('accepts a halftone spot shape and produces a different sheet per shape', async () => {
+    const run = async (bitmap: Record<string, unknown>) =>
+      (
+        await receiptSvgToEscposWithMetadata('<svg/>', {
+          printer: GPRINTER_BLE_80,
+          rasterize: grey,
+          bitmap: bitmap as never,
+        })
+      ).escposBytes
+
+    const heart = await run({ dither: 'halftone', spot: 'heart', cellSize: 12 })
+    const star = await run({ dither: 'halftone', spot: 'star', cellSize: 12 })
+    const round = await run({ dither: 'halftone', spot: 'round', cellSize: 12 })
+
+    // Same tone, so the same amount of ink…
+    const ink = (b: Uint8Array): number => {
+      let n = 0
+      for (const x of b) for (let k = 0; k < 8; k++) n += (x >> k) & 1
+      return n
+    }
+    expect(ink(star)).toBe(ink(heart))
+    expect(ink(round)).toBe(ink(heart))
+    // …but a genuinely different arrangement, or the shape option is doing nothing.
+    expect(heart).not.toEqual(star)
+    expect(heart).not.toEqual(round)
+  })
+})

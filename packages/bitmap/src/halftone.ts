@@ -112,6 +112,63 @@ export function buildSpotMatrix(size: number, shape: SpotShape): Float32Array {
   return m
 }
 
+/**
+ * Ordered values in [0, 1) over a grid of CELLS, for deciding which cells carry a mark.
+ *
+ * A recursive Bayer matrix: spatially even, deterministic, and it tiles — so the marks land
+ * in a regular scatter rather than clumping or forming lines.
+ */
+function bayer(n: number): Float32Array {
+  let m = [[0, 2], [3, 1]]
+  while (m.length < n) {
+    const k = m.length
+    const next: number[][] = Array.from({ length: k * 2 }, () => new Array<number>(k * 2).fill(0))
+    for (let y = 0; y < k; y++) {
+      for (let x = 0; x < k; x++) {
+        const v = m[y]![x]! * 4
+        next[y]![x] = v
+        next[y]![x + k] = v + 2
+        next[y + k]![x] = v + 3
+        next[y + k]![x + k] = v + 1
+      }
+    }
+    m = next
+  }
+  const size = m.length
+  const out = new Float32Array(size * size)
+  for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) out[y * size + x] = m[y]![x]! / (size * size)
+  return out
+}
+
+const CELL_PICK = 8
+const CELL_PICK_MATRIX = bayer(CELL_PICK)
+
+/**
+ * Smallest fraction of a cell that still reads as the shape it is meant to be.
+ *
+ * Below roughly this much ink a growing dot is a handful of pixels — a speck, not a heart.
+ * That is arithmetic, not a defect, and it is why a faint background screened the classic way
+ * comes out looking like a dirty print rather than a pattern.
+ */
+const MIN_READABLE_FILL = 0.32
+
+/**
+ * Should this cell carry a mark, and how full should it be?
+ *
+ * Classic AM screening scales every cell's dot with tone, which works down to nothing — the
+ * dot just gets smaller until it is a speck. For a screen whose whole point is its SHAPE that
+ * is the wrong trade: below the readable size, hold the mark's size and thin out how many
+ * cells get one instead. Average coverage is identical either way, so tone is preserved
+ * exactly; what changes is that the sheet shows hearts-or-nothing instead of grit.
+ */
+export function cellFill(coverage: number, cellX: number, cellY: number): number {
+  if (coverage >= MIN_READABLE_FILL) return coverage
+  if (coverage <= 0) return 0
+  const wanted = coverage / MIN_READABLE_FILL // fraction of cells that get a mark
+  const pick = CELL_PICK_MATRIX[(cellY % CELL_PICK) * CELL_PICK + (cellX % CELL_PICK)]!
+  return pick < wanted ? MIN_READABLE_FILL : 0
+}
+
 const cache = new Map<string, { size: number; matrix: Float32Array }>()
 
 /** Cached matrix — screening a full receipt would otherwise rebuild it per call. */

@@ -948,6 +948,10 @@
         <input type="range" id="ble-threshold" min="100" max="250" step="5" value="145" />
         <span class="ble-ends"><span data-i18n="ble.endThin">更白 · 字細</span><span data-i18n="ble.endBold">更黑 · 字粗</span></span>
       </label>
+      <label class="field ble-slider" id="ble-dot-row"><span class="ble-slabel"><span data-i18n="ble.dotSize">網點顆粒大小</span>:<output id="ble-dotsize-v">12</output> dots</span>
+        <input type="range" id="ble-dotsize" min="6" max="24" step="2" value="12" />
+        <span class="ble-ends"><span data-i18n="ble.endFine">細密</span><span data-i18n="ble.endCoarse">大顆 · 形狀明顯</span></span>
+      </label>
       <label class="field ble-slider"><span class="ble-slabel"><span data-i18n="ble.bgDensity">底圖濃度</span>:<output id="ble-bgdensity-v">30</output>%</span>
         <input type="range" id="ble-bgdensity" min="0" max="100" step="5" value="30" />
         <span class="ble-ends"><span data-i18n="ble.endFaint">看不見</span><span data-i18n="ble.endSolid">接近全黑</span></span>
@@ -978,6 +982,6 @@
 <footer data-i18n="footer.text">純前端 · 收據不上傳伺服器 · 由 @receipt-engine/render-svg 在瀏覽器內渲染</footer>
 
 <!-- Editor app (bundles the engine). Built from src/app/main.ts -> public/playground.global.js -->
-<script src="./playground.global.js?b=52"></script>
+<script src="./playground.global.js?b=53"></script>
 </body>
 </html>
