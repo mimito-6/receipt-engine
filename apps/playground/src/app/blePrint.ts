@@ -7,7 +7,7 @@
 import { PAPER_58, PAPER_80, type PaperProfile } from '@receipt-engine/core'
 import { renderReceiptToSvg } from '@receipt-engine/render-svg'
 import { mergeTheme } from '@receipt-engine/themes'
-import { toBlackMap } from '@receipt-engine/bitmap'
+import { toBlackMap, type SpotShape } from '@receipt-engine/bitmap'
 import {
   BleTransport,
   getPrinterProfile,
@@ -181,20 +181,30 @@ function printDoc(): unknown {
  * opt-in for designs carrying photos or gradients.
  */
 function bitmapOpts(): {
-  dither: 'none' | 'floyd-steinberg' | 'hybrid'
+  dither: 'none' | 'floyd-steinberg' | 'hybrid' | 'halftone'
   threshold: number
   inkFloor: number
   paperCeil: number
+  spot?: SpotShape
+  cellSize?: number
 } {
   const threshold = Number(($('ble-threshold') as HTMLInputElement).value) || 170
   // Pinned, not exposed: 255 is bare paper, so this clamp has almost no usable travel and
   // only decides whether faint tone prints AT ALL — never how strongly. Density is set in
   // the vector domain by printDoc(), where the control has real range.
   const paperCeil = 250
-  const dither = ($('ble-ink') as HTMLSelectElement).value as 'none' | 'floyd-steinberg' | 'hybrid'
-  // In hybrid the threshold names the solid-ink floor: everything darker prints solid, so the
-  // slider reads as glyph weight rather than as a global on/off point.
-  return { dither, threshold, inkFloor: threshold, paperCeil }
+  const [mode, spot] = ($('ble-ink') as HTMLSelectElement).value.split(':')
+  // In hybrid and halftone the threshold names the solid-ink floor: everything darker prints
+  // solid, so the slider reads as glyph weight rather than as a global on/off point.
+  const base = { threshold, inkFloor: threshold, paperCeil }
+  if (mode !== 'halftone') {
+    return { ...base, dither: mode as 'none' | 'floyd-steinberg' | 'hybrid' }
+  }
+  // Cell size is a legibility decision, not a preference worth another slider. A round dot
+  // reads at 8 dots (1mm at 203 dpi) and finer is better for tone; a heart or a star needs
+  // roughly half again as much before it is recognisable as anything but a blob.
+  const shape = (spot ?? 'round') as SpotShape
+  return { ...base, dither: 'halftone', spot: shape, cellSize: shape === 'heart' || shape === 'star' ? 12 : 8 }
 }
 
 /**

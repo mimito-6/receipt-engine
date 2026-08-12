@@ -1,4 +1,5 @@
-// RGBA → grayscale → 1-bit black map, via threshold or error-diffusion dithering.
+// RGBA → grayscale → 1-bit black map, via threshold, error diffusion, or shaped screening.
+import { spotMatrix, type SpotShape } from './halftone'
 
 /**
  * `hybrid` exists because a single global threshold cannot satisfy a receipt that mixes
@@ -11,7 +12,7 @@
  * hybrid splits the tonal range instead of choosing a point in it: solid ink stays solid,
  * paper stays clean, and only the mid-tones in between are dithered.
  */
-export type DitherMode = 'none' | 'floyd-steinberg' | 'atkinson' | 'hybrid'
+export type DitherMode = 'none' | 'floyd-steinberg' | 'atkinson' | 'hybrid' | 'halftone'
 
 /** Alpha-composite over white, then luminance (0=black … 255=white). */
 function toGray(rgba: ArrayLike<number>, width: number, height: number): Float32Array {
@@ -36,7 +37,16 @@ export function toBlackMap(
   rgba: ArrayLike<number>,
   width: number,
   height: number,
-  opts: { threshold?: number; dither?: DitherMode; inkFloor?: number; paperCeil?: number } = {},
+  opts: {
+    threshold?: number
+    dither?: DitherMode
+    inkFloor?: number
+    paperCeil?: number
+    /** halftone only: screen cell shape. */
+    spot?: SpotShape
+    /** halftone only: cell size in dots (default 8 — about 1mm at 203 dpi). */
+    cellSize?: number
+  } = {},
 ): Uint8Array {
   const threshold = opts.threshold ?? 128
   const mode = opts.dither ?? 'none'
@@ -47,10 +57,38 @@ export function toBlackMap(
   // slider into both must not be able to reach that state.
   const inkFloor = Math.min(opts.inkFloor ?? 96, paperCeil - 1)
   const gray = toGray(rgba, width, height)
+  const black = new Uint8Array(width * height)
+
+  if (mode === 'halftone') {
+    // Same clamps as hybrid: solid ink stays solid and paper stays clean, so type is never
+    // screened. Only the tones in between are — which is the whole point, since screening
+    // type would put holes in the glyphs.
+    const { size, matrix } = spotMatrix(opts.cellSize ?? 8, opts.spot ?? 'round')
+    const span = Math.max(1, paperCeil - inkFloor)
+    for (let y = 0; y < height; y++) {
+      const row = y % size
+      for (let x = 0; x < width; x++) {
+        const i = y * width + x
+        const l = gray[i]!
+        if (l <= inkFloor) {
+          black[i] = 1
+          continue
+        }
+        if (l >= paperCeil) {
+          black[i] = 0
+          continue
+        }
+        // t is 0 at solid ink and 1 at bare paper, so a darker tone clears a higher threshold
+        // and more of the cell fills.
+        const t = (l - inkFloor) / span
+        black[i] = t < matrix[row * size + (x % size)]! ? 1 : 0
+      }
+    }
+    return black
+  }
   // The clamp decision must read the ORIGINAL luminance. Judging it on the error-modified
   // value is exactly how diffusion eats into solid strokes.
   const source = mode === 'hybrid' ? Float32Array.from(gray) : gray
-  const black = new Uint8Array(width * height)
 
   const at = (x: number, y: number): number => y * width + x
   const add = (x: number, y: number, err: number, f: number): void => {

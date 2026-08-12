@@ -935,6 +935,11 @@
       <label class="field" style="margin-top:8px"><span data-i18n="ble.ink">影像處理</span>
         <select id="ble-ink">
           <option value="hybrid" selected data-i18n="ble.inkHybrid">混合(推薦)— 字銳利 + 保留底圖</option>
+          <option value="halftone:round" data-i18n="ble.inkDotRound">網點 · 圓點(像報紙,較實)</option>
+          <option value="halftone:diamond" data-i18n="ble.inkDotDiamond">網點 · 菱形</option>
+          <option value="halftone:line" data-i18n="ble.inkDotLine">網點 · 斜線</option>
+          <option value="halftone:heart" data-i18n="ble.inkDotHeart">網點 · 愛心</option>
+          <option value="halftone:star" data-i18n="ble.inkDotStar">網點 · 星星</option>
           <option value="none" data-i18n="ble.inkSharp">銳利 — 只留深色,最乾淨</option>
           <option value="floyd-steinberg" data-i18n="ble.inkDither">全抖色 — 照片用,字會變灰</option>
         </select>
@@ -973,6 +978,6 @@
 <footer data-i18n="footer.text">純前端 · 收據不上傳伺服器 · 由 @receipt-engine/render-svg 在瀏覽器內渲染</footer>
 
 <!-- Editor app (bundles the engine). Built from src/app/main.ts -> public/playground.global.js -->
-<script src="./playground.global.js?b=48"></script>
+<script src="./playground.global.js?b=49"></script>
 </body>
 </html>

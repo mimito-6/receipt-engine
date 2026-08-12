@@ -1,10 +1,13 @@
 // @receipt-engine/bitmap — RGBA → 1-bpp thermal bitmap.
 // Browser: feed canvas ImageData. Node: feed decoded PNG RGBA. Output plugs
 // straight into @receipt-engine/escpos (structurally compatible Bitmap1bpp).
+import type { SpotShape } from './halftone'
 import { toBlackMap, type DitherMode } from './dither'
 import { packBits } from './pack'
 
 export type { DitherMode } from './dither'
+export type { SpotShape } from './halftone'
+export { buildSpotMatrix, spotMatrix } from './halftone'
 export { toBlackMap } from './dither'
 export { packBits } from './pack'
 
@@ -24,6 +27,10 @@ export interface ToBitmapOptions {
   inkFloor?: number
   /** hybrid only: at or above this luminance a pixel is bare paper. Default 250. */
   paperCeil?: number
+  /** halftone only: screen cell shape (round / diamond / line / heart / star). */
+  spot?: SpotShape
+  /** halftone only: cell size in dots. Default 8, about 1mm at 203 dpi. */
+  cellSize?: number
 }
 
 /**
@@ -46,6 +53,8 @@ export function imageDataToBitmap(
     dither: opts.dither ?? 'floyd-steinberg',
     inkFloor: opts.inkFloor,
     paperCeil: opts.paperCeil,
+    spot: opts.spot,
+    cellSize: opts.cellSize,
   })
   return { width, height, data: packBits(black, width, height) }
 }
