@@ -61,5 +61,10 @@ export function svgImage(
 ): string {
   const par = options.preserveAspectRatio ?? 'xMidYMid meet'
   const filter = options.filter ? ` filter="${options.filter}"` : ''
-  return `<image href="${escapeXml(href)}" x="${fmt(x)}" y="${fmt(y)}" width="${fmt(width)}" height="${fmt(height)}" preserveAspectRatio="${par}"${filter} />`
+  // BOTH href and xlink:href. Browsers read the SVG2 `href`; Illustrator, Inkscape's older
+  // importers and most print tooling parse SVG 1.1, where `xlink:href` is the only image
+  // reference they recognise — given only `href` they import the document with the images
+  // missing rather than reporting an error.
+  const src = escapeXml(href)
+  return `<image href="${src}" xlink:href="${src}" x="${fmt(x)}" y="${fmt(y)}" width="${fmt(width)}" height="${fmt(height)}" preserveAspectRatio="${par}"${filter} />`
 }

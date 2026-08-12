@@ -15,7 +15,7 @@ import {
   examples,
   state,
 } from './state'
-import { applyScale, render, scheduleRender } from './render'
+import { applyScale, render, scheduleRender, renderSoon } from './render'
 import { addSticker, addStickerAt, ensure, renderStickerList, syncFormFromState } from './form'
 import {
   buildConfig,
@@ -307,7 +307,7 @@ function wire(): void {
   // currency is now a free-text field (datalist suggestions) so any symbol/code works — live update
   $('f-currency').addEventListener('input', function (this: HTMLInputElement) {
     state.receipt.currency = this.value.trim() || 'TWD'
-    render()
+    renderSoon()
   })
 
   // dimensions
@@ -344,11 +344,11 @@ function wire(): void {
   // merchant
   $('f-name').addEventListener('input', function (this: HTMLInputElement) {
     state.receipt.merchant.name = this.value || undefined
-    render()
+    renderSoon()
   })
   $('f-subtitle').addEventListener('input', function (this: HTMLInputElement) {
     state.receipt.merchant.subtitle = this.value || undefined
-    render()
+    renderSoon()
   })
   $('f-icon').addEventListener('input', function (this: HTMLInputElement) {
     state.receipt.merchant.icon = this.value || undefined
@@ -356,7 +356,7 @@ function wire(): void {
       state.receipt.merchant.logo = undefined
       $('logo-status').textContent = ''
     }
-    render()
+    renderSoon()
   })
   $('f-logo').addEventListener('change', function (this: HTMLInputElement) {
     if (this.files && this.files[0])
@@ -375,7 +375,7 @@ function wire(): void {
       const ev = ensure('event')
       ev[key] = this.value || undefined
       if (!Object.keys(ev).some((k) => ev[k])) delete state.receipt.event
-      render()
+      renderSoon()
     })
   }
   evField('e-name', 'name')
@@ -384,15 +384,15 @@ function wire(): void {
   evField('e-date', 'date')
   $('t-no').addEventListener('input', function (this: HTMLInputElement) {
     ensure('transaction').receiptNo = this.value
-    render()
+    renderSoon()
   })
   $('t-at').addEventListener('input', function (this: HTMLInputElement) {
     ensure('transaction').issuedAt = this.value || ''
-    render()
+    renderSoon()
   })
   $('t-cashier').addEventListener('input', function (this: HTMLInputElement) {
     ensure('transaction').cashier = this.value || undefined
-    render()
+    renderSoon()
   })
 
   // qr
@@ -463,7 +463,7 @@ function wire(): void {
     const commit = (): void => {
       const v = hex.value.trim()
       ;(curLook() as any)[key] = clear?.checked ? 'transparent' : HEX_ANY.test(v) ? v : picker.value
-      render()
+      renderSoon()
     }
     picker.addEventListener('input', () => {
       if (clear) clear.checked = false
@@ -487,7 +487,7 @@ function wire(): void {
   wireColor('c-text', 'c-text-hex', 'text')
   $('f-font-latin').addEventListener('change', function (this: HTMLSelectElement) {
     curLook().latinFont = this.value
-    render()
+    renderSoon()
   })
   $('f-font-cjk').addEventListener('change', function (this: HTMLSelectElement) {
     curLook().cjkFont = this.value
@@ -697,27 +697,27 @@ function wire(): void {
   $('s-bgop').addEventListener('input', function (this: HTMLInputElement) {
     ensure('assets').backgroundOpacity = +this.value / 100
     $('v-bgop').textContent = this.value + '%'
-    render()
+    renderSoon()
   })
   $('s-bgsc').addEventListener('input', function (this: HTMLInputElement) {
     ensure('assets').backgroundScale = +this.value / 100
     $('v-bgsc').textContent = this.value + '%'
-    render()
+    renderSoon()
   })
   $('s-bgx').addEventListener('input', function (this: HTMLInputElement) {
     ensure('assets').backgroundX = +this.value
     $('v-bgx').textContent = this.value + 'px'
-    render()
+    renderSoon()
   })
   $('s-bgy').addEventListener('input', function (this: HTMLInputElement) {
     ensure('assets').backgroundY = +this.value
     $('v-bgy').textContent = this.value + 'px'
-    render()
+    renderSoon()
   })
   $('s-bgrot').addEventListener('input', function (this: HTMLInputElement) {
     ensure('assets').backgroundRotation = +this.value
     $('v-bgrot').textContent = this.value + '°'
-    render()
+    renderSoon()
   })
 
   // config file

@@ -85,7 +85,26 @@ export function scheduleRender(): void {
   })
 }
 
+let softTimer: ReturnType<typeof setTimeout> | undefined
+
+/**
+ * Coalesced render, for changes that arrive in bursts — typing, mainly.
+ *
+ * render() replaces the whole canvas with `innerHTML =`, which discards every element and
+ * rebuilds it. Anything the browser has to decode again comes back a frame late, so a
+ * data-URI background image blinks on every keystroke. Rendering once the burst settles turns
+ * a continuous flicker into a single update the eye reads as the result appearing.
+ *
+ * Deliberately not requestAnimationFrame: that still repaints ~60x/second while typing, which
+ * is the same flicker at frame rate.
+ */
+export function renderSoon(): void {
+  clearTimeout(softTimer)
+  softTimer = setTimeout(render, 140)
+}
+
 export function render(): void {
+  clearTimeout(softTimer)
   const check = safeValidateReceipt(state.receipt)
   if (!check.success) {
     showError(t('error.receiptIncomplete') + (check.error?.format() ?? ''))

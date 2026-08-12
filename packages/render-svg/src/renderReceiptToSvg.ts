@@ -477,7 +477,8 @@ function renderInternal(
       `<clipPath id="re-bg"><rect x="${n(cardX)}" y="${n(cardTop)}" width="${n(cardWidth)}" ` +
       `height="${n(cardHeight)}" rx="${n(theme.radius.card)}"/></clipPath>`
     bgImage =
-      `<g clip-path="url(#re-bg)"><image href="${escapeXml(bgSrc)}" x="${n(bgX)}" y="${n(bgY)}" ` +
+      `<g clip-path="url(#re-bg)"><image href="${escapeXml(bgSrc)}" xlink:href="${escapeXml(bgSrc)}" ` +
+      `x="${n(bgX)}" y="${n(bgY)}" ` +
       `width="${n(bgW)}" height="${n(bgH)}" preserveAspectRatio="xMidYMid meet" opacity="${op}"${rotAttr}${filterAttr} /></g>`
   }
 
@@ -496,7 +497,8 @@ function renderInternal(
     ? { x: cardX, y: cardTop, w: cardWidth, h: cardHeight }
     : { x: 0, y: 0, w: width, h: totalHeight }
   const open =
-    `<svg xmlns="http://www.w3.org/2000/svg" width="${n(crop.w)}" height="${n(crop.h)}" ` +
+    `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" ` +
+    `width="${n(crop.w)}" height="${n(crop.h)}" ` +
     `viewBox="${n(crop.x)} ${n(crop.y)} ${n(crop.w)} ${n(crop.h)}" ` +
     `font-family="${escapeXml(theme.typography.fontFamily)}">`
 

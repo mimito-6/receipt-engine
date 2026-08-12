@@ -10,6 +10,7 @@ import { type Draft, type Look, type Pad, type ThemeName, deepClone, isImg, stat
 import { toast } from './feel'
 import { t } from './i18n'
 import { getPrintSettings } from './blePrint'
+import { buildFontFaceCss } from './pngExport'
 
 export function defaultPad(theme: ThemeName): Pad {
   const p = getTheme(theme).spacing.page || 30
@@ -86,10 +87,23 @@ export function currentSvg(): string {
 
 // PNG export (with font embedding) lives in ./pngExport.ts.
 
-export function downloadSvg(): void {
+export async function downloadSvg(): Promise<void> {
   // belt-and-braces (doExport already validates): never throw silently mid-export
   try {
-    dl('receipt.svg', new Blob([currentSvg()], { type: 'image/svg+xml' }))
+    // Embed the fonts, as the PNG path already does. Without them the file renders in
+    // whatever the opening machine happens to have installed, which is why exported type
+    // came back reflowed. Best-effort: a font fetch that fails must not lose the export.
+    let css = ''
+    try {
+      css = await buildFontFaceCss()
+    } catch {
+      /* fall through with no @font-face */
+    }
+    const svg = renderReceiptToSvg(
+      state.receipt as never,
+      exportOpts({ fontFaceCss: css, includeXmlDeclaration: true }) as never,
+    )
+    dl('receipt.svg', new Blob([svg], { type: 'image/svg+xml' }))
     toast(t('toast.svg'))
   } catch {
     toast(t('error.receiptIncomplete'))

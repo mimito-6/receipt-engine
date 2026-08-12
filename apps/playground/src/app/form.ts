@@ -1,7 +1,7 @@
 // Left-panel form: repeatable rows (items / discounts / payments / stickers),
 // and syncFormFromState which pushes the whole state back into the inputs.
 import { $, clientToReceipt, svgEl } from './dom'
-import { render } from './render'
+import { render, renderSoon } from './render'
 import { layoutOverlay, popSticker } from './overlay'
 import { type Draft, clamp, curEdges, curLook, curMono, curPad, curWidth, esc, isImg, state } from './state'
 import { toast } from './feel'
@@ -62,7 +62,7 @@ export function renderItems(): void {
         it[k] = v
         if (v !== num) inp.value = String(v)
       }
-      render()
+      renderSoon()
     })
   })
   box.querySelectorAll('[data-rm]').forEach((b) => {
@@ -100,7 +100,7 @@ export function renderDiscounts(): void {
         d.amount = clamp(num, 0, 1e9)
         if (d.amount !== num) inp.value = String(d.amount)
       }
-      render()
+      renderSoon()
     })
   })
   box.querySelectorAll('[data-rm]').forEach((b) => {
@@ -139,7 +139,7 @@ export function renderPayments(): void {
         p.amount = clamp(num, 0, 1e9)
         if (p.amount !== num) inp.value = String(p.amount)
       }
-      render()
+      renderSoon()
     })
   })
   box.querySelectorAll('[data-rm]').forEach((b) => {

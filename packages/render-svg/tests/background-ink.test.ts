@@ -102,3 +102,39 @@ describe('backgroundInkBoost', () => {
     )
   })
 })
+
+// Illustrator, and most print tooling, parse SVG 1.1 — where xlink:href is the only image
+// reference they recognise. Given only the SVG2 `href` they import the document with the
+// images silently missing, which is how an exported receipt arrived with no artwork.
+describe('SVG 1.1 image compatibility', () => {
+  const withArt = {
+    ...(receipt as object),
+    assets: { backgroundImage: PNG, backgroundOpacity: 0.3, logo: PNG },
+    // An image sticker exercises svgImage(), the shared helper the logo and stickers go
+    // through — a different code path from the background image's own <image> tag.
+    stickers: [{ content: PNG, x: 10, y: 10, size: 40, anchor: 'free' }],
+  } as never
+
+  it('declares the xlink namespace, or the file is not valid XML', () => {
+    const svg = renderReceiptToSvg(withArt, {})
+    expect(svg).toContain('xmlns:xlink="http://www.w3.org/1999/xlink"')
+  })
+
+  it('gives every image both href and xlink:href', () => {
+    const svg = renderReceiptToSvg(withArt, {})
+    const images = [...svg.matchAll(/<image\b[^>]*>/g)].map((m) => m[0])
+    expect(images.length).toBeGreaterThan(0)
+    for (const tag of images) {
+      expect(tag, `image without xlink:href: ${tag}`).toMatch(/\sxlink:href="/)
+      expect(tag, `image without href: ${tag}`).toMatch(/\shref="/)
+      // Both must point at the same asset — a mismatch renders differently per tool.
+      const href = tag.match(/\shref="([^"]*)"/)![1]
+      const xlink = tag.match(/\sxlink:href="([^"]*)"/)![1]
+      expect(xlink).toBe(href)
+    }
+  })
+
+  it('keeps the crop path emitting the namespace too', () => {
+    expect(renderReceiptToSvg(withArt, { cropToCard: true })).toContain('xmlns:xlink=')
+  })
+})
