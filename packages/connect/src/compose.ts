@@ -1,7 +1,7 @@
 // High-level one-call flows that tie the browser raster bridge to the pure
 // bitmap/escpos packages. Feed a (thermal) SVG string and a printer or share.
 import { buildPrintJob, type PrintJobOptions } from '@receipt-engine/escpos'
-import { imageDataToBitmap, type ToBitmapOptions } from '@receipt-engine/bitmap'
+import { imageDataToBitmap, packBits, toBlackMap, type ToBitmapOptions } from '@receipt-engine/bitmap'
 import { PAPER_58, receiptMetadata, type ReceiptMetadata } from '@receipt-engine/core'
 import type { PrintOptions } from './bluetooth'
 import type { PrinterProfile } from './profiles'
@@ -101,6 +101,66 @@ export async function receiptSvgToEscposWithMetadata(
   const { dots, job } = resolveJob(opts)
   const { data, width, height } = await (opts.rasterize ?? svgToImageData)(svg, { width: dots })
   const bmp = imageDataToBitmap(data, width, height, opts.bitmap)
+  return {
+    escposBytes: buildPrintJob(bmp, job),
+    metadata: receiptMetadata({
+      widthDots: width,
+      heightDots: height,
+      dpi: opts.printer?.paper.dpi,
+      feedAfterPrintMm: job.feedAfterPrintMm,
+    }),
+  }
+}
+
+/** One layer of a print: what to draw, and how that content should become 1-bit. */
+export interface PrintLayer {
+  svg: string
+  bitmap?: ToBitmapOptions
+}
+
+/**
+ * Build one print from several layers, each converted to 1-bit on its own terms.
+ *
+ * A single conversion has to treat the whole sheet the same way, because by then a pixel is
+ * just a pixel — nothing distinguishes a letter from a background sketch. Converting each
+ * layer separately keeps that distinction: type can take a hard threshold and stay crisp
+ * while artwork takes a screen, and the results are OR-ed, so a dot from any layer prints.
+ *
+ * Every layer must be rendered at the same geometry, which is what the renderer's `layers`
+ * option guarantees.
+ */
+export async function receiptLayersToEscposWithMetadata(
+  layers: PrintLayer[],
+  opts: PrintReceiptOptions = {},
+): Promise<EscposBuildResult> {
+  if (!layers.length) throw new Error('receiptLayers: at least one layer is required')
+  const { dots, job } = resolveJob(opts)
+  const raster = opts.rasterize ?? svgToImageData
+
+  let merged: Uint8Array | null = null
+  let width = 0
+  let height = 0
+  for (const l of layers) {
+    const img = await raster(l.svg, { width: dots })
+    const black = toBlackMap(img.data, img.width, img.height, {
+      dither: 'hybrid',
+      ...l.bitmap,
+    })
+    if (!merged) {
+      merged = black
+      width = img.width
+      height = img.height
+      continue
+    }
+    if (img.width !== width || img.height !== height) {
+      throw new Error(
+        `receiptLayers: layer geometry differs (${width}x${height} vs ${img.width}x${img.height})`,
+      )
+    }
+    for (let i = 0; i < merged.length; i++) if (black[i]) merged[i] = 1
+  }
+
+  const bmp = { width, height, data: packBits(merged!, width, height) }
   return {
     escposBytes: buildPrintJob(bmp, job),
     metadata: receiptMetadata({

@@ -4,7 +4,7 @@
 // stream — is checkable without hardware or a canvas.
 import { describe, expect, it } from 'vitest'
 import { PAPER_58, PAPER_80 } from '@receipt-engine/core'
-import { receiptSvgToEscposWithMetadata, resolveJob } from '../src/compose'
+import { receiptLayersToEscposWithMetadata, receiptSvgToEscposWithMetadata, resolveJob } from '../src/compose'
 import { GENERIC_BLE_58, GPRINTER_BLE_80 } from '../src/profiles'
 
 /**
@@ -151,5 +151,83 @@ describe('the public options actually reach the pipeline', () => {
     // …but a genuinely different arrangement, or the shape option is doing nothing.
     expect(heart).not.toEqual(star)
     expect(heart).not.toEqual(round)
+  })
+})
+
+// Per-content screening. After rasterization a pixel is just a pixel, so the only place type
+// can be told apart from artwork is before it is flattened — render the layers separately,
+// convert each on its own terms, and combine.
+describe('layered printing', () => {
+  const field = (l: number, rows = 32) =>
+    async (_svg: string, o: { width: number }) => {
+      const data = new Uint8ClampedArray(o.width * rows * 4).fill(l)
+      for (let i = 0; i < o.width * rows; i++) data[i * 4 + 3] = 255
+      return { width: o.width, height: rows, data }
+    }
+
+  const ink = (b: Uint8Array): number => {
+    let n = 0
+    for (const x of b) for (let k = 0; k < 8; k++) n += (x >> k) & 1
+    return n
+  }
+
+  it('combines layers so a dot from any one of them prints', async () => {
+    // Layer A inks nothing (bare paper); layer B inks everything (solid). The union is solid.
+    const both = await receiptLayersToEscposWithMetadata(
+      [
+        { svg: 'a', bitmap: { dither: 'none', threshold: 128 } },
+        { svg: 'b', bitmap: { dither: 'none', threshold: 128 } },
+      ],
+      {
+        printer: GPRINTER_BLE_80,
+        rasterize: (async (svg: string, o: { width: number }) =>
+          svg === 'a' ? field(255)(svg, o) : field(0)(svg, o)) as never,
+      },
+    )
+    const solidOnly = await receiptSvgToEscposWithMetadata('b', {
+      printer: GPRINTER_BLE_80,
+      rasterize: field(0),
+      bitmap: { dither: 'none', threshold: 128 },
+    })
+    expect(ink(both.escposBytes)).toBe(ink(solidOnly.escposBytes))
+  })
+
+  it('lets each layer use a different conversion', async () => {
+    // The same grey, screened two ways: the arrangement must differ even though tone matches.
+    const asHeart = await receiptLayersToEscposWithMetadata(
+      [{ svg: 'x', bitmap: { dither: 'halftone', spot: 'heart', cellSize: 12 } }],
+      { printer: GPRINTER_BLE_80, rasterize: field(190, 48) },
+    )
+    const asStar = await receiptLayersToEscposWithMetadata(
+      [{ svg: 'x', bitmap: { dither: 'halftone', spot: 'star', cellSize: 12 } }],
+      { printer: GPRINTER_BLE_80, rasterize: field(190, 48) },
+    )
+    expect(ink(asHeart.escposBytes)).toBe(ink(asStar.escposBytes))
+    expect(asHeart.escposBytes).not.toEqual(asStar.escposBytes)
+  })
+
+  it('refuses layers whose geometry does not line up', async () => {
+    await expect(
+      receiptLayersToEscposWithMetadata(
+        [{ svg: 'tall' }, { svg: 'short' }],
+        {
+          printer: GPRINTER_BLE_80,
+          rasterize: (async (svg: string, o: { width: number }) =>
+            svg === 'tall' ? field(0, 80)(svg, o) : field(0, 20)(svg, o)) as never,
+        },
+      ),
+    ).rejects.toThrow(/geometry differs/i)
+  })
+
+  it('reports the same measurements as a single-layer print of the same size', async () => {
+    const layered = await receiptLayersToEscposWithMetadata([{ svg: 'x' }], {
+      printer: GPRINTER_BLE_80,
+      rasterize: field(0, 1143),
+    })
+    const single = await receiptSvgToEscposWithMetadata('x', {
+      printer: GPRINTER_BLE_80,
+      rasterize: field(0, 1143),
+    })
+    expect(layered.metadata).toEqual(single.metadata)
   })
 })

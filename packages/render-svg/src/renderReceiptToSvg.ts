@@ -102,6 +102,18 @@ export interface RenderSvgOptions {
    * bytes, and the difference between a smooth print and a stuttering one.
    */
   hideCardBorder?: boolean
+  /**
+   * Emit only these layers, on the SAME canvas geometry as the full render.
+   *
+   * Exists so a print can convert each kind of content to 1-bit on its own terms. After
+   * rasterization a pixel is just a pixel — there is no telling type from artwork — so the
+   * only place the distinction still exists is here, before it is flattened. Render the
+   * layers separately, screen each one differently, and combine the results.
+   *
+   * Geometry is unaffected: every layer comes out the same size with everything in the same
+   * place, so the pieces line up exactly.
+   */
+  layers?: RenderLayer[]
   /** Omit ONLY the page background (the desk behind the card). The card itself —
    *  its shape, surface colour, border, torn edges and background image — is kept,
    *  so a clean PNG is just the receipt card on a transparent backdrop, ready to print. */
@@ -147,6 +159,11 @@ const LEGACY_BLOCK_ALIASES: Record<string, BlockKey[]> = {
 
 const DEFAULT_CARD_WIDTH = 720
 const THERMAL_WIDTH = 384
+/** Content groups that can be rendered independently. */
+export type RenderLayer = 'background' | 'card' | 'artwork' | 'decorations' | 'content' | 'stickers'
+
+const ALL_LAYERS: RenderLayer[] = ['background', 'card', 'artwork', 'decorations', 'content', 'stickers']
+
 const MONO_FILTER_ID = 're-mono'
 const BG_INK_FILTER_ID = 're-bg-ink'
 
@@ -502,17 +519,19 @@ function renderInternal(
     `viewBox="${n(crop.x)} ${n(crop.y)} ${n(crop.w)} ${n(crop.h)}" ` +
     `font-family="${escapeXml(theme.typography.fontFamily)}">`
 
+  const wanted = new Set<RenderLayer>(options.layers ?? ALL_LAYERS)
+  const layer = (name: RenderLayer, content: string): string => (wanted.has(name) ? content : '')
   const svg =
     xmlDecl +
     open +
     defs +
     fontStyle +
-    background +
-    card +
-    bgImage +
-    decorations +
-    parts.join('') +
-    stickerLayer +
+    layer('background', background) +
+    layer('card', card) +
+    layer('artwork', bgImage) +
+    layer('decorations', decorations) +
+    layer('content', parts.join('')) +
+    layer('stickers', stickerLayer) +
     '</svg>'
 
   return { svg, widthDots: Math.round(crop.w), heightDots: Math.round(crop.h) }

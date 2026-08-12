@@ -12,6 +12,8 @@ export type {
   TransportDiagnostics,
   WriteOptions,
 } from './transport'
+export { receiptLayersToEscposWithMetadata } from './compose'
+export type { PrintLayer } from './compose'
 export {
   TRANSMISSION_MODES,
   getTransmissionMode,

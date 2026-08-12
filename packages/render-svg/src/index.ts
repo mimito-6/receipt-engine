@@ -2,6 +2,7 @@ export {
   renderReceiptToSvg,
   renderReceiptWithMetadata,
   type RenderSvgOptions,
+  type RenderLayer,
   type RenderedReceipt,
 } from './renderReceiptToSvg'
 export { renderQrSvg, renderQrGroup, type QrOptions } from './qr'

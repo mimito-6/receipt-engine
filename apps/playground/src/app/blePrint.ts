@@ -5,7 +5,7 @@
 // composition intact. The design's SVG is rasterized straight to the head width, which keeps
 // the exact proportions AND is natively 576 dots (vector re-render, not a bitmap upscale).
 import { PAPER_58, PAPER_80, type PaperProfile } from '@receipt-engine/core'
-import { renderReceiptToSvg } from '@receipt-engine/render-svg'
+import { renderReceiptToSvg, type RenderLayer } from '@receipt-engine/render-svg'
 import { mergeTheme } from '@receipt-engine/themes'
 import { toBlackMap, type SpotShape } from '@receipt-engine/bitmap'
 import { buildFontFaceCss } from './pngExport'
@@ -13,7 +13,7 @@ import {
   BleTransport,
   getPrinterProfile,
   getTransmissionMode,
-  receiptSvgToEscposWithMetadata,
+  receiptLayersToEscposWithMetadata,
   svgToImageData,
   type PrinterProfile,
   type TransmissionModeName,
@@ -110,8 +110,9 @@ async function ensurePrintFontCss(): Promise<string> {
   return printFontCss
 }
 
-function buildPrintSvg(_paper: PaperProfile): string {
+function buildPrintSvg(_paper: PaperProfile, layers?: RenderLayer[]): string {
   const extra: Record<string, unknown> = {
+    ...(layers ? { layers } : {}),
     // Embed the design's own faces; without this the print is a different typeface entirely.
     ...(printFontCss ? { fontFaceCss: printFontCss } : {}),
     // Thermal paper is already white and every dot costs ink and battery, so the page
@@ -212,20 +213,43 @@ function printDoc(): unknown {
  * solid glyphs into grey stipple, so a hard threshold is the default and dithering is
  * opt-in for designs carrying photos or gradients.
  */
-function bitmapOpts(): {
+type BitmapOpts = {
   dither: 'none' | 'floyd-steinberg' | 'hybrid' | 'halftone'
   threshold: number
   inkFloor: number
   paperCeil: number
   spot?: SpotShape
   cellSize?: number
-} {
+}
+
+/**
+ * The three kinds of content on a receipt, each converted to 1-bit on its own terms.
+ *
+ * After rasterization a pixel carries no idea what drew it, so a single conversion has to
+ * treat a letter and a background sketch identically — which is why screening the artwork
+ * used to speckle the type's surroundings and make the whole sheet look misprinted. Rendering
+ * these separately is the only place the distinction still exists.
+ */
+const PRINT_LAYERS: Array<{ layers: RenderLayer[]; opts: () => BitmapOpts }> = [
+  // Type, rules and QR: always a hard threshold. Screening them is never what anyone wants.
+  { layers: ['card', 'content', 'decorations'], opts: () => sharpOpts() },
+  { layers: ['artwork'], opts: () => bitmapOpts('ble-ink', 'ble-dotsize') },
+  { layers: ['stickers'], opts: () => bitmapOpts('ble-ink-stickers', 'ble-dotsize-st') },
+]
+
+/** Type is never screened; the threshold is the only thing that shapes it. */
+function sharpOpts(): BitmapOpts {
+  const threshold = Number(($('ble-threshold') as HTMLInputElement).value) || 170
+  return { dither: 'none', threshold, inkFloor: threshold, paperCeil: 250 }
+}
+
+function bitmapOpts(selectId = 'ble-ink', grainId = 'ble-dotsize'): BitmapOpts {
   const threshold = Number(($('ble-threshold') as HTMLInputElement).value) || 170
   // Pinned, not exposed: 255 is bare paper, so this clamp has almost no usable travel and
   // only decides whether faint tone prints AT ALL — never how strongly. Density is set in
   // the vector domain by printDoc(), where the control has real range.
   const paperCeil = 250
-  const [mode, spot] = ($('ble-ink') as HTMLSelectElement).value.split(':')
+  const [mode, spot] = ($(selectId) as HTMLSelectElement).value.split(':')
   // In hybrid and halftone the threshold names the solid-ink floor: everything darker prints
   // solid, so the slider reads as glyph weight rather than as a global on/off point.
   const base = { threshold, inkFloor: threshold, paperCeil }
@@ -236,7 +260,7 @@ function bitmapOpts(): {
   // decided here. Bigger cells make the shape unmistakable and the texture coarse; smaller
   // ones reproduce tone more finely and eventually stop reading as a shape at all.
   const shape = (spot ?? 'round') as SpotShape
-  const cellSize = Number(($('ble-dotsize') as HTMLInputElement).value) || 12
+  const cellSize = Number(($(grainId) as HTMLInputElement).value) || 12
   return { ...base, dither: 'halftone', spot: shape, cellSize }
 }
 
@@ -251,7 +275,12 @@ function feedMm(): number {
 // Rasterizing the SVG is the slow step; thresholding the pixels is not. Cache by the SVG
 // itself so dragging the threshold re-thresholds cached pixels, while a density change (which
 // alters the SVG) correctly invalidates and re-renders.
-let previewCache: { key: string; width: number; height: number; data: Uint8ClampedArray } | null = null
+let previewCache: {
+  key: string
+  width: number
+  height: number
+  layers: Uint8ClampedArray[]
+} | null = null
 let previewTimer: ReturnType<typeof setTimeout> | undefined
 
 /**
@@ -266,18 +295,22 @@ async function drawPreview(): Promise<void> {
   if (!cx) return
   await ensurePrintFontCss()
   const paper = paperProfile()
-  const svg = buildPrintSvg(paper)
-  // Keyed on the paper too: the SVG is identical across paper sizes (it is rasterized to the
-  // head width downstream, not re-laid-out), so keying on it alone served a 384-dot raster
-  // for an 80mm print.
+  // The preview must be built exactly as the print is — layer by layer, each converted on its
+  // own terms — or it shows something the printer will never produce.
+  const svgs = PRINT_LAYERS.map((l) => buildPrintSvg(paper, l.layers))
   const key = `${paper.printableWidthDots}
-${svg}`
+${svgs.join(' ')}`
   if (!previewCache || previewCache.key !== key) {
-    const img = await svgToImageData(svg, { width: paper.printableWidthDots })
-    previewCache = { key, width: img.width, height: img.height, data: img.data }
+    const imgs = []
+    for (const svg of svgs) imgs.push(await svgToImageData(svg, { width: paper.printableWidthDots }))
+    previewCache = { key, width: imgs[0]!.width, height: imgs[0]!.height, layers: imgs.map((i) => i.data) }
   }
-  const { width, height, data } = previewCache
-  const black = toBlackMap(data, width, height, bitmapOpts())
+  const { width, height, layers: layerData } = previewCache
+  const black = new Uint8Array(width * height)
+  layerData.forEach((data, i) => {
+    const m = toBlackMap(data, width, height, PRINT_LAYERS[i]!.opts())
+    for (let k = 0; k < black.length; k++) if (m[k]) black[k] = 1
+  })
   const out = cx.createImageData(width, height)
   for (let i = 0; i < black.length; i++) {
     const v = black[i] ? 0 : 255
@@ -317,6 +350,9 @@ export function getPrintSettings(): Record<string, unknown> {
     paper: sel('ble-paper').value,
     mode: sel('ble-mode').value,
     ink: sel('ble-ink').value,
+    inkStickers: sel('ble-ink-stickers').value,
+    dotSize: Number(($('ble-dotsize') as HTMLInputElement).value),
+    dotSizeStickers: Number(($('ble-dotsize-st') as HTMLInputElement).value),
     threshold: Number(($('ble-threshold') as HTMLInputElement).value),
     bgDensity: Number(($('ble-bgdensity') as HTMLInputElement).value),
     feedMm: Number(($('ble-feed') as HTMLInputElement).value),
@@ -345,6 +381,9 @@ export function applyPrintSettings(cfg: unknown): void {
   setSel('ble-paper', p.paper)
   setSel('ble-mode', p.mode)
   setSel('ble-ink', p.ink)
+  setSel('ble-ink-stickers', p.inkStickers)
+  setNum('ble-dotsize', p.dotSize)
+  setNum('ble-dotsize-st', p.dotSizeStickers)
   setNum('ble-threshold', p.threshold)
   setNum('ble-bgdensity', p.bgDensity)
   setNum('ble-feed', p.feedMm)
@@ -359,6 +398,8 @@ export function refreshPrintPanel(): void {
     ['ble-threshold', 'ble-threshold-v'],
     ['ble-bgdensity', 'ble-bgdensity-v'],
     ['ble-feed', 'ble-feed-v'],
+    ['ble-dotsize', 'ble-dotsize-v'],
+    ['ble-dotsize-st', 'ble-dotsize-st-v'],
   ] as const) {
     $(out).textContent = ($(id) as HTMLInputElement).value
   }
@@ -448,13 +489,10 @@ async function printCurrent(): Promise<void> {
     await ensurePrintFontCss()
     const paper = paperProfile()
     const printer = printerProfile()
-    const svg = buildPrintSvg(paper)
-    const { escposBytes, metadata } = await receiptSvgToEscposWithMetadata(svg, {
-      printer,
-      dots: paper.printableWidthDots,
-      bitmap: bitmapOpts(),
-      job: { feedAfterPrintMm: feedMm() },
-    })
+    const { escposBytes, metadata } = await receiptLayersToEscposWithMetadata(
+      PRINT_LAYERS.map((l) => ({ svg: buildPrintSvg(paper, l.layers), bitmap: l.opts() })),
+      { printer, dots: paper.printableWidthDots, job: { feedAfterPrintMm: feedMm() } },
+    )
     const stats = {
       '版面寬 Width (dots)': metadata.widthDots,
       '版面高 Height (dots)': metadata.heightDots,
@@ -543,13 +581,10 @@ async function estimate(): Promise<void> {
     await ensurePrintFontCss()
     const paper = paperProfile()
     const printer = printerProfile()
-    const svg = buildPrintSvg(paper)
-    const { escposBytes, metadata } = await receiptSvgToEscposWithMetadata(svg, {
-      printer,
-      dots: paper.printableWidthDots,
-      bitmap: bitmapOpts(),
-      job: { feedAfterPrintMm: feedMm() },
-    })
+    const { escposBytes, metadata } = await receiptLayersToEscposWithMetadata(
+      PRINT_LAYERS.map((l) => ({ svg: buildPrintSvg(paper, l.layers), bitmap: l.opts() })),
+      { printer, dots: paper.printableWidthDots, job: { feedAfterPrintMm: feedMm() } },
+    )
     const ink = inkCoverage(escposBytes, metadata.widthDots, metadata.heightDots)
     setStatus(
       `${metadata.widthDots}×${metadata.heightDots} dots · ${metadata.estimatedLengthMm}mm · ` +
@@ -589,8 +624,12 @@ export function initBlePrint(): void {
   bindRange('ble-threshold', 'ble-threshold-v')
   bindRange('ble-bgdensity', 'ble-bgdensity-v')
   bindRange('ble-dotsize', 'ble-dotsize-v')
+  bindRange('ble-dotsize-st', 'ble-dotsize-st-v')
   bindRange('ble-feed', 'ble-feed-v')
-  for (const id of ['ble-threshold', 'ble-bgdensity', 'ble-dotsize', 'ble-ink', 'ble-mono', 'ble-paper']) {
+  for (const id of [
+    'ble-threshold', 'ble-bgdensity', 'ble-dotsize', 'ble-dotsize-st',
+    'ble-ink', 'ble-ink-stickers', 'ble-mono', 'ble-paper',
+  ]) {
     $(id).addEventListener('input', schedulePreview)
     $(id).addEventListener('change', schedulePreview)
   }
@@ -609,12 +648,13 @@ export function initBlePrint(): void {
   const syncLive = (): void => {
     setLive('ble-threshold', ink.value !== 'floyd-steinberg')
     // Grain only means anything to a screen.
-    const row = $('ble-dot-row')
-    row.style.display = ink.value.startsWith('halftone') ? '' : 'none'
+    $('ble-dot-row').style.display = ink.value.startsWith('halftone') ? '' : 'none'
+    $('ble-dot-row-st').style.display = sel('ble-ink-stickers').value.startsWith('halftone') ? '' : 'none'
     setLive('ble-bgdensity', !!bgAssets()?.backgroundImage)
   }
   syncLiveControls = syncLive
   ink.addEventListener('change', syncLive)
+  sel('ble-ink-stickers').addEventListener('change', syncLive)
   document.addEventListener('re:design-changed', () => {
     // The embedded faces are subsetted to the glyphs actually used, so changing the text or
     // the font picker invalidates them.
