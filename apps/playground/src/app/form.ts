@@ -287,6 +287,9 @@ export function syncFormFromState(): void {
   $('logo-status').textContent = m.logo ? t('status.logoSetSync') : ''
   val('e-name', ev.name)
   val('e-booth', ev.boothNumber || ev.boothName)
+  // Absent means the historical default; show it so the box reflects what is printed and can
+  // be cleared. An explicit empty string stays empty.
+  val('e-boothlabel', ev.boothLabel ?? (ev.boothNumber ? 'Booth' : ''))
   val('e-location', ev.location)
   val('e-date', ev.date)
   val('t-no', tx.receiptNo)
@@ -327,6 +330,9 @@ export function syncFormFromState(): void {
   const bop = a.backgroundOpacity != null ? a.backgroundOpacity : 0.3
   ;($('s-bgop') as HTMLInputElement).value = String(Math.round(bop * 100))
   $('v-bgop').textContent = Math.round(bop * 100) + '%'
+  const lsc = (state.receipt.merchant as { logoScale?: number } | undefined)?.logoScale ?? 1
+  ;($('s-logosc') as HTMLInputElement).value = String(Math.round(lsc * 100))
+  $('v-logosc').textContent = Math.round(lsc * 100) + '%'
   const bsc = a.backgroundScale != null ? a.backgroundScale : 1
   ;($('s-bgsc') as HTMLInputElement).value = String(Math.round(bsc * 100))
   $('v-bgsc').textContent = Math.round(bsc * 100) + '%'

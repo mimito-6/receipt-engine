@@ -780,6 +780,8 @@
           <input type="text" id="f-icon" placeholder="或一個字當圖示" data-i18n-ph="placeholder.icon" />
         </div>
         <div id="logo-status" class="muted-note"></div>
+        <label class="field"><span data-i18n="field.logoScale">商標大小</span> <span id="v-logosc" class="hint"></span></label>
+        <input type="range" id="s-logosc" min="25" max="400" step="5" />
         <div class="sub-label" data-i18n="subLabel.background">底圖 / 背景(透明度・大小・位置)</div>
         <div class="row2">
           <button class="btn ghost upload"><span data-i18n="btn.uploadBg">上傳底圖</span><input type="file" id="f-bg" accept="image/*" /></button>
@@ -824,8 +826,12 @@
         <div class="muted-note autofill" data-i18n="field.autofill">可留空,接結帳系統時會自動帶入</div>
         <label class="field" data-i18n="field.eventName">活動名稱</label><input type="text" id="e-name" placeholder="例如:Artist Alley" data-i18n-ph="placeholder.eventName" />
         <div class="row2">
+          <div><label class="field" data-i18n="field.boothLabel">攤位前綴</label><input type="text" id="e-boothlabel" placeholder="Booth" data-i18n-ph="placeholder.boothLabel" /></div>
           <div><label class="field" data-i18n="field.boothNumber">攤位編號</label><input type="text" id="e-booth" placeholder="A12" /></div>
+        </div>
+        <div class="row2">
           <div><label class="field" data-i18n="field.location">地點</label><input type="text" id="e-location" placeholder="Taipei" /></div>
+          <div></div>
         </div>
         <label class="field" data-i18n="field.date">日期</label><input type="text" id="e-date" placeholder="2026-06-01" />
       </details>
@@ -1010,6 +1016,6 @@
 <footer data-i18n="footer.text">純前端 · 收據不上傳伺服器 · 由 @receipt-engine/render-svg 在瀏覽器內渲染</footer>
 
 <!-- Editor app (bundles the engine). Built from src/app/main.ts -> public/playground.global.js -->
-<script src="./playground.global.js?b=55"></script>
+<script src="./playground.global.js?b=57"></script>
 </body>
 </html>

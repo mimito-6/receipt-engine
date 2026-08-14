@@ -14,6 +14,8 @@ export const MerchantSchema = z.object({
   subtitle: z.string().optional(),
   /** URL, data URI, or relative path. */
   logo: z.string().optional(),
+  /** Multiplier on the logo's default box (1 = as-is). Clamped by the renderer. */
+  logoScale: z.number().positive().optional(),
   /** emoji, URL, data URI, or relative path. */
   icon: z.string().optional(),
   address: z.string().optional(),
@@ -25,6 +27,12 @@ export const EventSchema = z.object({
   name: z.string().optional(),
   boothName: z.string().optional(),
   boothNumber: z.string().optional(),
+  /**
+   * Word printed before the booth number. Defaults to "Booth" when absent; set it to an empty
+   * string to print the number alone. It was hardcoded, so a receipt could not carry a booth
+   * number without an English word attached to it.
+   */
+  boothLabel: z.string().optional(),
   location: z.string().optional(),
   date: z.string().optional(),
 })

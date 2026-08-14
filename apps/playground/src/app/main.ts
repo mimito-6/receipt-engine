@@ -405,6 +405,13 @@ function wire(): void {
   }
   evField('e-name', 'name')
   evField('e-booth', 'boothNumber')
+  // NOT evField: that maps '' to undefined, and undefined is what means "use the default
+  // Booth". Clearing the box has to survive as an empty string or it cannot turn the word off.
+  $('e-boothlabel').addEventListener('input', function (this: HTMLInputElement) {
+    const ev = ensure('event')
+    ev.boothLabel = this.value
+    renderSoon()
+  })
   evField('e-location', 'location')
   evField('e-date', 'date')
   $('t-no').addEventListener('input', function (this: HTMLInputElement) {
@@ -722,6 +729,13 @@ function wire(): void {
   $('s-bgop').addEventListener('input', function (this: HTMLInputElement) {
     ensure('assets').backgroundOpacity = +this.value / 100
     $('v-bgop').textContent = this.value + '%'
+    renderSoon()
+  })
+  $('s-logosc').addEventListener('input', function (this: HTMLInputElement) {
+    // Lives on merchant, next to the logo it scales, so it travels with the design and is
+    // saved by the config file without any extra plumbing.
+    ensure('merchant').logoScale = +this.value / 100
+    $('v-logosc').textContent = this.value + '%'
     renderSoon()
   })
   $('s-bgsc').addEventListener('input', function (this: HTMLInputElement) {

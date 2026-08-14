@@ -136,3 +136,89 @@ describe('cropToCard', () => {
     expect(box(renderReceiptToSvg(design, {})).slice(0, 2)).toEqual([0, 0])
   })
 })
+
+// The logo box was a constant, so a mark that came out too small or too dominant could not be
+// adjusted at all without editing the theme.
+describe('logo scale', () => {
+  const PNG = 'data:image/png;base64,iVBORw0KGgo='
+  const withLogo = (logoScale?: number) =>
+    ({
+      schemaVersion: '0.1',
+      currency: 'TWD',
+      merchant: { name: 'Scale', logo: PNG, ...(logoScale != null ? { logoScale } : {}) },
+      transaction: { receiptNo: '1', issuedAt: '2026-06-01T12:00' },
+      items: [{ name: 'Item', quantity: 1, unitPrice: 100 }],
+    }) as never
+
+  /** Width and height of the logo <image> as drawn. */
+  function logoRect(svg: string): { w: number; h: number } {
+    const m = svg.match(/<image[^>]*width="([\d.]+)"[^>]*height="([\d.]+)"/)!
+    return { w: Number(m[1]), h: Number(m[2]) }
+  }
+
+  it('scales the mark, keeping the box proportions', () => {
+    const base = logoRect(renderReceiptToSvg(withLogo(), {}))
+    const big = logoRect(renderReceiptToSvg(withLogo(2), {}))
+    expect(big.w / base.w).toBeCloseTo(2, 3)
+    expect(big.h / base.h).toBeCloseTo(2, 3)
+    // Aspect is preserved, so the mark is never stretched.
+    expect(big.w / big.h).toBeCloseTo(base.w / base.h, 5)
+  })
+
+  it('shrinks as well as grows', () => {
+    const small = logoRect(renderReceiptToSvg(withLogo(0.5), {}))
+    const base = logoRect(renderReceiptToSvg(withLogo(), {}))
+    expect(small.w).toBeLessThan(base.w)
+    expect(small.w / base.w).toBeCloseTo(0.5, 3)
+  })
+
+  it('never lets the mark grow past the sheet', () => {
+    const svg = renderReceiptToSvg(withLogo(99), {})
+    const width = Number(svg.match(/viewBox="0 0 (\d+)/)![1])
+    const { w } = logoRect(svg)
+    expect(w).toBeLessThanOrEqual(width)
+  })
+
+  it('is a no-op when unset, so existing designs are untouched', () => {
+    expect(renderReceiptToSvg(withLogo(), {})).toBe(renderReceiptToSvg(withLogo(1), {}))
+  })
+})
+
+// "Booth" was hardcoded in front of the booth number, so a receipt could carry the number or
+// nothing, but never the number without an English word attached to it.
+describe('booth prefix', () => {
+  const withEvent = (event: Record<string, unknown>) =>
+    ({
+      schemaVersion: '0.1',
+      currency: 'TWD',
+      merchant: { name: 'Stall' },
+      transaction: { receiptNo: '1', issuedAt: '2026-06-01T12:00' },
+      items: [{ name: 'Item', quantity: 1, unitPrice: 100 }],
+      event,
+    }) as never
+
+  const textOf = (svg: string): string =>
+    [...svg.matchAll(/<text[^>]*>(.*?)<\/text>/g)].map((m) => m[1]).join(' | ')
+
+  it('keeps the historical wording when no prefix is given', () => {
+    expect(textOf(renderReceiptToSvg(withEvent({ boothNumber: 'A12' }), {}))).toContain('Booth A12')
+  })
+
+  it('prints the number alone when the prefix is cleared', () => {
+    const out = textOf(renderReceiptToSvg(withEvent({ boothNumber: 'A12', boothLabel: '' }), {}))
+    expect(out).toContain('A12')
+    expect(out).not.toContain('Booth')
+  })
+
+  it('uses whatever word the design asks for', () => {
+    const out = textOf(renderReceiptToSvg(withEvent({ boothNumber: 'A12', boothLabel: '攤位' }), {}))
+    expect(out).toContain('攤位 A12')
+    expect(out).not.toContain('Booth')
+  })
+
+  it('does not print a stray prefix when there is no number', () => {
+    const out = textOf(renderReceiptToSvg(withEvent({ boothLabel: 'Booth', name: 'Artist Alley' }), {}))
+    expect(out).toContain('Artist Alley')
+    expect(out).not.toContain('Booth')
+  })
+})

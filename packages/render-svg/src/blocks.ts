@@ -111,8 +111,7 @@ export function renderHeader(
   let markup = ''
 
   if (merchant.logo && isImageSource(merchant.logo)) {
-    const w = Math.min(ctx.logoMaxWidth ?? 160, ctx.contentWidth * 0.5)
-    const h = ctx.logoMaxHeight ?? 76
+    const { w, h } = logoBox(ctx, merchant)
     markup += p.image(merchant.logo, cx - w / 2, cursor, w, h)
     cursor += h + 14
   } else if (merchant.icon) {
@@ -185,7 +184,12 @@ export function renderEvent(
 ): BlockResult {
   const { theme } = ctx
   const cx = centerX(ctx)
-  const booth = event.boothNumber ? `Booth ${event.boothNumber}` : (event.boothName ?? '')
+  // The label is the user's text, not ours. Undefined keeps the historical "Booth" so existing
+  // designs are unchanged; an empty string prints the number on its own.
+  const boothLabel = event.boothLabel ?? 'Booth'
+  const booth = event.boothNumber
+    ? [boothLabel, event.boothNumber].filter(Boolean).join(' ')
+    : (event.boothName ?? '')
   const primary = [event.name, booth].filter(Boolean).join('  ·  ')
   const secondary = [event.location, event.date].filter(Boolean).join('  ·  ')
   if (!primary && !secondary) return EMPTY
@@ -680,11 +684,25 @@ export function renderMessage(
 // message parts. The default order reproduces the classic stacked look.
 // ---------------------------------------------------------------------------
 
+/**
+ * The logo's drawing box, scaled by `merchant.logoScale`.
+ *
+ * Scale is applied to width and height together and then capped against the content width, so
+ * the mark keeps the box's proportions instead of stretching, and cannot grow past the sheet
+ * however large a multiplier is asked for.
+ */
+function logoBox(ctx: RenderContext, merchant: ReceiptMerchant): { w: number; h: number } {
+  const baseW = Math.min(ctx.logoMaxWidth ?? 160, ctx.contentWidth * 0.5)
+  const baseH = ctx.logoMaxHeight ?? 76
+  const wanted = Math.min(4, Math.max(0.25, merchant.logoScale ?? 1))
+  const scale = Math.min(wanted, ctx.contentWidth / baseW)
+  return { w: baseW * scale, h: baseH * scale }
+}
+
 export function renderLogo(ctx: RenderContext, p: Painter, merchant: ReceiptMerchant, y: number): BlockResult {
   const cx = centerX(ctx)
   if (merchant.logo && isImageSource(merchant.logo)) {
-    const w = Math.min(ctx.logoMaxWidth ?? 160, ctx.contentWidth * 0.5)
-    const h = ctx.logoMaxHeight ?? 76
+    const { w, h } = logoBox(ctx, merchant)
     return { markup: p.image(merchant.logo, cx - w / 2, y, w, h), height: h }
   }
   if (merchant.icon) {
