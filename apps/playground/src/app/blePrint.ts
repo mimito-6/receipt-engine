@@ -295,7 +295,7 @@ async function drawPreview(): Promise<void> {
   const key = `${paper.printableWidthDots}
 ${svgs.join(' ')}`
   if (!previewCache || previewCache.key !== key) {
-    const imgs = []
+    const imgs: Array<{ width: number; height: number; data: Uint8ClampedArray }> = []
     for (const svg of svgs) imgs.push(await svgToImageData(svg, { width: paper.printableWidthDots }))
     // The print builder rejects mismatched layers; the preview used to take the first layer's
     // dimensions for all of them and composite anyway, which silently drew the others at the

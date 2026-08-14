@@ -1,6 +1,6 @@
 // Left-panel form: repeatable rows (items / discounts / payments / stickers),
 // and syncFormFromState which pushes the whole state back into the inputs.
-import { $, clientToReceipt, svgEl } from './dom'
+import { $, clientToReceipt, svgEl, growRangeToFit } from './dom'
 import { render, renderSoon } from './render'
 import { layoutOverlay, popSticker } from './overlay'
 import { type Draft, clamp, curEdges, curLook, curMono, curPad, curWidth, esc, isImg, state } from './state'
@@ -336,9 +336,15 @@ export function syncFormFromState(): void {
   const bsc = a.backgroundScale != null ? a.backgroundScale : 1
   ;($('s-bgsc') as HTMLInputElement).value = String(Math.round(bsc * 100))
   $('v-bgsc').textContent = Math.round(bsc * 100) + '%'
-  ;($('s-bgx') as HTMLInputElement).value = String(a.backgroundX != null ? a.backgroundX : 0)
+  // Grow the track BEFORE assigning, or an offset past the current bound is clamped away and
+  // the slider then misreports where the artwork actually is.
+  const bx = a.backgroundX != null ? a.backgroundX : 0
+  const by = a.backgroundY != null ? a.backgroundY : 0
+  growRangeToFit($('s-bgx') as HTMLInputElement, bx)
+  growRangeToFit($('s-bgy') as HTMLInputElement, by)
+  ;($('s-bgx') as HTMLInputElement).value = String(bx)
   $('v-bgx').textContent = ($('s-bgx') as HTMLInputElement).value + 'px'
-  ;($('s-bgy') as HTMLInputElement).value = String(a.backgroundY != null ? a.backgroundY : 0)
+  ;($('s-bgy') as HTMLInputElement).value = String(by)
   $('v-bgy').textContent = ($('s-bgy') as HTMLInputElement).value + 'px'
   ;($('s-bgrot') as HTMLInputElement).value = String(a.backgroundRotation != null ? a.backgroundRotation : 0)
   $('v-bgrot').textContent = ($('s-bgrot') as HTMLInputElement).value + '°'

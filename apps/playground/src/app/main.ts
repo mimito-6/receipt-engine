@@ -4,7 +4,7 @@ import { renderReceiptToSvg } from '@receipt-engine/render-svg'
 import { renderReceiptToHtml } from '@receipt-engine/render-html'
 import { getTheme, mergeTheme } from '@receipt-engine/themes'
 import { safeValidateReceipt } from '@receipt-engine/core'
-import { $, clientToReceipt, dl, readFile, showError, svgEl } from './dom'
+import { $, clientToReceipt, dl, readFile, showError, svgEl, makeExtendable } from './dom'
 import {
   STICKERS,
   THERMAL_LOOK,
@@ -743,6 +743,9 @@ function wire(): void {
     $('v-bgsc').textContent = this.value + '%'
     renderSoon()
   })
+  // No ceiling on how far the artwork can be pushed — the track grows when it is reached.
+  makeExtendable($('s-bgx') as HTMLInputElement)
+  makeExtendable($('s-bgy') as HTMLInputElement)
   $('s-bgx').addEventListener('input', function (this: HTMLInputElement) {
     ensure('assets').backgroundX = +this.value
     $('v-bgx').textContent = this.value + 'px'

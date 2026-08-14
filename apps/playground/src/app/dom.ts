@@ -6,6 +6,41 @@ export function $<T extends HTMLElement = HTMLElement>(id: string): T {
   return document.getElementById(id) as T
 }
 
+/**
+ * Widen a range input, symmetrically, until `value` fits inside it.
+ *
+ * A range input silently CLAMPS a value outside its bounds. Loading a design whose offset ran
+ * past the slider's limit therefore showed the wrong number, and the next touch of the slider
+ * wrote that clamped number back — quietly moving the artwork the design had placed.
+ */
+export function growRangeToFit(el: HTMLInputElement, value: number, chunk = 300): void {
+  const want = Math.abs(value)
+  let bound = Math.abs(Number(el.max)) || chunk
+  while (bound < want) bound += chunk
+  if (bound !== Math.abs(Number(el.max))) {
+    el.max = String(bound)
+    el.min = String(-bound)
+  }
+}
+
+/**
+ * Let a slider keep going: reaching an end pushes that end further out.
+ *
+ * A fixed range is a guess about how far anyone will want to move something, and it is wrong
+ * as soon as someone wants more. Extending on demand keeps the useful precision near the
+ * middle while removing the ceiling.
+ */
+export function makeExtendable(el: HTMLInputElement, chunk = 300): void {
+  el.addEventListener('input', () => {
+    const v = Number(el.value)
+    const bound = Math.abs(Number(el.max))
+    if (Math.abs(v) >= bound) {
+      el.max = String(bound + chunk)
+      el.min = String(-(bound + chunk))
+    }
+  })
+}
+
 export function showError(m: string): void {
   const e = $('err')
   e.textContent = m
