@@ -174,7 +174,11 @@
   #cfg-load-btn span[data-i18n]::before { content: '↑ '; }
   /* padding (not overflow:hidden) absorbs the card-tilt overflow, so a -3px left paste-shadow isn't clipped */
   .controls { display: grid; gap: 22px; padding-inline: 6px; }
-  .group { display: grid; gap: 16px; } /* room for the ±1deg rotated bounding boxes so scraps don't kiss */
+  /* 20px: the tilt makes each closed card's box ~10px taller than its layout box (585px wide
+     x sin(1deg)), so two neighbours eat ~10px of any gap between them. 16 was not enough and
+     they overlapped; this leaves a visible ~10px of daylight. The controls column is a fixed
+     width, so this does not need to scale with the viewport. */
+  .group { display: grid; gap: 20px; }
   /* "machine voice": mono + letter-spacing, CJK-safe (no uppercase reliance), de-emoji'd */
   /* ── chapter heads: a big Anton number hangs in the gutter, a lime swipe under the title ── */
   .group-title { color: var(--ink); font-family: var(--font-ui); font-size: 14px; font-weight: 700; letter-spacing: 0;
@@ -200,7 +204,14 @@
   /* ── cards as pasted paper scraps: ink left-rule, closed tabs tilt + sticker shadow, open snaps straight ── */
   .card { background: var(--panel); border-radius: 0 var(--r-md) var(--r-md) 0; border-left: 3px solid var(--ink);
     padding: 13px 14px 15px; box-shadow: var(--shadow-panel);
-    transition: box-shadow var(--dur-settle), transform var(--dur-settle); transform-origin: left center; }
+    transition: box-shadow var(--dur-settle), transform var(--dur-settle);
+    /* Pivot at the CENTRE, not the left edge. Hinged at the spine, a 1deg tilt swings the far
+       end down by the card's full width x sin(1deg) — about 10px on a 585px card — and all of
+       it lands on one side. Two neighbours tilted opposite ways therefore closed on each other
+       by 20px and overlapped through a 16px gap. Pivoting at the centre splits that swing
+       evenly above and below, so the same tilt costs half the room and the gap stays even
+       along the whole width instead of pinching at the right. */
+    transform-origin: center; }
   .card:hover { box-shadow: var(--shadow-float); }
   /* paste angle comes from --tilt, stamped per-card in DOM order at init (main.ts) so adjacent
      scraps ALWAYS oppose — robust across the 3 chapter <section>s where nth-of-type would re-seed,
@@ -999,6 +1010,6 @@
 <footer data-i18n="footer.text">純前端 · 收據不上傳伺服器 · 由 @receipt-engine/render-svg 在瀏覽器內渲染</footer>
 
 <!-- Editor app (bundles the engine). Built from src/app/main.ts -> public/playground.global.js -->
-<script src="./playground.global.js?b=54"></script>
+<script src="./playground.global.js?b=55"></script>
 </body>
 </html>
