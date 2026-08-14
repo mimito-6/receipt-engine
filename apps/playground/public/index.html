@@ -347,7 +347,24 @@
   .ble-group { margin-top: 14px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; }
   .ble-group-title { font-weight: 700; font-size: 12px; margin-bottom: 6px; letter-spacing: .02em; }
   .ble-group .ble-slider:first-of-type { margin-top: 8px; }
-  .ble-preview-wrap { margin-top: 12px; }
+  .ble-preview-wrap { margin-top: 10px; }
+  /* Docked, so the sheet stays in view while the controls below it are being adjusted. The
+     panel is a tall column of sliders; with the preview at the bottom, every change meant
+     scrolling down to see it and back up to change it again. Desktop only — on a phone a
+     sticky preview would cover the very controls it is meant to accompany. */
+  /* A fixed window onto the sheet, scrolled internally. Constraining the CANVAS instead was
+     not enough: a sticky element taller than the viewport cannot pin to the top — the browser
+     holds it by its bottom edge instead — and a full receipt is several times the screen. A
+     bounded box keeps the dock short enough to pin, and a long receipt stays inspectable by
+     scrolling inside it. */
+  .ble-preview-box { height: 40vh; min-height: 200px; overflow: auto; background: #fff;
+    border: 1px solid var(--line); border-radius: 6px; }
+  .ble-preview-box #ble-preview { display: block; width: 100%; height: auto; border: 0;
+    border-radius: 0; min-height: 0; }
+  @media (min-width: 900px) {
+    .ble-preview-wrap { position: sticky; top: 8px; z-index: 3;
+      background: var(--panel); padding-bottom: 8px; }
+  }
   .ble-preview-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; font-weight: 600; }
   .ble-preview-head .muted-note { font-weight: 400; }
   /* White plate behind it: the preview IS the paper, so it must not pick up the page tint. */
@@ -930,6 +947,10 @@
     <!-- Thermal printing over BLE: prints the design that is open right now. -->
     <details class="card ble-card" id="ble-print">
       <summary><span data-i18n="ble.title">熱感印表機列印(藍牙)</span> <span class="hint" data-i18n="ble.hint">把目前這張版型直接印出來</span></summary>
+      <div class="ble-preview-wrap">
+        <div class="ble-preview-head"><span data-i18n="ble.preview">列印預覽</span><span class="muted-note" data-i18n="ble.previewNote">實際 1-bit 輸出</span></div>
+        <div class="ble-preview-box"><canvas id="ble-preview" role="img" aria-label="列印預覽:實際 1-bit 輸出" data-i18n-aria-label="ble.previewAlt"></canvas></div>
+      </div>
       <div class="ble-grid">
         <label class="field"><span data-i18n="ble.printer">印表機</span>
           <select id="ble-printer">
@@ -1054,10 +1075,6 @@
         <input type="range" id="ble-feed" min="0" max="40" step="2" value="20" />
         <span class="ble-ends"><span data-i18n="ble.endTight">貼齊</span><span data-i18n="ble.endLoose">好撕</span></span>
       </label>
-      <div class="ble-preview-wrap">
-        <div class="ble-preview-head"><span data-i18n="ble.preview">列印預覽</span><span class="muted-note" data-i18n="ble.previewNote">實際 1-bit 輸出</span></div>
-        <canvas id="ble-preview" role="img" aria-label="列印預覽:實際 1-bit 輸出" data-i18n-aria-label="ble.previewAlt"></canvas>
-      </div>
       <label class="dl-clean"><input type="checkbox" id="ble-ack" /> <span data-i18n="ble.ack">可靠模式(每包等印表機確認,較慢但不會靜默丟包)</span></label>
       <div class="ble-btns">
         <button class="btn" id="ble-connect" type="button" data-i18n="ble.connect">連線印表機</button>
@@ -1076,6 +1093,6 @@
 <footer data-i18n="footer.text">純前端 · 收據不上傳伺服器 · 由 @receipt-engine/render-svg 在瀏覽器內渲染</footer>
 
 <!-- Editor app (bundles the engine). Built from src/app/main.ts -> public/playground.global.js -->
-<script src="./playground.global.js?b=59"></script>
+<script src="./playground.global.js?b=62"></script>
 </body>
 </html>
