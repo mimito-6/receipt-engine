@@ -112,12 +112,12 @@ export function renderHeader(
 
   if (merchant.logo && isImageSource(merchant.logo)) {
     const { w, h } = logoBox(ctx, merchant)
-    markup += p.image(merchant.logo, cx - w / 2, cursor, w, h)
+    markup += p.image(merchant.logo, cx - w / 2, cursor, w, h, { layer: 'logo' })
     cursor += h + 14
   } else if (merchant.icon) {
     if (isImageSource(merchant.icon)) {
       const s = 64
-      markup += p.image(merchant.icon, cx - s / 2, cursor, s, s)
+      markup += p.image(merchant.icon, cx - s / 2, cursor, s, s, { layer: 'logo' })
       cursor += s + 12
     } else {
       const size = 46
@@ -703,12 +703,12 @@ export function renderLogo(ctx: RenderContext, p: Painter, merchant: ReceiptMerc
   const cx = centerX(ctx)
   if (merchant.logo && isImageSource(merchant.logo)) {
     const { w, h } = logoBox(ctx, merchant)
-    return { markup: p.image(merchant.logo, cx - w / 2, y, w, h), height: h }
+    return { markup: p.image(merchant.logo, cx - w / 2, y, w, h, { layer: 'logo' }), height: h }
   }
   if (merchant.icon) {
     if (isImageSource(merchant.icon)) {
       const s = 64
-      return { markup: p.image(merchant.icon, cx - s / 2, y, s, s), height: s }
+      return { markup: p.image(merchant.icon, cx - s / 2, y, s, s, { layer: 'logo' }), height: s }
     }
     const size = 46
     return { markup: monoWrap(ctx, p.text(merchant.icon, cx, y + size, { size, anchor: 'middle' })), height: size }
@@ -917,7 +917,7 @@ export function renderStickers(
       : ''
 
     const inner = isImage
-      ? p.image(sticker.content, cx - size / 2, cy - size / 2, size, size)
+      ? p.image(sticker.content, cx - size / 2, cy - size / 2, size, size, { layer: 'stickers' })
       : monoWrap(ctx, p.text(sticker.content, cx, cy + size * 0.34, { size, anchor: 'middle' }))
 
     out += `<g${rotate}>${inner}</g>`

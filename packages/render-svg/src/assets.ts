@@ -41,6 +41,8 @@ function fmt(value: number): string {
 }
 
 export interface SvgImageOptions {
+  /** Which print layer this image belongs to; the painter filters on it. */
+  layer?: string
   preserveAspectRatio?: string
   /** SVG filter reference, e.g. "url(#re-mono)" for black & white. */
   filter?: string

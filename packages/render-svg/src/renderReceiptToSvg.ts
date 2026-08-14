@@ -160,9 +160,29 @@ const LEGACY_BLOCK_ALIASES: Record<string, BlockKey[]> = {
 const DEFAULT_CARD_WIDTH = 720
 const THERMAL_WIDTH = 384
 /** Content groups that can be rendered independently. */
-export type RenderLayer = 'background' | 'card' | 'artwork' | 'decorations' | 'content' | 'stickers'
+export type RenderLayer =
+  | 'background'
+  | 'card'
+  | 'artwork'
+  | 'decorations'
+  /** Text, rules and QR — everything drawn as vector rather than placed as an image. */
+  | 'content'
+  /** The merchant's logo or icon mark. */
+  | 'logo'
+  /** Images placed as content blocks (image block, footer image). */
+  | 'images'
+  | 'stickers'
 
-const ALL_LAYERS: RenderLayer[] = ['background', 'card', 'artwork', 'decorations', 'content', 'stickers']
+const ALL_LAYERS: RenderLayer[] = [
+  'background',
+  'card',
+  'artwork',
+  'decorations',
+  'content',
+  'logo',
+  'images',
+  'stickers',
+]
 
 const MONO_FILTER_ID = 're-mono'
 const BG_INK_FILTER_ID = 're-bg-ink'
@@ -286,6 +306,7 @@ function renderInternal(
   const contentWidth = contentRight - contentLeft
 
   const ctx: RenderContext = {
+    layerFilter: options.layers ? new Set(options.layers) : undefined,
     theme,
     width,
     outerMargin,
@@ -530,7 +551,10 @@ function renderInternal(
     layer('card', card) +
     layer('artwork', bgImage) +
     layer('decorations', decorations) +
-    layer('content', parts.join('')) +
+    // Not gated here: content, logo and images are interleaved inside the blocks, so the
+    // painter drops the elements that do not belong to the requested layers while the blocks
+    // still compute identical geometry.
+    parts.join('') +
     layer('stickers', stickerLayer) +
     '</svg>'
 

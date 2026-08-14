@@ -222,3 +222,47 @@ describe('booth prefix', () => {
     expect(out).not.toContain('Booth')
   })
 })
+
+// Per-content print settings need the logo separable from the text it sits among. Blocks
+// interleave them, so the split happens at the painter — but the geometry must be computed in
+// full regardless, or the layers stop lining up when they are combined.
+describe('logo as its own layer', () => {
+  const PNG = 'data:image/png;base64,iVBORw0KGgo='
+  const doc = {
+    schemaVersion: '0.1',
+    currency: 'TWD',
+    merchant: { name: 'Stall', logo: PNG },
+    transaction: { receiptNo: '1', issuedAt: '2026-06-01T12:00' },
+    items: [{ name: 'Item', quantity: 1, unitPrice: 100 }],
+  } as never
+
+  const images = (svg: string): string[] => [...svg.matchAll(/<image\b[^>]*>/g)].map((m) => m[0])
+  const texts = (svg: string): string[] => [...svg.matchAll(/<text\b[^>]*>/g)].map((m) => m[0])
+  const height = (svg: string): string => svg.match(/viewBox="0 0 \d+ (\d+)"/)![1]!
+
+  it('draws the logo alone when only that layer is asked for', () => {
+    const svg = renderReceiptToSvg(doc, { layers: ['logo'] })
+    expect(images(svg)).toHaveLength(1)
+    expect(texts(svg)).toHaveLength(0)
+  })
+
+  it('draws the text without the logo when only content is asked for', () => {
+    const svg = renderReceiptToSvg(doc, { layers: ['content'] })
+    expect(images(svg)).toHaveLength(0)
+    expect(texts(svg).length).toBeGreaterThan(0)
+  })
+
+  it('keeps identical geometry across every layer, so they can be combined', () => {
+    const full = height(renderReceiptToSvg(doc, {}))
+    for (const layers of [['logo'], ['content'], ['content', 'logo'], ['stickers']] as const) {
+      expect(height(renderReceiptToSvg(doc, { layers: [...layers] })), `layers ${layers}`).toBe(full)
+    }
+  })
+
+  it('places the logo at the same coordinates whether or not the text is drawn', () => {
+    const alone = images(renderReceiptToSvg(doc, { layers: ['logo'] }))[0]!
+    const together = images(renderReceiptToSvg(doc, { layers: ['content', 'logo'] }))[0]!
+    const xy = (t: string) => t.match(/x="([\d.]+)" y="([\d.]+)"/)!.slice(1, 3).join(',')
+    expect(xy(alone)).toBe(xy(together))
+  })
+})

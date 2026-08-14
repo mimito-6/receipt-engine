@@ -18,6 +18,14 @@ export interface RenderContext {
   formatMoney: (amount: number) => string
   /** When set (thermal), every image is rendered through this filter, e.g. "url(#re-mono)". */
   monoFilterId?: string
+  /**
+   * Which layers to draw. Undefined draws everything.
+   *
+   * Applied by the painter rather than by the caller, because content, the logo and placed
+   * images are interleaved inside the same blocks — the geometry has to be computed in full
+   * either way so the layers line up, and only the emission differs.
+   */
+  layerFilter?: Set<string>
   /** Editor opt-in: tag elements with data-re-id / data-re-block for hit-testing. */
   interactive?: boolean
   /** Per-element style overrides, keyed by element id. */
@@ -271,11 +279,18 @@ export interface Painter {
 /** A painter with the theme font family pre-bound for text. */
 export function createPainter(ctx: RenderContext): Painter {
   const family = ctx.theme.typography.fontFamily
+  const wants = (layer: string): boolean => !ctx.layerFilter || ctx.layerFilter.has(layer)
+  // Vector marks — type, rules, QR — are all 'content'. Images say which layer they belong to.
+  const vector = wants('content')
   return {
-    text: (content, x, y, options = {}) => svgText(content, x, y, { family, ...options }),
-    rect: svgRect,
-    line: svgLine,
-    image: (href, x, y, width, height, options = {}) =>
-      svgImage(href, x, y, width, height, { filter: ctx.monoFilterId, ...options }),
+    text: (content, x, y, options = {}) =>
+      vector ? svgText(content, x, y, { family, ...options }) : '',
+    rect: (...args) => (vector ? svgRect(...args) : ''),
+    line: (...args) => (vector ? svgLine(...args) : ''),
+    image: (href, x, y, width, height, options = {}) => {
+      const { layer = 'images', ...rest } = options as { layer?: string }
+      if (!wants(layer)) return ''
+      return svgImage(href, x, y, width, height, { filter: ctx.monoFilterId, ...rest })
+    },
   }
 }

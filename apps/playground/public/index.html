@@ -342,6 +342,11 @@
   .ble-slabel { display: block; margin-bottom: 2px; font-weight: 600; }
   .ble-slabel output { font-variant-numeric: tabular-nums; }
   .ble-ends { display: flex; justify-content: space-between; margin-top: 2px; font-size: 11px; opacity: 0.6; }
+  /* Four groups of near-identical controls need a visible boundary, or the panel reads as one
+     undifferentiated column of sliders and it stops being obvious which one governs what. */
+  .ble-group { margin-top: 14px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; }
+  .ble-group-title { font-weight: 700; font-size: 12px; margin-bottom: 6px; letter-spacing: .02em; }
+  .ble-group .ble-slider:first-of-type { margin-top: 8px; }
   .ble-preview-wrap { margin-top: 12px; }
   .ble-preview-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; font-weight: 600; }
   .ble-preview-head .muted-note { font-weight: 400; }
@@ -949,47 +954,102 @@
         </label>
       </div>
       <label class="dl-clean"><input type="checkbox" id="ble-mono" checked /> <span data-i18n="ble.mono">白底黑字(深色版型必開,否則印出一片黑)</span></label>
-      <label class="field" style="margin-top:8px"><span data-i18n="ble.inkBg">底圖:網點樣式</span>
-        <select id="ble-ink">
-          <option value="hybrid" selected data-i18n="ble.inkHybrid">混合(推薦)— 字銳利 + 保留底圖</option>
-          <option value="halftone:round" data-i18n="ble.inkDotRound">網點 · 圓點(像報紙,較實)</option>
+      <div class="ble-group">
+        <div class="ble-group-title" data-i18n="ble.grpText">文字 / 線條 / QR</div>
+        <label class="field"><span data-i18n="ble.style">取樣方式</span>
+          <select id="ble-ink-text">
+          <option value="none" selected data-i18n="ble.inkSharp">銳利 — 只留深色,最乾淨</option>
+          <option value="hybrid" data-i18n="ble.inkHybrid">混合 — 深色實心,中間調抖色</option>
+          <option value="halftone:round" data-i18n="ble.inkDotRound">網點 · 圓點</option>
           <option value="halftone:diamond" data-i18n="ble.inkDotDiamond">網點 · 菱形</option>
           <option value="halftone:line" data-i18n="ble.inkDotLine">網點 · 斜線</option>
           <option value="halftone:heart" data-i18n="ble.inkDotHeart">網點 · 愛心</option>
           <option value="halftone:star" data-i18n="ble.inkDotStar">網點 · 星星</option>
-          <option value="none" data-i18n="ble.inkSharp">銳利 — 只留深色,最乾淨</option>
-          <option value="floyd-steinberg" data-i18n="ble.inkDither">全抖色 — 照片用,字會變灰</option>
-        </select>
-      </label>
-      <label class="field ble-slider"><span class="ble-slabel"><span data-i18n="ble.threshold">黑白門檻</span>:<output id="ble-threshold-v">145</output></span>
-        <input type="range" id="ble-threshold" min="100" max="250" step="5" value="145" />
-        <span class="ble-ends"><span data-i18n="ble.endThin">更白 · 字細</span><span data-i18n="ble.endBold">更黑 · 字粗</span></span>
-      </label>
-      <label class="field ble-slider" id="ble-dot-row"><span class="ble-slabel"><span data-i18n="ble.dotSize">底圖:顆粒大小</span>:<output id="ble-dotsize-v">12</output> dots</span>
-        <input type="range" id="ble-dotsize" min="6" max="24" step="2" value="12" />
-        <span class="ble-ends"><span data-i18n="ble.endFine">細密</span><span data-i18n="ble.endCoarse">大顆 · 形狀明顯</span></span>
-      </label>
-      <label class="field ble-slider"><span class="ble-slabel"><span data-i18n="ble.bgDensity">底圖濃度</span>:<output id="ble-bgdensity-v">30</output>%</span>
-        <input type="range" id="ble-bgdensity" min="0" max="100" step="5" value="30" />
-        <span class="ble-ends"><span data-i18n="ble.endFaint">看不見</span><span data-i18n="ble.endSolid">接近全黑</span></span>
-      </label>
-      <label class="field" style="margin-top:12px"><span data-i18n="ble.inkSticker">貼紙 / 圖片:網點樣式</span>
-        <select id="ble-ink-stickers">
-          <option value="hybrid" selected data-i18n="ble.inkHybrid">混合(推薦)— 字銳利 + 保留底圖</option>
-          <option value="halftone:round" data-i18n="ble.inkDotRound">網點 · 圓點(像報紙,較實)</option>
+          <option value="floyd-steinberg" data-i18n="ble.inkDither">全抖色 — 照片用</option>
+          </select>
+        </label>
+        <label class="field ble-slider"><span class="ble-slabel"><span data-i18n="ble.blackness">黑度</span>:<output id="ble-threshold-v">145</output></span>
+          <input type="range" id="ble-threshold" min="100" max="250" step="5" value="145" />
+          <span class="ble-ends"><span data-i18n="ble.endThin">更白 · 更細</span><span data-i18n="ble.endBold">更黑 · 更粗</span></span>
+        </label>
+        <label class="field ble-slider" id="ble-dotsize-text-row"><span class="ble-slabel"><span data-i18n="ble.dotSize">顆粒大小</span>:<output id="ble-dotsize-text-v">12</output> dots</span>
+          <input type="range" id="ble-dotsize-text" min="6" max="24" step="2" value="12" />
+          <span class="ble-ends"><span data-i18n="ble.endFine">細密</span><span data-i18n="ble.endCoarse">大顆 · 形狀明顯</span></span>
+        </label>
+      </div>
+      <div class="ble-group">
+        <div class="ble-group-title" data-i18n="ble.grpLogo">商標 LOGO</div>
+        <label class="field"><span data-i18n="ble.style">取樣方式</span>
+          <select id="ble-ink-logo">
+          <option value="none" selected data-i18n="ble.inkSharp">銳利 — 只留深色,最乾淨</option>
+          <option value="hybrid" data-i18n="ble.inkHybrid">混合 — 深色實心,中間調抖色</option>
+          <option value="halftone:round" data-i18n="ble.inkDotRound">網點 · 圓點</option>
           <option value="halftone:diamond" data-i18n="ble.inkDotDiamond">網點 · 菱形</option>
           <option value="halftone:line" data-i18n="ble.inkDotLine">網點 · 斜線</option>
           <option value="halftone:heart" data-i18n="ble.inkDotHeart">網點 · 愛心</option>
           <option value="halftone:star" data-i18n="ble.inkDotStar">網點 · 星星</option>
+          <option value="floyd-steinberg" data-i18n="ble.inkDither">全抖色 — 照片用</option>
+          </select>
+        </label>
+        <label class="field ble-slider"><span class="ble-slabel"><span data-i18n="ble.blackness">黑度</span>:<output id="ble-threshold-logo-v">145</output></span>
+          <input type="range" id="ble-threshold-logo" min="100" max="250" step="5" value="145" />
+          <span class="ble-ends"><span data-i18n="ble.endThin">更白 · 更細</span><span data-i18n="ble.endBold">更黑 · 更粗</span></span>
+        </label>
+        <label class="field ble-slider" id="ble-dotsize-logo-row"><span class="ble-slabel"><span data-i18n="ble.dotSize">顆粒大小</span>:<output id="ble-dotsize-logo-v">12</output> dots</span>
+          <input type="range" id="ble-dotsize-logo" min="6" max="24" step="2" value="12" />
+          <span class="ble-ends"><span data-i18n="ble.endFine">細密</span><span data-i18n="ble.endCoarse">大顆 · 形狀明顯</span></span>
+        </label>
+      </div>
+      <div class="ble-group">
+        <div class="ble-group-title" data-i18n="ble.grpBg">底圖</div>
+        <label class="field"><span data-i18n="ble.style">取樣方式</span>
+          <select id="ble-ink">
           <option value="none" data-i18n="ble.inkSharp">銳利 — 只留深色,最乾淨</option>
-          <option value="floyd-steinberg" data-i18n="ble.inkDither">全抖色 — 照片用,字會變灰</option>
-        </select>
-      </label>
-      <label class="field ble-slider" id="ble-dot-row-st"><span class="ble-slabel"><span data-i18n="ble.dotSizeSticker">貼紙:顆粒大小</span>:<output id="ble-dotsize-st-v">12</output> dots</span>
-        <input type="range" id="ble-dotsize-st" min="6" max="24" step="2" value="12" />
-        <span class="ble-ends"><span data-i18n="ble.endFine">細密</span><span data-i18n="ble.endCoarse">大顆 · 形狀明顯</span></span>
-      </label>
-      <div class="muted-note" data-i18n="ble.layerNote">文字、線條與 QR 永遠用銳利處理,不會被網點碰到 —— 上面的「黑白門檻」決定它們的粗細。</div>
+          <option value="hybrid" selected data-i18n="ble.inkHybrid">混合 — 深色實心,中間調抖色</option>
+          <option value="halftone:round" data-i18n="ble.inkDotRound">網點 · 圓點</option>
+          <option value="halftone:diamond" data-i18n="ble.inkDotDiamond">網點 · 菱形</option>
+          <option value="halftone:line" data-i18n="ble.inkDotLine">網點 · 斜線</option>
+          <option value="halftone:heart" data-i18n="ble.inkDotHeart">網點 · 愛心</option>
+          <option value="halftone:star" data-i18n="ble.inkDotStar">網點 · 星星</option>
+          <option value="floyd-steinberg" data-i18n="ble.inkDither">全抖色 — 照片用</option>
+          </select>
+        </label>
+        <label class="field ble-slider"><span class="ble-slabel"><span data-i18n="ble.blackness">黑度</span>:<output id="ble-threshold-bg-v">145</output></span>
+          <input type="range" id="ble-threshold-bg" min="100" max="250" step="5" value="145" />
+          <span class="ble-ends"><span data-i18n="ble.endThin">更白 · 更細</span><span data-i18n="ble.endBold">更黑 · 更粗</span></span>
+        </label>
+        <label class="field ble-slider" id="ble-dotsize-row"><span class="ble-slabel"><span data-i18n="ble.dotSize">顆粒大小</span>:<output id="ble-dotsize-v">12</output> dots</span>
+          <input type="range" id="ble-dotsize" min="6" max="24" step="2" value="12" />
+          <span class="ble-ends"><span data-i18n="ble.endFine">細密</span><span data-i18n="ble.endCoarse">大顆 · 形狀明顯</span></span>
+        </label>
+        <label class="field ble-slider"><span class="ble-slabel"><span data-i18n="ble.bgDensity">底圖濃度</span>:<output id="ble-bgdensity-v">30</output>%</span>
+          <input type="range" id="ble-bgdensity" min="0" max="100" step="5" value="30" />
+          <span class="ble-ends"><span data-i18n="ble.endFaint">看不見</span><span data-i18n="ble.endSolid">接近全黑</span></span>
+        </label>
+      </div>
+      <div class="ble-group">
+        <div class="ble-group-title" data-i18n="ble.grpSticker">貼紙 / 圖片</div>
+        <label class="field"><span data-i18n="ble.style">取樣方式</span>
+          <select id="ble-ink-stickers">
+          <option value="none" data-i18n="ble.inkSharp">銳利 — 只留深色,最乾淨</option>
+          <option value="hybrid" selected data-i18n="ble.inkHybrid">混合 — 深色實心,中間調抖色</option>
+          <option value="halftone:round" data-i18n="ble.inkDotRound">網點 · 圓點</option>
+          <option value="halftone:diamond" data-i18n="ble.inkDotDiamond">網點 · 菱形</option>
+          <option value="halftone:line" data-i18n="ble.inkDotLine">網點 · 斜線</option>
+          <option value="halftone:heart" data-i18n="ble.inkDotHeart">網點 · 愛心</option>
+          <option value="halftone:star" data-i18n="ble.inkDotStar">網點 · 星星</option>
+          <option value="floyd-steinberg" data-i18n="ble.inkDither">全抖色 — 照片用</option>
+          </select>
+        </label>
+        <label class="field ble-slider"><span class="ble-slabel"><span data-i18n="ble.blackness">黑度</span>:<output id="ble-threshold-st-v">145</output></span>
+          <input type="range" id="ble-threshold-st" min="100" max="250" step="5" value="145" />
+          <span class="ble-ends"><span data-i18n="ble.endThin">更白 · 更細</span><span data-i18n="ble.endBold">更黑 · 更粗</span></span>
+        </label>
+        <label class="field ble-slider" id="ble-dotsize-st-row"><span class="ble-slabel"><span data-i18n="ble.dotSize">顆粒大小</span>:<output id="ble-dotsize-st-v">12</output> dots</span>
+          <input type="range" id="ble-dotsize-st" min="6" max="24" step="2" value="12" />
+          <span class="ble-ends"><span data-i18n="ble.endFine">細密</span><span data-i18n="ble.endCoarse">大顆 · 形狀明顯</span></span>
+        </label>
+      </div>
       <label class="field ble-slider"><span class="ble-slabel"><span data-i18n="ble.feed">列印後送紙</span>:<output id="ble-feed-v">20</output>mm</span>
         <input type="range" id="ble-feed" min="0" max="40" step="2" value="20" />
         <span class="ble-ends"><span data-i18n="ble.endTight">貼齊</span><span data-i18n="ble.endLoose">好撕</span></span>
@@ -1016,6 +1076,6 @@
 <footer data-i18n="footer.text">純前端 · 收據不上傳伺服器 · 由 @receipt-engine/render-svg 在瀏覽器內渲染</footer>
 
 <!-- Editor app (bundles the engine). Built from src/app/main.ts -> public/playground.global.js -->
-<script src="./playground.global.js?b=57"></script>
+<script src="./playground.global.js?b=58"></script>
 </body>
 </html>

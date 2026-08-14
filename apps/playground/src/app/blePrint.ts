@@ -231,20 +231,14 @@ type BitmapOpts = {
  * these separately is the only place the distinction still exists.
  */
 const PRINT_LAYERS: Array<{ layers: RenderLayer[]; opts: () => BitmapOpts }> = [
-  // Type, rules and QR: always a hard threshold. Screening them is never what anyone wants.
-  { layers: ['card', 'content', 'decorations'], opts: () => sharpOpts() },
-  { layers: ['artwork'], opts: () => bitmapOpts('ble-ink', 'ble-dotsize') },
-  { layers: ['stickers'], opts: () => bitmapOpts('ble-ink-stickers', 'ble-dotsize-st') },
+  { layers: ['card', 'content', 'decorations'], opts: () => bitmapOpts('ble-ink-text', 'ble-dotsize-text', 'ble-threshold') },
+  { layers: ['logo'], opts: () => bitmapOpts('ble-ink-logo', 'ble-dotsize-logo', 'ble-threshold-logo') },
+  { layers: ['artwork'], opts: () => bitmapOpts('ble-ink', 'ble-dotsize', 'ble-threshold-bg') },
+  { layers: ['stickers', 'images'], opts: () => bitmapOpts('ble-ink-stickers', 'ble-dotsize-st', 'ble-threshold-st') },
 ]
 
-/** Type is never screened; the threshold is the only thing that shapes it. */
-function sharpOpts(): BitmapOpts {
-  const threshold = Number(($('ble-threshold') as HTMLInputElement).value) || 170
-  return { dither: 'none', threshold, inkFloor: threshold, paperCeil: 250 }
-}
-
-function bitmapOpts(selectId = 'ble-ink', grainId = 'ble-dotsize'): BitmapOpts {
-  const threshold = Number(($('ble-threshold') as HTMLInputElement).value) || 170
+function bitmapOpts(selectId: string, grainId: string, thresholdId: string): BitmapOpts {
+  const threshold = Number(($(thresholdId) as HTMLInputElement).value) || 145
   // Pinned, not exposed: 255 is bare paper, so this clamp has almost no usable travel and
   // only decides whether faint tone prints AT ALL — never how strongly. Density is set in
   // the vector domain by printDoc(), where the control has real range.
@@ -349,10 +343,10 @@ export function getPrintSettings(): Record<string, unknown> {
     printer: sel('ble-printer').value,
     paper: sel('ble-paper').value,
     mode: sel('ble-mode').value,
-    ink: sel('ble-ink').value,
-    inkStickers: sel('ble-ink-stickers').value,
-    dotSize: Number(($('ble-dotsize') as HTMLInputElement).value),
-    dotSizeStickers: Number(($('ble-dotsize-st') as HTMLInputElement).value),
+    // Every group, by id, so adding one later does not silently stop being saved.
+    layers: Object.fromEntries(
+      ['ble-ink-text', 'ble-threshold', 'ble-dotsize-text', 'ble-ink-logo', 'ble-threshold-logo', 'ble-dotsize-logo', 'ble-ink', 'ble-threshold-bg', 'ble-dotsize', 'ble-ink-stickers', 'ble-threshold-st', 'ble-dotsize-st', 'ble-bgdensity'].map((id) => [id, ($(id) as HTMLInputElement | HTMLSelectElement).value]),
+    ),
     threshold: Number(($('ble-threshold') as HTMLInputElement).value),
     bgDensity: Number(($('ble-bgdensity') as HTMLInputElement).value),
     feedMm: Number(($('ble-feed') as HTMLInputElement).value),
@@ -380,10 +374,13 @@ export function applyPrintSettings(cfg: unknown): void {
   setSel('ble-printer', p.printer)
   setSel('ble-paper', p.paper)
   setSel('ble-mode', p.mode)
-  setSel('ble-ink', p.ink)
-  setSel('ble-ink-stickers', p.inkStickers)
-  setNum('ble-dotsize', p.dotSize)
-  setNum('ble-dotsize-st', p.dotSizeStickers)
+  const saved = (p.layers ?? {}) as Record<string, string>
+  for (const [id, v] of Object.entries(saved)) {
+    const el = $(id) as HTMLInputElement | HTMLSelectElement | null
+    if (!el) continue
+    if (el instanceof HTMLSelectElement) setSel(id, v)
+    else setNum(id, Number(v))
+  }
   setNum('ble-threshold', p.threshold)
   setNum('ble-bgdensity', p.bgDensity)
   setNum('ble-feed', p.feedMm)
@@ -396,10 +393,15 @@ export function applyPrintSettings(cfg: unknown): void {
 export function refreshPrintPanel(): void {
   for (const [id, out] of [
     ['ble-threshold', 'ble-threshold-v'],
-    ['ble-bgdensity', 'ble-bgdensity-v'],
-    ['ble-feed', 'ble-feed-v'],
+    ['ble-threshold-logo', 'ble-threshold-logo-v'],
+    ['ble-threshold-bg', 'ble-threshold-bg-v'],
+    ['ble-threshold-st', 'ble-threshold-st-v'],
+    ['ble-dotsize-text', 'ble-dotsize-text-v'],
+    ['ble-dotsize-logo', 'ble-dotsize-logo-v'],
     ['ble-dotsize', 'ble-dotsize-v'],
     ['ble-dotsize-st', 'ble-dotsize-st-v'],
+    ['ble-bgdensity', 'ble-bgdensity-v'],
+    ['ble-feed', 'ble-feed-v'],
   ] as const) {
     $(out).textContent = ($(id) as HTMLInputElement).value
   }
@@ -622,14 +624,16 @@ export function initBlePrint(): void {
     sync()
   }
   bindRange('ble-threshold', 'ble-threshold-v')
-  bindRange('ble-bgdensity', 'ble-bgdensity-v')
+  bindRange('ble-dotsize-text', 'ble-dotsize-text-v')
+  bindRange('ble-threshold-logo', 'ble-threshold-logo-v')
+  bindRange('ble-dotsize-logo', 'ble-dotsize-logo-v')
+  bindRange('ble-threshold-bg', 'ble-threshold-bg-v')
   bindRange('ble-dotsize', 'ble-dotsize-v')
+  bindRange('ble-threshold-st', 'ble-threshold-st-v')
   bindRange('ble-dotsize-st', 'ble-dotsize-st-v')
+  bindRange('ble-bgdensity', 'ble-bgdensity-v')
   bindRange('ble-feed', 'ble-feed-v')
-  for (const id of [
-    'ble-threshold', 'ble-bgdensity', 'ble-dotsize', 'ble-dotsize-st',
-    'ble-ink', 'ble-ink-stickers', 'ble-mono', 'ble-paper',
-  ]) {
+  for (const id of ['ble-ink-text', 'ble-threshold', 'ble-dotsize-text', 'ble-ink-logo', 'ble-threshold-logo', 'ble-dotsize-logo', 'ble-ink', 'ble-threshold-bg', 'ble-dotsize', 'ble-ink-stickers', 'ble-threshold-st', 'ble-dotsize-st', 'ble-bgdensity', 'ble-mono', 'ble-paper']) {
     $(id).addEventListener('input', schedulePreview)
     $(id).addEventListener('change', schedulePreview)
   }
@@ -644,17 +648,21 @@ export function initBlePrint(): void {
     const row = el.closest('label') as HTMLElement | null
     if (row) row.style.opacity = live ? '1' : '0.4'
   }
-  const ink = $('ble-ink') as HTMLSelectElement
   const syncLive = (): void => {
-    setLive('ble-threshold', ink.value !== 'floyd-steinberg')
-    // Grain only means anything to a screen.
-    $('ble-dot-row').style.display = ink.value.startsWith('halftone') ? '' : 'none'
-    $('ble-dot-row-st').style.display = sel('ble-ink-stickers').value.startsWith('halftone') ? '' : 'none'
+    // Grain only means anything to a screen; blackness is inert under full error diffusion,
+    // which conserves input tone no matter where the threshold sits.
+    $('ble-dotsize-text-row').style.display = sel('ble-ink-text').value.startsWith('halftone') ? '' : 'none'
+    $('ble-dotsize-logo-row').style.display = sel('ble-ink-logo').value.startsWith('halftone') ? '' : 'none'
+    $('ble-dotsize-row').style.display = sel('ble-ink').value.startsWith('halftone') ? '' : 'none'
+    $('ble-dotsize-st-row').style.display = sel('ble-ink-stickers').value.startsWith('halftone') ? '' : 'none'
+    setLive('ble-threshold', sel('ble-ink-text').value !== 'floyd-steinberg')
+    setLive('ble-threshold-logo', sel('ble-ink-logo').value !== 'floyd-steinberg')
+    setLive('ble-threshold-bg', sel('ble-ink').value !== 'floyd-steinberg')
+    setLive('ble-threshold-st', sel('ble-ink-stickers').value !== 'floyd-steinberg')
     setLive('ble-bgdensity', !!bgAssets()?.backgroundImage)
   }
   syncLiveControls = syncLive
-  ink.addEventListener('change', syncLive)
-  sel('ble-ink-stickers').addEventListener('change', syncLive)
+  for (const [inkId] of [['ble-ink-text'], ['ble-ink-logo'], ['ble-ink'], ['ble-ink-stickers']]) sel(inkId).addEventListener('change', syncLive)
   document.addEventListener('re:design-changed', () => {
     // The embedded faces are subsetted to the glyphs actually used, so changing the text or
     // the font picker invalidates them.
