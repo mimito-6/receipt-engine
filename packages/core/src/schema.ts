@@ -201,6 +201,11 @@ export const ReceiptDocumentSchema = z.object({
   customBlocks: z.array(CustomBlockSchema).optional(),
   /** Free-floating decorations (emoji or images) rendered on top of the receipt. */
   stickers: z.array(StickerSchema).optional(),
+  /**
+   * Blank blocks used to space sections apart. They draw nothing and only reserve height;
+   * their position comes from `blockOrder` like any other block, via the key `spacer:<id>`.
+   */
+  spacers: z.array(z.object({ id: z.string().min(1), height: z.number().min(0).max(600) })).optional(),
   /** Per-element style overrides, keyed by element id (e.g. "items.0.name", "totals.total"). */
   styleOverrides: z.record(z.string(), TextStyleSchema).optional(),
   /** Override the top-to-bottom order of the major sections. */

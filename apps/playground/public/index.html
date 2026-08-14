@@ -501,6 +501,9 @@
     width: 32px; height: 30px; cursor: pointer; font-size: 14px; transition: border-color var(--dur-tap), color var(--dur-tap); }
   .order-btn:hover:not(:disabled) { border-color: var(--ink-affordance); color: var(--ink); }
   .order-btn:disabled { opacity: .35; cursor: default; }
+  /* A spacer's row carries its height, since the block itself shows nothing to judge by. */
+  .order-row .spacer-h { width: 92px; margin-left: 6px; }
+  .order-row.is-spacer .order-name { font-style: italic; opacity: .8; }
 
   /* ---- accessibility: visually-hidden polite live region for status announcements ---- */
   .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden;
@@ -830,6 +833,8 @@
 
       <details class="card" id="card-order"><summary><span data-i18n="panel.order.title">版面順序</span> <span class="hint" data-i18n="panel.order.hint">↑↓ 排序,或在收據上直接拖區塊</span></summary>
         <div id="order-list"></div>
+        <button class="btn sm ghost" id="add-spacer" type="button" style="margin-top:8px" data-i18n="order.addSpacer">＋ 加入空白間隔</button>
+        <div class="muted-note" data-i18n="order.spacerHint">空白間隔只佔位置,不會印出任何東西。加入後可以拖到任何位置,並調整高度。</div>
       </details>
     </section>
 
@@ -1093,6 +1098,6 @@
 <footer data-i18n="footer.text">純前端 · 收據不上傳伺服器 · 由 @receipt-engine/render-svg 在瀏覽器內渲染</footer>
 
 <!-- Editor app (bundles the engine). Built from src/app/main.ts -> public/playground.global.js -->
-<script src="./playground.global.js?b=63"></script>
+<script src="./playground.global.js?b=64"></script>
 </body>
 </html>

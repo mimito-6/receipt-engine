@@ -255,15 +255,37 @@ function move(key: string, dir: -1 | 1): void {
 // to <body> after a press; remember the just-moved key+dir so we can re-focus its button in the new layout
 let _pendingFocus: { key: string; dir: 'up' | 'down' } | null = null
 
+/**
+ * Append a blank block and put it at the end of the order.
+ *
+ * Its id has to be unique and stable: the block order identifies blocks by key, and two
+ * spacers sharing one would be deduplicated down to a single block.
+ */
+export function addSpacer(): void {
+  const doc = state.receipt as unknown as {
+    spacers?: Array<{ id: string; height: number }>
+    blockOrder?: string[]
+  }
+  const spacers = (doc.spacers ??= [])
+  let n = spacers.length + 1
+  while (spacers.some((s) => s.id === `s${n}`)) n++
+  const id = `s${n}`
+  spacers.push({ id, height: 24 })
+  doc.blockOrder = [...(doc.blockOrder ?? domOrder()), `spacer:${id}`]
+  render()
+  renderOrderPanel()
+}
+
 export function renderOrderPanel(): void {
   const box = $('order-list')
   if (!box) return
   const order = domOrder()
   box.innerHTML = ''
   order.forEach((key, i) => {
-    const label = LABELS[key] ? t(LABELS[key]) : key
+    const spacerId = key.startsWith('spacer:') ? key.slice('spacer:'.length) : null
+    const label = spacerId ? t('order.spacer') : LABELS[key] ? t(LABELS[key]) : key
     const row = document.createElement('div')
-    row.className = 'order-row'
+    row.className = 'order-row' + (spacerId ? ' is-spacer' : '')
     row.dataset.key = key
     // aria-label carries the block name (the glyph alone reads as a bare "button"); the ↑↓ glyph
     // is decorative so hide it from AT
@@ -273,6 +295,38 @@ export function renderOrderPanel(): void {
       (i === 0 ? ' disabled' : '') + '><span aria-hidden="true">↑</span></button>' +
       '<button class="order-btn" data-dir="down" aria-label="' + t('order.moveDown', { name: label }) + '"' +
       (i === order.length - 1 ? ' disabled' : '') + '><span aria-hidden="true">↓</span></button>'
+    if (spacerId) {
+      // The block draws nothing, so its size has to be adjustable from here.
+      const doc = state.receipt as unknown as { spacers?: Array<{ id: string; height: number }> }
+      const sp = doc.spacers?.find((x) => x.id === spacerId)
+      const h = document.createElement('input')
+      h.type = 'range'
+      h.className = 'spacer-h'
+      h.min = '0'
+      h.max = '300'
+      h.step = '4'
+      h.value = String(sp?.height ?? 24)
+      h.setAttribute('aria-label', t('order.spacerHeight'))
+      h.addEventListener('input', () => {
+        const target = doc.spacers?.find((x) => x.id === spacerId)
+        if (target) target.height = Number(h.value)
+        render()
+      })
+      const del = document.createElement('button')
+      del.className = 'order-btn'
+      del.type = 'button'
+      del.setAttribute('aria-label', t('order.spacerRemove'))
+      del.innerHTML = '<span aria-hidden="true">×</span>'
+      del.addEventListener('click', () => {
+        doc.spacers = (doc.spacers ?? []).filter((x) => x.id !== spacerId)
+        const cur = ((state.receipt as unknown as { blockOrder?: string[] }).blockOrder ?? domOrder())
+        ;(state.receipt as unknown as { blockOrder?: string[] }).blockOrder = cur.filter((k) => k !== key)
+        render()
+        renderOrderPanel()
+      })
+      row.appendChild(h)
+      row.appendChild(del)
+    }
     const [upBtn, downBtn] = row.querySelectorAll('button')
     upBtn.addEventListener('click', () => {
       _pendingFocus = { key, dir: 'up' }

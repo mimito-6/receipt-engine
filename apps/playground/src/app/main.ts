@@ -39,7 +39,7 @@ import {
 } from './overlay'
 import { clearSelection, onCanvasDblClick, onCanvasKeydown, refreshInspector } from './inspector'
 import { installEdgeHandles, positionEdgeHandles } from './resize'
-import { beginCanvasGesture } from './reorder'
+import { beginCanvasGesture, addSpacer } from './reorder'
 import { redo, resetHistory, undo } from './history'
 import { applyI18n, setLang, t, type Lang } from './i18n'
 import { fastPrint, playPrintReveal, setFastPrint } from './printReveal'
@@ -731,6 +731,7 @@ function wire(): void {
     $('v-bgop').textContent = this.value + '%'
     renderSoon()
   })
+  $('add-spacer').addEventListener('click', () => addSpacer())
   $('s-logosc').addEventListener('input', function (this: HTMLInputElement) {
     // Lives on merchant, next to the logo it scales, so it travels with the design and is
     // saved by the config file without any extra plumbing.

@@ -340,6 +340,21 @@ function renderInternal(
   }
 
   const placeKey = (key: BlockKey): void => {
+    // A spacer draws nothing and exists purely to reserve height. On the editor canvas it
+    // still needs something to grab, so it gets a transparent hit area and a dashed outline;
+    // in an export or a print it emits nothing at all.
+    if (typeof key === 'string' && key.startsWith('spacer:')) {
+      const id = key.slice('spacer:'.length)
+      const sp = doc.spacers?.find((s2) => s2.id === id)
+      if (!sp || sp.height <= 0) return
+      const markup = options.interactive
+        ? `<rect x="${n(cardX + innerPad)}" y="${n(y)}" width="${n(contentWidth)}" ` +
+          `height="${n(sp.height)}" fill="transparent" stroke="${escapeXml(theme.palette.border)}" ` +
+          `stroke-width="1" stroke-dasharray="3 5" pointer-events="all" />`
+        : ''
+      placeOne({ markup, height: sp.height }, key)
+      return
+    }
     switch (key) {
       case 'logo':
         placeOne(renderLogo(ctx, p, doc.merchant, y), 'logo')
