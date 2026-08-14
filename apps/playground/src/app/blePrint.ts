@@ -297,6 +297,15 @@ ${svgs.join(' ')}`
   if (!previewCache || previewCache.key !== key) {
     const imgs = []
     for (const svg of svgs) imgs.push(await svgToImageData(svg, { width: paper.printableWidthDots }))
+    // The print builder rejects mismatched layers; the preview used to take the first layer's
+    // dimensions for all of them and composite anyway, which silently drew the others at the
+    // wrong offset — the misalignment showed up as doubled artwork rather than as an error.
+    const odd = imgs.find((i) => i.width !== imgs[0]!.width || i.height !== imgs[0]!.height)
+    if (odd) {
+      throw new Error(
+        `layer geometry differs: ${imgs[0]!.width}x${imgs[0]!.height} vs ${odd.width}x${odd.height}`,
+      )
+    }
     previewCache = { key, width: imgs[0]!.width, height: imgs[0]!.height, layers: imgs.map((i) => i.data) }
   }
   const { width, height, layers: layerData } = previewCache

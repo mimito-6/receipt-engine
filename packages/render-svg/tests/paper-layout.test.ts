@@ -2,7 +2,7 @@
 // receipt, and it was a real defect: an 80mm print came out visibly narrower than the roll.
 import { describe, expect, it } from 'vitest'
 import { PAPER_58, PAPER_80 } from '@receipt-engine/core'
-import { renderReceiptToSvg, renderReceiptWithMetadata } from '../src/index'
+import { renderReceiptToSvg, renderReceiptWithMetadata, type RenderLayer } from '../src/index'
 
 const receipt = {
   schemaVersion: '0.1',
@@ -238,7 +238,9 @@ describe('logo as its own layer', () => {
 
   const images = (svg: string): string[] => [...svg.matchAll(/<image\b[^>]*>/g)].map((m) => m[0])
   const texts = (svg: string): string[] => [...svg.matchAll(/<text\b[^>]*>/g)].map((m) => m[0])
-  const height = (svg: string): string => svg.match(/viewBox="0 0 \d+ (\d+)"/)![1]!
+  // Any viewBox, not just one anchored at 0 0 — cropToCard windows onto the card, so the
+  // origin is non-zero and a stricter pattern simply fails to match.
+  const height = (svg: string): string => svg.match(/viewBox="[\d.]+ [\d.]+ [\d.]+ ([\d.]+)"/)![1]!
 
   it('draws the logo alone when only that layer is asked for', () => {
     const svg = renderReceiptToSvg(doc, { layers: ['logo'] })
@@ -253,9 +255,44 @@ describe('logo as its own layer', () => {
   })
 
   it('keeps identical geometry across every layer, so they can be combined', () => {
-    const full = height(renderReceiptToSvg(doc, {}))
-    for (const layers of [['logo'], ['content'], ['content', 'logo'], ['stickers']] as const) {
-      expect(height(renderReceiptToSvg(doc, { layers: [...layers] })), `layers ${layers}`).toBe(full)
+    // A document exercising EVERY block, not the minimum that renders. The first version of
+    // this test used a bare receipt and passed while the real thing was broken: renderSubtitle
+    // decided its height from whether it had emitted markup, so it collapsed to zero in any
+    // layer that does not draw text and shifted everything below it by 44px.
+    const rich = {
+      schemaVersion: '0.1',
+      currency: 'TWD',
+      merchant: {
+        name: 'Stall',
+        subtitle: 'hand-made things',
+        website: 'example.com',
+        socials: [{ label: '@shop', url: 'https://example.com' }],
+        logo: PNG,
+      },
+      transaction: { receiptNo: '1', issuedAt: '2026-06-01T12:00', cashier: 'Mimi' },
+      event: { name: 'Artist Alley', boothNumber: 'A12', location: 'Taipei', date: '2026-06-01' },
+      items: [{ name: 'Item', quantity: 2, unitPrice: 100, variant: 'Pastel' }],
+      discounts: [{ label: 'Bundle', amount: 50 }],
+      payments: [{ method: 'cash', amount: 200 }],
+      qr: { value: 'https://example.com', caption: 'follow' },
+      footer: { thanks: 'Thank you!', note: 'see you' },
+      assets: { backgroundImage: PNG, backgroundOpacity: 0.3 },
+      stickers: [{ content: PNG, x: 10, y: 10, size: 40, anchor: 'free' }],
+    } as never
+
+    const every: RenderLayer[][] = [
+      ['card', 'content', 'decorations'],
+      ['logo'],
+      ['artwork'],
+      ['stickers', 'images'],
+      ['content'],
+    ]
+    const full = height(renderReceiptToSvg(rich, { cropToCard: true }))
+    for (const layers of every) {
+      expect(
+        height(renderReceiptToSvg(rich, { cropToCard: true, layers })),
+        `layers ${layers.join('+')} changed the sheet height`,
+      ).toBe(full)
     }
   })
 

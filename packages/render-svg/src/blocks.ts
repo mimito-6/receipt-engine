@@ -735,7 +735,13 @@ export function renderMerchantSubtitle(ctx: RenderContext, p: Painter, merchant:
   const cx = centerX(ctx)
   let cursor = y
   let markup = ''
+  // Tracked separately from `markup`, because the painter can suppress drawing while the
+  // layout still has to reserve the space. Deciding the block's HEIGHT from whether anything
+  // was emitted made this block collapse to zero in any layer that does not draw text, which
+  // shifted everything below it and left the layers unable to line up when combined.
+  let laidOut = false
   if (merchant.subtitle) {
+    laidOut = true
     const sub = textLines(
       p,
       wrapText(merchant.subtitle, ctx.contentWidth, theme.typography.bodySize, ctx.mono),
@@ -749,7 +755,8 @@ export function renderMerchantSubtitle(ctx: RenderContext, p: Painter, merchant:
   }
   const tagline = [merchant.website, ...(merchant.socials ?? []).map((s) => s.label)].filter(Boolean).join('  ·  ')
   if (tagline) {
-    if (markup) cursor += 2
+    if (laidOut) cursor += 2
+    laidOut = true
     const line = textLines(p, [tagline], cx, cursor, theme.typography.smallSize, {
       anchor: 'middle',
       fill: theme.palette.mutedText,
@@ -757,7 +764,7 @@ export function renderMerchantSubtitle(ctx: RenderContext, p: Painter, merchant:
     markup += line.markup
     cursor += line.height
   }
-  return markup ? { markup, height: cursor - y } : EMPTY
+  return laidOut ? { markup, height: cursor - y } : EMPTY
 }
 
 export function renderQrImage(ctx: RenderContext, p: Painter, qr: ReceiptQr, y: number): BlockResult {
